@@ -96,22 +96,23 @@ export default function HomePage() {
         {/* Right Side - Agrandissement du Catalogue + Espacement */}
         <div className="w-[40%] flex justify-start">
           <div className="bg-white/50 p-16 rounded-3xl shadow-2xl max-w-xl w-full text-center space-y-6">
-            {["DOOR", "B2B", "B2C", "SI3C", "GUIDE", "About Us"].map((dept) => (
-              <Link key={dept} href={`/${dept.toLowerCase()}`}>
-                <div className="w-full p-6 border border-[#6f80ac] text-[#6f80ac] font-bold text-2xl rounded-lg hover:bg-[#68bddd] hover:text-white transition-all duration-300 cursor-pointer mb-6">
-                  {dept}
-                </div>
-              </Link>
-            ))}
-
-            {/* Social Links */}
-            <div className="flex justify-center space-x-6 mt-8">
-              <Link href="#"><FaFacebook size={36} className="text-[#6f80ac] hover:text-[#68bddd]" /></Link>
-              <Link href="#"><FaLinkedin size={36} className="text-[#6f80ac] hover:text-[#68bddd]" /></Link>
+          {["HISPEED", "FTTH", "DSL", "FTTB", "EARFTicketing", "About Us"].map((dept) => (
+            <motion.div
+              key={dept} 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full"
+            >
+               <Link href={`/${dept.toLowerCase()}`}>
+                  <div className="w-full p-6 border border-[#6f80ac] text-[#6f80ac] font-bold text-2xl rounded-lg hover:bg-[#68bddd] hover:text-white transition-all duration-300 cursor-pointer mb-6">
+                    {dept}
+                 </div>
+                </Link>
+              </motion.div>
+))}
             </div>
           </div>
         </div>
       </div>
-    </div>
   );
 }
