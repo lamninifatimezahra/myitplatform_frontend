@@ -18,7 +18,7 @@ const data = [
 
 export default function StackedBarChart() {
   return (
-    <div className="bg-white p-4 shadow-md rounded-lg">
+    <div className="bg-gray-300 p-6 rounded-xl shadow-md">
       <h2 className="text-lg font-semibold text-gray-700">Vue d’ensemble combinée du Backlog</h2>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>
