@@ -57,14 +57,14 @@ export default function HispeedDashboard() {
             </div>
             {/* Colonne 3 : VolumeReentrant */}
             <div className="col-span-1">
-              <RapportSortantsEntrants />
+              <ClientCoupeChart />
             </div>
           </div>
           {/* Quatrième ligne : ClientCoupeChart et GroupedBarChart */}
           <div className="mt-6 grid grid-cols-2 gap-6">
             {/* Colonne 1 : ClientCoupeChart */}
             <div className="col-span-1">
-              <ClientCoupeChart />
+              <RapportSortantsEntrants />
             </div>
             {/* Colonne 2 : GroupedBarChart */}
             <div className="col-span-1">
