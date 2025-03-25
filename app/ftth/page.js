@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Card from "./components/Card";
@@ -8,26 +9,28 @@ import LineChart from "./components/LineChart";
 import StackedBarChart from "./components/StackedBarChart";
 
 export default function DashboardFTTH() {
-  return (
-    <div className="flex h-screen relative">
-      {/* Image de fond */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-40"
-        style={{ backgroundImage: "url('/background-office.jpg')" }}
-      ></div>
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  return (
+    <div className="flex h-screen w-full overflow-hidden">
       {/* Sidebar */}
-      <div className="relative z-20 bg-white shadow-md w-64">
-        <Sidebar />
-      </div>
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* Contenu principal */}
-      <div className="flex-1 flex flex-col relative z-10 max-w-[calc(100%-250px)] mx-auto">
-        {/* Header avec le filtre de date inclus */}
-        <Header />
+      <div className="flex-1 flex flex-col relative">
+        {/* Image de fond */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
+          style={{ backgroundImage: "url('/background-office.jpg')" }}
+        ></div>
 
-        {/* Contenu du dashboard */}
-        <div className="p-6 space-y-6">
+        {/* Header fixé en haut */}
+        <div className="sticky top-0 z-50 bg-white shadow-md">
+          <Header />
+        </div>
+
+        {/* Contenu du dashboard avec un scrollable container */}
+        <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
           {/* Section des statistiques */}
           <div className="grid grid-cols-4 gap-6">
             <Card title="Backlog FTTH J-1" value="75" percentage="+18%" description="+3 des commandes" />
