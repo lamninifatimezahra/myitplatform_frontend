@@ -68,7 +68,7 @@ export default function HomePage() {
               }}
             >
               <AiOutlineUser size={24} className="text-[#6f80ac]" />
-              <span className="text-[#6f80ac] font-semibold">Ayoub LAHDOUD</span>
+              <span className="text-[#6f80ac] font-semibold">User</span>
             </div>
           </div>
         </div>

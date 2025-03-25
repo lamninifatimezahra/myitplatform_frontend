@@ -8,27 +8,28 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { AiOutlineFilter } from "react-icons/ai";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import { AiOutlineFilter } from "react-icons/ai";
+import { useExport } from "./ExportContext"; // 📦 à adapter selon le chemin réel
 
-// Enregistrer les composants de Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 export default function TauxReentrants() {
+  const id = "taux-reentrants";
+  const { selectedIds, toggleId } = useExport();
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("week"); // "week" ou "month"
+  const [viewMode, setViewMode] = useState("week");
   const [selectedValues, setSelectedValues] = useState([]);
   const [disabledCategories, setDisabledCategories] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Couleurs fixes
   const colors = {
     "Réentrant": "#68bddd",
-    "Non Réentrant": "#6f80ac",
+    "Non Réentrant": "#1b2b6b",
   };
 
-  // Fetch les données depuis l'API
   useEffect(() => {
     async function fetchData() {
       try {
@@ -37,140 +38,178 @@ export default function TauxReentrants() {
         setData(result);
         setLoading(false);
 
-        // Définir valeurs par défaut (5 dernières semaines/mois)
-        const availableWeeks = [...new Set(result.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-        const availableMonths = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
-        setSelectedValues(viewMode === "week" ? availableWeeks.slice(-5) : availableMonths.slice(-5));
+        const weeks = [...new Set(result.map(t => t.semaine))].sort((a, b) => a - b);
+        const months = [...new Set(result.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        setSelectedValues(viewMode === "week" ? weeks.slice(-5) : months.slice(-5));
       } catch (error) {
-        console.error("Erreur lors du fetch des données :", error);
+        console.error("Erreur lors du fetch :", error);
       }
     }
     fetchData();
   }, [viewMode]);
 
-  if (loading) {
-    return <p className="text-center text-gray-500">Chargement des données...</p>;
-  }
+  if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
-  // Obtenir les semaines et mois uniques
-  const availableWeeks = [...new Set(data.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-  const availableMonths = [...new Set(data.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  const weeks = [...new Set(data.map(t => t.semaine))].sort((a, b) => a - b);
+  const months = [...new Set(data.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
 
-  // Filtrer les données en fonction des filtres sélectionnés
   const filteredData = data.filter(ticket =>
     selectedValues.includes(viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1)
   );
 
-  // Calcul du nombre de réentrants et non réentrants
-  const reentrantCount = filteredData.filter(ticket => ticket.is_reentrant_global === true).length;
-  const nonReentrantCount = filteredData.filter(ticket => ticket.is_reentrant_global === false).length;
+  const ticketsById = {};
+  filteredData.forEach(ticket => {
+    if (!ticketsById[ticket.id_ticket]) {
+      ticketsById[ticket.id_ticket] = [];
+    }
+    ticketsById[ticket.id_ticket].push(ticket);
+  });
 
-  // Calcul du pourcentage
-  const totalTickets = reentrantCount + nonReentrantCount;
-  const reentrantPercentage = totalTickets ? ((reentrantCount / totalTickets) * 100).toFixed(1) : "0.0";
-  const nonReentrantPercentage = totalTickets ? ((nonReentrantCount / totalTickets) * 100).toFixed(1) : "0.0";
+  let nonReentrantCount = 0;
+  let reentrantCount = 0;
 
-  // Configuration des données pour le Doughnut chart
+  Object.values(ticketsById).forEach(tickets => {
+    const sorted = tickets.sort((a, b) => new Date(a.date_derniere_maj) - new Date(b.date_derniere_maj));
+    nonReentrantCount += 1;
+    reentrantCount += sorted.length - 1;
+  });
+
+  const total = nonReentrantCount + reentrantCount;
   const categories = ["Réentrant", "Non Réentrant"];
+
   const chartData = {
     labels: categories,
     datasets: [
       {
-        data: categories.map(cat => 
-          disabledCategories.includes(cat) ? 0 : (cat === "Réentrant" ? reentrantCount : nonReentrantCount)
+        data: categories.map(cat =>
+          disabledCategories.includes(cat)
+            ? 0
+            : cat === "Réentrant"
+              ? reentrantCount
+              : nonReentrantCount
         ),
         backgroundColor: categories.map(cat => colors[cat]),
+        cutout: "45%",
+        borderWidth: 1,
+        rotation: -90,
       },
     ],
   };
 
-  // Gérer la sélection des semaines/mois
   const handleSelectionChange = (value) => {
     setSelectedValues(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
   };
 
-  // Gérer l'affichage des catégories dans la légende
   const toggleCategory = (category) => {
     setDisabledCategories(prev =>
       prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
     );
   };
 
+  const periodeLabel = selectedValues.length > 0
+    ? (viewMode === "week"
+      ? `Semaine(s) : ${selectedValues.join(", ")}`
+      : `Mois : ${selectedValues.join(", ")}`)
+    : "Aucune période sélectionnée";
+
   return (
-    <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
-      <h3 className="text-lg font-semibold mb-3 text-gray-500">Taux des Réentrants</h3>
+    <div className="visualisation relative" data-id={id}>
+      <div className="absolute top-2 right-2 z-50 flex space-x-2">
+        <button
+          className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <AiOutlineFilter size={20} className="text-gray-600" />
+        </button>
+        <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
+          <input
+            type="checkbox"
+            checked={selectedIds.includes(id)}
+            onChange={() => toggleId(id)}
+          />
+          <span>Inclure</span>
+        </label>
+      </div>
 
-      {/* Bouton de filtre */}
-      <button className="absolute top-2 right-2 bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
-        onClick={() => setIsOpen(!isOpen)}>
-        <AiOutlineFilter size={20} className="text-gray-500" />
-      </button>
-
-      {/* Filtre Popup */}
-      {isOpen && (
-        <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
-          <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-
-          {/* Sélecteur de vue */}
-          <div className="flex space-x-2 mb-2">
-            <button className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-              onClick={() => setViewMode("week")}>Semaine</button>
-            <button className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-              onClick={() => setViewMode("month")}>Mois</button>
-          </div>
-
-          {/* Liste avec cases à cocher pour les semaines/mois */}
-          <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-            {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
-              <div key={value} className="flex items-center space-x-2">
-                <input type="checkbox" checked={selectedValues.includes(value)}
-                  onChange={() => handleSelectionChange(value)} />
-                <span className="text-gray-500">{viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}</span>
-              </div>
-            ))}
-          </div>
+      <div className="bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">Taux des Réentrants</h3>
+          <p className="text-sm text-gray-500 mb-3">{periodeLabel}</p>
         </div>
-      )}
 
-      {/* Graphique */}
-      <div className="flex-grow">
-        <Doughnut
-          data={chartData}
-          options={{
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: {
-                display: true,
-                labels: {
-                  color: "black",
-                  font: { size: 12 },
-                  generateLabels: (chart) => {
-                    return chart.data.labels.map((label, i) => ({
-                      text: `${label} (${label === "Réentrant" ? reentrantPercentage : nonReentrantPercentage}%)`,
+        {isOpen && (
+          <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
+            <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
+
+            <div className="flex space-x-2 mb-2">
+              <button className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => setViewMode("week")}>Semaine</button>
+              <button className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => setViewMode("month")}>Mois</button>
+            </div>
+
+            <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
+              {(viewMode === "week" ? weeks : months).map(value => (
+                <div key={value} className="flex items-center space-x-2">
+                  <input type="checkbox" checked={selectedValues.includes(value)} onChange={() => handleSelectionChange(value)} />
+                  <span className="text-gray-500">{viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="relative h-full max-h-[300px] w-full">
+          <Doughnut
+            data={chartData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "right",
+                  labels: {
+                    color: "black",
+                    font: { size: 11 },
+                    boxWidth: 12,
+                    padding: 8,
+                    generateLabels: (chart) => chart.data.labels.map((label, i) => ({
+                      text: label,
                       fillStyle: colors[label],
                       hidden: disabledCategories.includes(label),
-                    }));
+                    }))
+                  },
+                  onClick: (_, legendItem) => toggleCategory(legendItem.text),
+                },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => {
+                      const label = context.label;
+                      const value = context.raw;
+                      const percent = total ? ((value / total) * 100).toFixed(2) : "0.0";
+                      return `${label}: ${value} (${percent}%)`;
+                    },
                   }
                 },
-                onClick: (_, legendItem) => {
-                  toggleCategory(legendItem.text.split(" (")[0]);
+                datalabels: {
+                  color: "black",
+                  font: { size: 10 },
+                  formatter: (value, context) => {
+                    const label = context.chart.data.labels[context.dataIndex];
+                    if (value === 0) return "";
+                    const percent = ((value / total) * 100).toFixed(2);
+                    return `${value} (${percent}%)`;
+                  },
+                  anchor: 'end',
+                  align: 'end',
+                  offset: 8
                 }
-              }
-            },
-            layout: {
-              padding: {
-                top: 5,
-                bottom: 5,
-                left: 5,
-                right: 5
-              }
-            }
-          }}
-          plugins={[ChartDataLabels]}
-        />
+              },
+              layout: { padding: 10 }
+            }}
+          />
+        </div>
       </div>
     </div>
   );

@@ -13,8 +13,8 @@ import {
   Filler
 } from "chart.js";
 import { AiOutlineFilter } from "react-icons/ai";
+import { useExport } from "./ExportContext";
 
-// Enregistrer les composants de Chart.js
 ChartJS.register(
   LineElement,
   CategoryScale,
@@ -26,14 +26,16 @@ ChartJS.register(
 );
 
 export default function RapportSortantsEntrants() {
+  const id = "rapport-sortants-entrants";
+  const { selectedIds, toggleId } = useExport();
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("week"); // "day", "week" ou "month"
+  const [viewMode, setViewMode] = useState("week");
   const [selectedValues, setSelectedValues] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [groupedData, setGroupedData] = useState({});
 
-  // Fetch les données depuis l'API
   useEffect(() => {
     async function fetchData() {
       try {
@@ -41,17 +43,10 @@ export default function RapportSortantsEntrants() {
         const result = await response.json();
         setData(result);
         setLoading(false);
-
-        // Calculer les données agrégées indépendamment des filtres
         processData(result, viewMode);
-        
-        // Définir valeurs par défaut (5 dernières semaines/mois)
+
         const availableWeeks = [...new Set(result.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-        const availableMonths = [...new Set(result.map(ticket => {
-          const date = new Date(ticket.date_derniere_maj);
-          return date.getMonth() + 1;
-        }))].sort((a, b) => a - b);
-        
+        const availableMonths = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
         setSelectedValues(viewMode === "week" ? availableWeeks.slice(-5) : availableMonths.slice(-5));
       } catch (error) {
         console.error("Erreur lors du fetch des données :", error);
@@ -60,162 +55,138 @@ export default function RapportSortantsEntrants() {
     fetchData();
   }, []);
 
-  // Recalculer les données agrégées lors du changement de mode de vue
   useEffect(() => {
     if (data.length > 0) {
       processData(data, viewMode);
-      
-      // Mettre à jour les sélections après changement de mode
       const availableWeeks = [...new Set(data.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-      const availableMonths = [...new Set(data.map(ticket => {
-        const date = new Date(ticket.date_derniere_maj);
-        return date.getMonth() + 1;
-      }))].sort((a, b) => a - b);
-      
+      const availableMonths = [...new Set(data.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
       setSelectedValues(viewMode === "week" ? availableWeeks.slice(-5) : availableMonths.slice(-5));
     }
   }, [viewMode, data]);
 
-  // Fonction pour traiter et agréger les données
   const processData = (tickets, mode) => {
     const aggregatedData = {};
-    
-    // Calculer les entrées par période
     tickets.forEach(ticket => {
-      let entrantKey;
-      if (mode === "week") {
-        entrantKey = ticket.semaine;
-      } else { // mode === "month"
-        const date = new Date(ticket.date_derniere_maj);
-        entrantKey = date.getMonth() + 1;
-      }
-      
-      if (!aggregatedData[entrantKey]) {
-        aggregatedData[entrantKey] = { entrants: 0, sortants: 0 };
-      }
+      let entrantKey = mode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1;
+      if (!aggregatedData[entrantKey]) aggregatedData[entrantKey] = { entrants: 0, sortants: 0 };
       aggregatedData[entrantKey].entrants += 1;
     });
-    
-    // Calculer les sorties par période
+
     tickets.forEach(ticket => {
       if (ticket.date_sortie) {
-        let sortantKey;
-        if (mode === "week") {
-          sortantKey = ticket.semaine_date_sortant;
-        } else { // mode === "month"
-          const date = new Date(ticket.date_sortie);
-          sortantKey = date.getMonth() + 1;
-        }
-        
-        if (!aggregatedData[sortantKey]) {
-          aggregatedData[sortantKey] = { entrants: 0, sortants: 0 };
-        }
+        let sortantKey = mode === "week" ? ticket.semaine_date_sortant : new Date(ticket.date_sortie).getMonth() + 1;
+        if (!aggregatedData[sortantKey]) aggregatedData[sortantKey] = { entrants: 0, sortants: 0 };
         aggregatedData[sortantKey].sortants += 1;
       }
     });
-    
+
     setGroupedData(aggregatedData);
   };
 
-  if (loading) {
-    return <p className="text-center text-gray-500">Chargement des données...</p>;
-  }
+  if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
-  // Obtenir les semaines et mois uniques
   const availableWeeks = [...new Set(data.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-  const availableMonths = [...new Set(data.map(ticket => {
-    const date = new Date(ticket.date_derniere_maj);
-    return date.getMonth() + 1;
-  }))].sort((a, b) => a - b);
+  const availableMonths = [...new Set(data.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
 
-  // Préparer les données pour le graphique (en utilisant uniquement les périodes sélectionnées)
   const filteredPeriods = Object.keys(groupedData)
     .map(key => parseInt(key))
     .filter(key => selectedValues.includes(key))
     .sort((a, b) => a - b);
 
-  const labels = filteredPeriods.map(value => 
-    viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`
-  );
-
+  const labels = filteredPeriods.map(value => viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`);
   const dataValues = filteredPeriods.map(period => {
     const { entrants, sortants } = groupedData[period] || { entrants: 0, sortants: 0 };
     return entrants > 0 ? ((sortants / entrants) * 100).toFixed(1) : 0;
   });
 
-  // Gérer la sélection des semaines/mois
   const handleSelectionChange = (value) => {
     setSelectedValues(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
   };
 
+  const periodeLabel = selectedValues.length > 0
+    ? (viewMode === "week" ? `Semaine(s) : ${selectedValues.join(", ")}` : `Mois : ${selectedValues.join(", ")}`)
+    : "Aucune période sélectionnée";
+
   return (
-    <div className="relative bg-white p-5 shadow-md rounded-lg w-full">
-      <h3 className="text-lg font-semibold mb-3 text-gray-500">Rapport : Sortants/Entrants</h3>
-
-      {/* Bouton de filtre */}
-      <button className="absolute top-2 right-2 bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
-        onClick={() => setIsOpen(!isOpen)}>
-        <AiOutlineFilter size={20} className="text-gray-500" />
-      </button>
-
-      {/* Filtre Popup */}
-      {isOpen && (
-        <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
-          <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-
-          {/* Sélecteur de vue */}
-          <div className="flex space-x-2 mb-2">
-            <button className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-              onClick={() => setViewMode("week")}>Semaine</button>
-            <button className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-              onClick={() => setViewMode("month")}>Mois</button>
-          </div>
-
-          {/* Liste avec cases à cocher pour les semaines/mois */}
-          <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-            {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
-              <div key={value} className="flex items-center space-x-2">
-                <input type="checkbox" checked={selectedValues.includes(value)}
-                  onChange={() => handleSelectionChange(value)} />
-                <span className="text-gray-500">{viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}</span>
-              </div>
-            ))}
-          </div>
+    <div className="visualisation relative" data-id={id}>
+      <div className="relative bg-white p-5 shadow-md rounded-lg w-full">
+        <div className="absolute top-2 right-2 flex items-center space-x-2 z-50">
+          <button
+            className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <AiOutlineFilter size={20} className="text-gray-600" />
+          </button>
+          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(id)}
+              onChange={() => toggleId(id)}
+            />
+            <span>Inclure</span>
+          </label>
         </div>
-      )}
 
-      {/* Graphique */}
-      <Line
-        data={{
-          labels,
-          datasets: [
-            {
-              label: "Rapport Sortants/Entrants (%)",
-              data: dataValues,
-              borderColor: "#68bddd",
-              backgroundColor: "rgba(104, 189, 221, 0.2)",
-              fill: true,
-              tension: 0.4, // Lissage de la courbe
-            },
-          ],
-        }}
-        options={{
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: (context) => `${context.raw}%` } },
-          },
-          scales: {
-            x: { grid: { display: false } },
-            y: {
-              grid: { display: true },
-              ticks: { callback: (value) => `${value}%` },
-            },
-          },
-        }}
-      />
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Rapport : Sortants/Entrants</h3>
+          <p className="text-sm text-gray-500">{periodeLabel}</p>
+        </div>
+
+        {isOpen && (
+          <div className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50">
+            <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
+            <div className="flex space-x-2 mb-2 mt-2">
+              <button className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => setViewMode("week")}>Semaine</button>
+              <button className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => setViewMode("month")}>Mois</button>
+            </div>
+            <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
+              {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
+                <div key={value} className="flex items-center space-x-2">
+                  <input type="checkbox" checked={selectedValues.includes(value)}
+                    onChange={() => handleSelectionChange(value)} />
+                  <span className="text-gray-500">{viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="h-[300px]">
+          <Line
+            data={{
+              labels,
+              datasets: [
+                {
+                  label: "Rapport Sortants/Entrants (%)",
+                  data: dataValues,
+                  borderColor: "#68bddd",
+                  backgroundColor: "rgba(104, 189, 221, 0.2)",
+                  fill: true,
+                  tension: 0.4,
+                },
+              ],
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: (context) => `${context.raw}%` } },
+              },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  grid: { display: true },
+                  ticks: { callback: (value) => `${value}%` },
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import html2canvas from "html2canvas-pro"; // Utilisation de html2canvas-pro
+import { useState, useEffect } from "react";
+import html2canvas from "html2canvas-pro";
 import { saveAs } from "file-saver";
 import PptxGenJS from "pptxgenjs";
 import { Document, Packer, Paragraph, ImageRun } from "docx";
@@ -9,45 +9,74 @@ import {
   AiOutlineBell,
   AiOutlineUser,
   AiOutlineFilter,
-  AiOutlineDownload
+  AiOutlineDownload,
 } from "react-icons/ai";
+import { useExport } from "./ExportContext";
 
 export default function Header() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [allIds, setAllIds] = useState([]);
+  const { selectedIds, toggleAll } = useExport();
 
-  // 📌 Fonction pour capturer les visualisations
+  // 🔁 Met à jour dynamiquement la liste des visualisations visibles
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const updateIds = () => {
+        const ids = Array.from(document.querySelectorAll(".visualisation"))
+          .map((el) => el.getAttribute("data-id"))
+          .filter(Boolean);
+        setAllIds(ids);
+      };
+
+      updateIds(); // Initial
+
+      const observer = new MutationObserver(updateIds);
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      return () => observer.disconnect();
+    }
+  }, []);
+
+  const allChecked = allIds.length > 0 && selectedIds.length === allIds.length;
+
+  // 📸 Capture des visualisations sélectionnées avec styles et taille réels
   const captureScreenshots = async () => {
-    const elements = document.querySelectorAll(".visualisation");
-    const images = [];
+    const elements = Array.from(document.querySelectorAll(".visualisation")).filter(
+      (el) => selectedIds.includes(el.getAttribute("data-id"))
+    );
 
+    const images = [];
     for (let element of elements) {
       try {
-        // Capture de l'image avec html2canvas-pro
+        const { width, height } = element.getBoundingClientRect();
+
         const canvas = await html2canvas(element, {
-          backgroundColor: "#ffffff", // Forcer un fond blanc
+          backgroundColor: null,        // ✅ garde le style original
+          useCORS: true,                // ✅ images externes
+          scale: 2,                     // ✅ haute résolution
           removeContainer: true,
-          useCORS: true,
+          width: Math.ceil(width),
+          height: Math.ceil(height),
         });
 
-        const imageData = canvas.toDataURL("image/png");
-        images.push(imageData);
+        images.push(canvas.toDataURL("image/png"));
       } catch (error) {
         console.error("Erreur de capture d'écran :", error);
       }
     }
 
-    return images.length > 0 ? images : null; // Vérifie qu'on a bien des images
+    return images.length > 0 ? images : null;
   };
 
-  // 📌 Générer un fichier Word
+  // 📄 Génération du Word
   const generateWord = async () => {
     setIsGenerating(true);
-    setShowMenu(false); // Fermer le menu après sélection
+    setShowMenu(false);
     const images = await captureScreenshots();
 
     if (!images) {
-      alert("Erreur : Impossible de capturer les visuels !");
+      alert("Erreur : Aucune visualisation sélectionnée !");
       setIsGenerating(false);
       return;
     }
@@ -55,16 +84,15 @@ export default function Header() {
     const doc = new Document({
       sections: [
         {
-          properties: {},
-          children: images.map(image => [
+          children: images.flatMap((image) => [
             new Paragraph({
               children: [
-                new ImageRun({ data: image, transformation: { width: 600, height: 300 } })
-              ]
+                new ImageRun({ data: image, transformation: { width: 600, height: 300 } }),
+              ],
             }),
-            new Paragraph("Commentaire : ____________________________________________________"),
+            new Paragraph("Commentaire : ________________________________________"),
             new Paragraph(""),
-          ]).flat(),
+          ]),
         },
       ],
     });
@@ -74,23 +102,23 @@ export default function Header() {
     setIsGenerating(false);
   };
 
-  // 📌 Générer un fichier PowerPoint
+  // 📊 Génération du PPT
   const generatePPT = async () => {
     setIsGenerating(true);
     setShowMenu(false);
     const images = await captureScreenshots();
 
     if (!images) {
-      alert("Erreur : Impossible de capturer les visuels !");
+      alert("Erreur : Aucune visualisation sélectionnée !");
       setIsGenerating(false);
       return;
     }
 
     const ppt = new PptxGenJS();
-    images.forEach(image => {
+    images.forEach((image) => {
       const slide = ppt.addSlide();
       slide.addImage({ data: image, x: 1, y: 1, w: 7, h: 3.5 });
-      slide.addText("Commentaire :", { x: 1, y: 4.5, fontSize: 14, color: "000000" });
+      slide.addText("Commentaire :", { x: 1, y: 4.5, fontSize: 14 });
     });
 
     ppt.writeFile({ fileName: "Compte_Rendu.pptx" });
@@ -99,47 +127,50 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-md flex justify-between items-center px-6 py-4">
-      {/* Titre */}
+      {/* Titre principal */}
       <div>
         <h1 className="text-xl font-bold text-blue-700">Dashboard HISPEED</h1>
         <p className="text-gray-600">Bienvenue</p>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center space-x-6">
-        <AiOutlineSearch size={24} className="text-gray-600 cursor-pointer hover:text-blue-500" />
-        <AiOutlineBell size={24} className="text-gray-600 cursor-pointer hover:text-blue-500" />
-        <AiOutlineUser size={24} className="text-gray-600 cursor-pointer hover:text-blue-500" />
+      {/* Actions à droite */}
+      <div className="flex items-center space-x-4">
+        <AiOutlineSearch size={24} className="text-gray-600" />
+        <AiOutlineBell size={24} className="text-gray-600" />
+        <AiOutlineUser size={24} className="text-gray-600" />
 
-        <button className="flex items-center space-x-2 px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition">
-          <AiOutlineFilter className="text-gray-800" />
-          <span className="text-gray-800">Filtrer</span>
+        {/* ✅ Bouton de sélection groupée */}
+        <button
+          className="flex items-center space-x-2 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          onClick={() => toggleAll(allIds, !allChecked)}
+        >
+          <AiOutlineFilter className="text-gray-800"/>
+          <span className="text-gray-600">{allChecked ? "Tout décocher" : "Tout cocher"}</span>
         </button>
 
-        {/* 📌 Bouton Télécharger CR avec menu déroulant */}
+        {/* 📥 Menu export */}
         <div className="relative">
           <button
             className="flex items-center space-x-2 px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
             onClick={() => setShowMenu(!showMenu)}
           >
             <AiOutlineDownload className="text-gray-800" />
-            <span className="text-gray-800">{isGenerating ? "Génération..." : "Télécharger CR"}</span>
+            <span className="text-gray-600">{isGenerating ? "Génération..." : "Télécharger CR"}</span>
           </button>
 
-          {/* 📌 Menu déroulant pour choisir le format */}
           {showMenu && (
             <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-2 w-48 z-50">
               <button
-                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 w-full text-left"
+                className="block px-4 py-2 hover:bg-gray-200 w-full text-left text-gray-600"
                 onClick={generateWord}
               >
-                📄 Télécharger en Word
+                📄 En Word
               </button>
               <button
-                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 w-full text-left"
+                className="block px-4 py-2 hover:bg-gray-200 w-full text-left text-gray-600"
                 onClick={generatePPT}
               >
-                📊 Télécharger en PowerPoint
+                📊 En PowerPoint
               </button>
             </div>
           )}

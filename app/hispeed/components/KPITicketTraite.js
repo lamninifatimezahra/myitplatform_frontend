@@ -4,15 +4,18 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { AiOutlineCalendar } from "react-icons/ai";
+import { useExport } from "./ExportContext";
 
-// Fonction pour obtenir le numéro de la semaine
+// Fonction pour obtenir le numéro de semaine ISO
 const getWeekNumber = (date) => {
-  const oneJan = new Date(date.getFullYear(), 0, 1);
-  const millisecsInDay = 86400000;
-  return Math.ceil(((date - oneJan) / millisecsInDay + oneJan.getDay() + 1) / 7);
+  const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = tempDate.getUTCDay() || 7;
+  tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
+  return Math.ceil(((tempDate - yearStart) / 86400000 + 1) / 7);
 };
 
-// Composant pour afficher le numéro de la semaine
+// Header personnalisé pour le calendrier
 const renderCustomHeader = ({
   date,
   decreaseMonth,
@@ -21,23 +24,24 @@ const renderCustomHeader = ({
   nextMonthButtonDisabled,
 }) => (
   <div className="flex justify-between items-center p-2 bg-gray-100 rounded-t-md">
-    <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>
-      {"<"}
-    </button>
-    <span className="font-medium">{date.toLocaleString("fr-FR", { month: "long", year: "numeric" })}</span>
-    <button onClick={increaseMonth} disabled={nextMonthButtonDisabled}>
-      {">"}
-    </button>
+    <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>{"<"}</button>
+    <span className="font-medium">
+      {date.toLocaleString("fr-FR", { month: "long", year: "numeric" })}
+    </span>
+    <button onClick={increaseMonth} disabled={nextMonthButtonDisabled}>{">"}</button>
   </div>
 );
 
-export default function KpiCard() {
+export default function KpiTicketTraite() {
+  const id = "kpi-ticket-traite";
+  const { selectedIds, toggleId } = useExport();
+
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [ticketCount, setTicketCount] = useState(0);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Fetch data from backend API
   useEffect(() => {
     fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/")
       .then((response) => response.json())
@@ -48,57 +52,89 @@ export default function KpiCard() {
       .catch((error) => console.error("Erreur de chargement des données :", error));
   }, []);
 
-  // Fonction pour calculer les tickets traités sur la période sélectionnée
-  const calculateTickets = (tickets, start, end) => {
-    if (!start || !end) {
-      // Si aucune période n'est sélectionnée, afficher le total
-      setTicketCount(tickets.filter(ticket => ticket.date_sortie).length);
-    } else {
-      const startFormatted = start.toISOString().split("T")[0]; // Format YYYY-MM-DD
-      const endFormatted = end.toISOString().split("T")[0];
-
-      const filteredTickets = tickets.filter(ticket => 
-        ticket.date_sortie >= startFormatted && ticket.date_sortie <= endFormatted
-      );
-
-      setTicketCount(filteredTickets.length);
-    }
-  };
-
-  // Mettre à jour le KPI lorsque la période change
   useEffect(() => {
     calculateTickets(data, startDate, endDate);
   }, [startDate, endDate]);
 
-  return (
-    <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-64">
-      <h3 className="text-gray-600 text-lg font-medium">Ticket Traité</h3>
-      <p className="text-3xl font-bold text-black">{ticketCount}</p>
+  const calculateTickets = (tickets, start, end) => {
+    if (!start || !end) {
+      setTicketCount(tickets.filter(t => t.date_sortie).length);
+    } else {
+      const startStr = start.toISOString().split("T")[0];
+      const endStr = end.toISOString().split("T")[0];
+      const filtered = tickets.filter(t =>
+        t.date_sortie &&
+        t.date_sortie >= startStr &&
+        t.date_sortie <= endStr
+      );
+      setTicketCount(filtered.length);
+    }
+  };
 
-      {/* Bouton Sélecteur de Période */}
-      <div className="absolute top-3 right-3">
-        <DatePicker
-          selectsRange={true} // Active le mode plage de dates
-          startDate={startDate}
-          endDate={endDate}
-          onChange={(dates) => {
-            const [start, end] = dates;
-            setStartDate(start);
-            setEndDate(end);
-          }}
-          dateFormat="yyyy-MM-dd"
-          placeholderText="Sélectionner une période"
-          renderCustomHeader={renderCustomHeader}
-          formatWeekNumber={getWeekNumber} // Ajoute le numéro de la semaine
-          showWeekNumbers // Affiche les numéros de semaine
-          className="hidden"
-        />
-        <button
-          className="bg-gray-300 p-2 rounded-full hover:bg-gray-300 transition"
-          onClick={() => document.querySelector(".react-datepicker__input-container input").click()}
-        >
-          <AiOutlineCalendar size={20} className="text-gray-800" />
-        </button>
+  const formatDate = (date) => {
+    if (!date) return "";
+    const formatted = date.toLocaleDateString("fr-FR");
+    const week = getWeekNumber(date);
+    return `${formatted} (S-${week})`;
+  };
+
+  const periodeLabel = startDate && endDate
+    ? `Période : ${formatDate(startDate)} → ${formatDate(endDate)}`
+    : "Toutes les périodes";
+
+  return (
+    <div className="visualisation relative w-64" data-id={id}>
+      <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+        
+        {/* ✅ Bouton filtre (en haut à droite) */}
+        <div className="absolute top-3 right-3 z-50">
+          <button
+            className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"
+            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+          >
+            <AiOutlineCalendar size={20} className="text-gray-800" />
+          </button>
+        </div>
+
+        {/* ✅ Bouton inclure (en bas à droite) */}
+        <div className="absolute bottom-3 right-3 z-50">
+          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(id)}
+              onChange={() => toggleId(id)}
+            />
+            <span>Inclure</span>
+          </label>
+        </div>
+
+        {/* ✅ Titre + période */}
+        <h3 className="text-gray-600 text-lg font-medium">Tickets Traités</h3>
+        <p className="text-xs text-gray-500 mb-1">{periodeLabel}</p>
+
+        {/* ✅ Valeur KPI */}
+        <p className="text-3xl font-bold text-black">{ticketCount}</p>
+
+        {/* ✅ Calendrier */}
+        {isCalendarOpen && (
+          <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-2 z-50">
+            <DatePicker
+              selectsRange
+              startDate={startDate}
+              endDate={endDate}
+              onChange={([start, end]) => {
+                setStartDate(start);
+                setEndDate(end);
+              }}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="Sélectionner une période"
+              renderCustomHeader={renderCustomHeader}
+              formatWeekNumber={getWeekNumber}
+              showWeekNumbers
+              inline
+            />
+          </div>
+        )}
       </div>
     </div>
   );

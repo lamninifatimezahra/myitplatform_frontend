@@ -10,73 +10,67 @@ import SlaAnciennete from "./components/SlaAnciennete";
 import VolumeTicketsDivision from "./components/VolumeTicketsDivision";
 import TauxReentrants from "./components/TauxReentrants";
 import ClientCoupeChart from "./components/ClientCoupeChart";
-import GroupedBarChart from "./components/GroupedBarChart";
+import GroupedBarChart from "./components/TicketsEntrantsSortants";
 import RapportSortantsEntrants from "./components/RapportSortantsEntrants";
 import TicketsReentrantsTable from "./components/TicketsReentrantsTable";
+import TicketsEnCoursTable from "./components/TicketsEncoursTable"
+import { ExportProvider } from "./components/ExportContext";
+
 
 export default function HispeedDashboard() {
   return (
+    <ExportProvider>
     <div className="flex min-h-screen">
-      {/* Sidebar fixe */}
+      {/* Sidebar */}
       <div className="fixed h-screen w-64 overflow-y-auto bg-white shadow-md">
         <Sidebar />
       </div>
-      {/* Contenu principal avec marge pour la Sidebar */}
-      <div className="flex-1 ml-64 flex flex-col">
-        {/* Header */}
+
+      {/* Contenu principal */}
+      <div className="flex-1 ml-64 flex flex-col bg-gray-100">
         <Header />
-        {/* Contenu du Dashboard */}
-        <main className="p-6 bg-gray-100 flex-1">
-          {/* Première ligne : Cartes KPI */}
+
+        <main className="p-6 flex-1 space-y-6">
+          {/* Ligne 1 : KPI Cards */}
           <div className="flex justify-center space-x-6">
             <KpiTicketsEntrants />
             <KpiCard />
             <KpiTicketsEnCours />
             <KpiReentrant />
           </div>
-          {/* Deuxième ligne : Graphiques */}
-          <div className="mt-6 grid grid-cols-2 gap-6">
-            {/* Colonne 1 : TranticiteCriticite */}
-            <div className="col-span-1">
-              <TranticiteCriticite />
-            </div>
-            {/* Colonne 2 : SlaAnciennete */}
-            <div className="col-span-1">
-              <SlaAnciennete />
-            </div>
+
+          {/* Ligne 2 : GroupedBarChart + TranticiteCriticite */}
+          <div className="grid grid-cols-2 gap-6">
+            <GroupedBarChart />
+            <TranticiteCriticite />
           </div>
-          {/* Troisième ligne : VolumeTicketsDivision et autres graphiques */}
-          <div className="mt-6 grid grid-cols-3 gap-6">
-            {/* Colonne 1 : VolumeTicketsDivision */}
-            <div className="col-span-1">
-              <VolumeTicketsDivision />
-            </div>
-            {/* Colonne 2 : TauxReentrants */}
-            <div className="col-span-1">
-              <TauxReentrants />
-            </div>
-            {/* Colonne 3 : VolumeReentrant */}
-            <div className="col-span-1">
-              <ClientCoupeChart />
-            </div>
+
+          {/* Ligne 3 : SlaAnciennete + ClientCoupeChart */}
+          <div className="grid grid-cols-2 gap-6">
+            <SlaAnciennete />
+            <VolumeTicketsDivision />
           </div>
-          {/* Quatrième ligne : ClientCoupeChart et GroupedBarChart */}
-          <div className="mt-6 grid grid-cols-2 gap-6">
-            {/* Colonne 1 : ClientCoupeChart */}
-            <div className="col-span-1">
-              <RapportSortantsEntrants />
-            </div>
-            {/* Colonne 2 : GroupedBarChart */}
-            <div className="col-span-1">
-              <VolumeReentrant />
-            </div>
+
+          {/* Ligne 4 : VolumeTicketsDivision + TauxReentrants */}
+          <div className="grid grid-cols-2 gap-6">
+            <RapportSortantsEntrants />
+            <TauxReentrants />
           </div>
-          {/* Cinquième ligne : Table des tickets réentrants */}
-          <div className="mt-6">
+
+          {/* Ligne 5 : RapportSortantsEntrants + VolumeReentrant */}
+          <div className="grid grid-cols-2 gap-6">
+            <ClientCoupeChart />
+            <VolumeReentrant />
+          </div>
+
+          {/* Ligne 6 : Table des tickets réentrants */}
+          <div>
             <TicketsReentrantsTable />
+            <TicketsEnCoursTable/>
           </div>
         </main>
       </div>
     </div>
+    </ExportProvider>
   );
 }
