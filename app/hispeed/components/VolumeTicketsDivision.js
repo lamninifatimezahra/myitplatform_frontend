@@ -219,6 +219,7 @@ export default function VolumeTicketsDivision() {
               layout: {
                 padding: { top: 20, right: 50, bottom: 20, left: 50 }
               }
+              
             }}
           />
         </div>
