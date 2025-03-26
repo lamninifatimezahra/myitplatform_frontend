@@ -66,8 +66,11 @@ export default function HispeedDashboard() {
           {/* Ligne 6 : Table des tickets réentrants */}
           <div>
             <TicketsReentrantsTable />
-            <TicketsEnCoursTable/>
           </div>
+          <div>
+          <TicketsEnCoursTable/>
+          </div>
+
         </main>
       </div>
     </div>
