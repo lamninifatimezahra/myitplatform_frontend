@@ -2,22 +2,24 @@
 
 import { useState } from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Legend,
 } from "recharts";
 import PeriodSelector from "./PeriodSelector";
 import ZoomModal from "./ZoomModal";
 import { Maximize2, Pencil } from "lucide-react";
 
-export default function PieChartComponent({ title, data }) {
+export default function StackedHistogram({ title, data }) {
   const [period, setPeriod] = useState("year");
   const [isZoomed, setIsZoomed] = useState(false);
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-4">
+    <div className="bg-gray-200 shadow-md rounded-lg p-4">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-gray-700 font-semibold">{title}</h3>
         <div className="flex items-center gap-2">
@@ -26,7 +28,7 @@ export default function PieChartComponent({ title, data }) {
           {/* ✏️ Crayon */}
           <button
             onClick={() => console.log("Ajouter annotation")}
-            className="p-1 rounded hover:bg-gray-200 text-gray-600"
+            className="p-1 rounded hover:bg-gray-300 text-gray-600"
             title="Ajouter une annotation"
           >
             <Pencil size={16} />
@@ -35,7 +37,7 @@ export default function PieChartComponent({ title, data }) {
           {/* ⤢ Agrandir */}
           <button
             onClick={() => setIsZoomed(true)}
-            className="p-1 rounded hover:bg-gray-200 text-gray-600"
+            className="p-1 rounded hover:bg-gray-300 text-gray-600"
             title="Agrandir"
           >
             <Maximize2 size={16} />
@@ -44,40 +46,26 @@ export default function PieChartComponent({ title, data }) {
       </div>
 
       <ResponsiveContainer width="100%" height={250}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={50}
-            outerRadius={80}
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
+        <BarChart data={data}>
+          <XAxis dataKey="month" />
+          <YAxis />
           <Tooltip />
-        </PieChart>
+          <Legend />
+          <Bar dataKey="entrants" stackId="a" fill="#4A90E2" />
+          <Bar dataKey="sortants" stackId="a" fill="#FF6B6B" />
+        </BarChart>
       </ResponsiveContainer>
 
       <ZoomModal isOpen={isZoomed} onClose={() => setIsZoomed(false)} title={title}>
         <ResponsiveContainer width="100%" height={400}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={70}
-              outerRadius={120}
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-zoom-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
+          <BarChart data={data}>
+            <XAxis dataKey="month" />
+            <YAxis />
             <Tooltip />
-          </PieChart>
+            <Legend />
+            <Bar dataKey="entrants" stackId="a" fill="#4A90E2" />
+            <Bar dataKey="sortants" stackId="a" fill="#FF6B6B" />
+          </BarChart>
         </ResponsiveContainer>
       </ZoomModal>
     </div>
