@@ -1,13 +1,15 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineBell, AiOutlineUser } from "react-icons/ai";
-import { FaFacebook, FaLinkedin, FaExclamationCircle } from "react-icons/fa";
+import useAuth from "@/hooks/useAuth";
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+
   const [showUserPopup, setShowUserPopup] = useState(false);
   const [showAlertPopup, setShowAlertPopup] = useState(false);
   const notifications = [
@@ -16,7 +18,6 @@ export default function HomePage() {
     "Message du support technique",
   ];
 
-  // Fermer les popups lorsqu'on clique en dehors
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".popup-container")) {
@@ -27,6 +28,8 @@ export default function HomePage() {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+
+  if (loading || !user) return <div>Chargement sécurisé...</div>;
 
   return (
     <div className="relative flex flex-col h-screen overflow-hidden">
@@ -93,26 +96,35 @@ export default function HomePage() {
           <Image src="/logo-myit.png" alt="MyIT Logo" width={700} height={700} priority />
         </div>
 
-        {/* Right Side - Agrandissement du Catalogue + Espacement */}
+        {/* Right Side - Catalogue Dashboards */}
         <div className="w-[40%] flex justify-start">
           <div className="bg-white/50 p-16 rounded-3xl shadow-2xl max-w-xl w-full text-center space-y-6">
-          {["HISPEED", "FTTH", "DSL", "FTTB", "EARFTicketing", "About Us"].map((dept) => (
-            <motion.div
-              key={dept} 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full"
-            >
-               <Link href={`/${dept.toLowerCase()}`}>
-                  <div className="w-full p-6 border border-[#6f80ac] text-[#6f80ac] font-bold text-2xl rounded-lg hover:bg-[#68bddd] hover:text-white transition-all duration-300 cursor-pointer mb-6">
-                    {dept}
-                 </div>
-                </Link>
-              </motion.div>
-))}
-            </div>
+            {["HISPEED", "FTTH", "DSL", "FTTB", "EARFTicketing", "About Us"].map((dept) => {
+              const hasAccess = user.role === "admin" || user.dashboards?.includes(dept);
+              return (
+                <motion.div
+                  key={dept}
+                  whileHover={{ scale: hasAccess ? 1.05 : 1 }}
+                  whileTap={{ scale: hasAccess ? 0.95 : 1 }}
+                  className="w-full"
+                >
+                  {hasAccess ? (
+                    <Link href={`/${dept.toLowerCase()}`}>
+                      <div className="w-full p-6 border border-[#6f80ac] text-[#6f80ac] font-bold text-2xl rounded-lg hover:bg-[#68bddd] hover:text-white transition-all duration-300 cursor-pointer mb-6">
+                        {dept}
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="w-full p-6 border border-gray-300 text-gray-400 text-2xl font-bold rounded-lg bg-gray-100 cursor-not-allowed mb-6">
+                      {dept}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
+    </div>
   );
 }

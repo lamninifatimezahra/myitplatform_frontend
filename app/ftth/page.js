@@ -1,18 +1,30 @@
-"use client";
+'use client';
+
 import { useState } from "react";
+import useAuth from "@/hooks/useAuth"; // ✅ Hook d'authentification
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 
-// ✅ Nouveaux composants
 import KPICard from "./components/KPICard";
 import PieChartComponent from "./components/PieChart";
 import HistogramChart from "./components/HistogramChart";
 import StackedHistogram from "./components/StackedHistogram";
 
 export default function DashboardFTTH() {
+  const { user, loading, authorized, hydrated } = useAuth(null, "FTTH");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // 🎯 Données graphiques
+
+  if (!hydrated || loading || !authorized) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
+        Chargement...
+      </div>
+    );
+  }
+
+
+
   const dataObjectif = [
     { name: "Dans l'objectif", value: 75, color: "#4CAF50" },
     { name: "Hors objectif", value: 25, color: "#E0E0E0" },
@@ -79,25 +91,19 @@ export default function DashboardFTTH() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* Contenu principal */}
       <div className="flex-1 flex flex-col relative">
-        {/* Image de fond */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
           style={{ backgroundImage: "url('/background-office.jpg')" }}
         ></div>
 
-        {/* Header */}
         <div className="sticky top-0 z-50 bg-white shadow-md">
           <Header />
         </div>
 
-        {/* Dashboard Content */}
         <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
-          {/* Cartes KPI */}
           <div className="grid grid-cols-4 gap-6">
             <KPICard title="Backlog FTTH J-1" value="75" percentage="+18%" description="+3 des commandes" />
             <KPICard title="Backlog FTTH J" value="1937" percentage="+27%" description="+1531 des commandes" />
@@ -105,14 +111,12 @@ export default function DashboardFTTH() {
             <KPICard title="Dossiers Traités" value="2548" percentage="+59%" description="+598 cette semaine" />
           </div>
 
-          {/* Première ligne de graphiques */}
           <div className="grid grid-cols-3 gap-6">
             <PieChartComponent title="Objectif" data={dataObjectif} />
             <HistogramChart title="Vue d’ensemble combinée du Backlog" data={dataBacklog} dataKey="value" color="#00AEEF" />
             <HistogramChart title="Top 5 RÈGLES (Semaine en cours)" data={dataTopRegles} dataKey="value" color="#4A56E2" />
           </div>
 
-          {/* Deuxième ligne de graphiques */}
           <div className="grid grid-cols-3 gap-6">
             <PieChartComponent title="Répartition Manuelle (Acteur)" data={dataRepartition} />
             <HistogramChart title="Top 5 RÈGLES par jour" data={dataReglesParJour} dataKey="value" color="#7B61FF" />
