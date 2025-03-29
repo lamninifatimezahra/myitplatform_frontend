@@ -13,7 +13,7 @@ import {
 } from "chart.js";
 import { AiOutlineFilter } from "react-icons/ai";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-import { useExport } from "./ExportContext"; // ajuste le chemin si besoin
+import { useExport } from "./ExportContext"; // ajustez le chemin si besoin
 
 ChartJS.register(
   BarElement,
@@ -34,54 +34,128 @@ export default function SlaAnciennete() {
   const [viewMode, setViewMode] = useState("week");
   const [selectedValues, setSelectedValues] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [multipleYearsExist, setMultipleYearsExist] = useState(false);
 
   const slaCategories = ["Jour", "2J", "3J", "Semaine", "2semaines", "Plus 2S"];
 
+  // Chargement initial des données et extraction des années disponibles
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
         const result = await response.json();
         setData(result);
-        setLoading(false);
 
-        const weeks = [...new Set(result.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-        const months = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
-        setSelectedValues(viewMode === "week" ? weeks.slice(-5) : months.slice(-5));
+        // Extraction des années disponibles à partir de la date de dernière mise à jour
+        const years = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getFullYear()))].sort();
+        setAvailableYears(years);
+        setMultipleYearsExist(years.length > 1);
+
+        // Sélectionner par défaut l'année la plus récente
+        const latestYear = years[years.length - 1];
+        setSelectedYear(latestYear);
+
+        setLoading(false);
       } catch (error) {
         console.error("Erreur fetch :", error);
       }
     }
     fetchData();
-  }, [viewMode]);
+  }, []);
+
+  // Mise à jour des périodes sélectionnées lorsque viewMode, selectedYear ou data change
+  useEffect(() => {
+    if (data.length > 0 && selectedYear) {
+      const filteredByYear = data.filter(ticket => 
+        new Date(ticket.date_derniere_maj).getFullYear() === selectedYear
+      );
+      if (viewMode === "week") {
+        const weeks = [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
+        setSelectedValues(weeks.length > 0 ? weeks.slice(-5) : []);
+      } else {
+        const months = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        setSelectedValues(months.length > 0 ? months.slice(-5) : []);
+      }
+    }
+  }, [viewMode, selectedYear, data]);
 
   if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
-  const availableWeeks = [...new Set(data.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-  const availableMonths = [...new Set(data.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  // Fonction pour extraire les périodes (semaines ou mois) pour l'année sélectionnée
+  const getAvailablePeriodsForYear = (year) => {
+    const filteredByYear = data.filter(ticket => new Date(ticket.date_derniere_maj).getFullYear() === year);
+    if (viewMode === "week") {
+      return [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
+    } else {
+      return [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+    }
+  };
 
-  const filteredData = data.filter(ticket =>
-    selectedValues.includes(viewMode === "week"
-      ? ticket.semaine
-      : new Date(ticket.date_derniere_maj).getMonth() + 1)
-  );
+  const availablePeriods = getAvailablePeriodsForYear(selectedYear);
 
-  const labels = [...new Set(filteredData.map(ticket =>
-    viewMode === "week"
-      ? `S${ticket.semaine}`
-      : `M${new Date(ticket.date_derniere_maj).getMonth() + 1}`
-  ))];
+  // Vérifier si toutes les périodes disponibles sont sélectionnées
+  const allPeriodsSelected =
+    availablePeriods.length > 0 &&
+    availablePeriods.every(period => selectedValues.includes(period));
 
+  const toggleSelectAll = () => {
+    if (allPeriodsSelected) {
+      setSelectedValues([]);
+    } else {
+      setSelectedValues([...availablePeriods]);
+    }
+  };
+
+  const handleSelectionChange = (value) => {
+    setSelectedValues(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  // Filtrer les données en fonction de l'année et des périodes sélectionnées
+  const filteredData = data.filter(ticket => {
+    const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
+    const ticketPeriod =
+      viewMode === "week"
+        ? ticket.semaine
+        : new Date(ticket.date_derniere_maj).getMonth() + 1;
+    return ticketYear === selectedYear && selectedValues.includes(ticketPeriod);
+  });
+
+  // Stocker les périodes sélectionnées avec l'année associée
+  const selectedValuesWithYear = selectedValues.map(value => ({
+    value,
+    year: selectedYear
+  }));
+
+  // Création des labels du graphique
+  const labels = selectedValuesWithYear.map(item => {
+    const periodLabel = viewMode === "week" ? `S${item.value}` : `M${item.value}`;
+    return multipleYearsExist ? `${periodLabel}, ${item.year}` : periodLabel;
+  });
+
+  // Construction des datasets pour le graphique
   const datasets = slaCategories.map(category => ({
     label: category,
-    data: labels.map(label => {
-      const period = viewMode === "week" ? parseInt(label.replace("S", "")) : parseInt(label.replace("M", ""));
-      return filteredData.filter(ticket =>
-        (viewMode === "week"
-          ? ticket.semaine
-          : new Date(ticket.date_derniere_maj).getMonth() + 1) === period &&
-        ticket.age_hispeed1 === category
-      ).length;
+    data: selectedValuesWithYear.map(item => {
+      return filteredData.filter(ticket => {
+        const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
+        const ticketPeriod =
+          viewMode === "week"
+            ? ticket.semaine
+            : new Date(ticket.date_derniere_maj).getMonth() + 1;
+        return (
+          ticketYear === item.year &&
+          ticketPeriod === item.value &&
+          ticket.age_hispeed1 === category
+        );
+      }).length;
     }),
     backgroundColor: getColorForSlaCategory(category),
     stack: "stack1",
@@ -90,32 +164,34 @@ export default function SlaAnciennete() {
 
   function getColorForSlaCategory(category) {
     switch (category) {
-      case "Jour": return "#b8e0f0";
-      case "2J": return "#c9b8f0";
-      case "3J": return "#8A4FFF";
-      case "Semaine": return "#9932CC";
-      case "2semaines": return "#0064a1";
-      case "Plus 2S": return "#60b2f0";
-      default: return "#ecf0f1";
+      case "Jour":
+        return "#b8e0f0";
+      case "2J":
+        return "#c9b8f0";
+      case "3J":
+        return "#8A4FFF";
+      case "Semaine":
+        return "#9932CC";
+      case "2semaines":
+        return "#0064a1";
+      case "Plus 2S":
+        return "#60b2f0";
+      default:
+        return "#ecf0f1";
     }
   }
 
-  const handleSelectionChange = (value) => {
-    setSelectedValues(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const periodeLabel = selectedValues.length > 0
-    ? (viewMode === "week"
-      ? `Semaine(s) : ${selectedValues.join(", ")}`
-      : `Mois : ${selectedValues.join(", ")}`)
-    : "Aucune période sélectionnée";
+  const periodeLabel =
+    selectedValues.length > 0
+      ? viewMode === "week"
+        ? `Semaine(s) : ${selectedValues.join(", ")}`
+        : `Mois : ${selectedValues.join(", ")}`
+      : "Aucune période sélectionnée";
 
   return (
     <div className="visualisation relative" data-id={id}>
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full">
-        {/* ✅ Coin supérieur droit */}
+        {/* Coin supérieur droit : bouton filtre et inclure */}
         <div className="absolute top-2 right-2 flex items-center space-x-2 z-50">
           <button
             className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
@@ -123,7 +199,6 @@ export default function SlaAnciennete() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-
           <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
             <input
               type="checkbox"
@@ -134,34 +209,77 @@ export default function SlaAnciennete() {
           </label>
         </div>
 
-        {/* ✅ Titre & période */}
+        {/* Titre & période */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-800">SLA d’ancienneté</h3>
-          <p className="text-sm text-gray-500">{periodeLabel}</p>
+          <p className="text-sm text-gray-500">
+            {selectedYear && `Année : ${selectedYear} - `}
+            {periodeLabel}
+          </p>
         </div>
 
-        {/* ✅ Popup filtre */}
+        {/* Popup filtre */}
         {isOpen && (
           <div className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50">
             <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-
             <div className="flex space-x-2 mb-2 mt-2">
               <button
-                className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                className={`px-3 py-1 rounded-md ${
+                  viewMode === "week"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-300 text-gray-500"
+                }`}
                 onClick={() => setViewMode("week")}
               >
                 Semaine
               </button>
               <button
-                className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                className={`px-3 py-1 rounded-md ${
+                  viewMode === "month"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-300 text-gray-500"
+                }`}
                 onClick={() => setViewMode("month")}
               >
                 Mois
               </button>
             </div>
-
+            {/* Sélection d'année si plusieurs années existent */}
+            {multipleYearsExist && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                <div className="flex flex-wrap gap-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`px-2 py-1 text-xs rounded-md ${
+                        selectedYear === year
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Bouton unique de sélection/désélection */}
+            <div className="mb-2">
+              <button
+                onClick={toggleSelectAll}
+                className={`text-xs px-2 py-1 rounded-md w-full ${
+                  allPeriodsSelected
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                }`}
+              >
+                {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
             <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-              {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
+              {availablePeriods.map(value => (
                 <div key={value} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -169,7 +287,9 @@ export default function SlaAnciennete() {
                     onChange={() => handleSelectionChange(value)}
                   />
                   <span className="text-gray-500">
-                    {viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}
+                    {viewMode === "week"
+                      ? `Semaine ${value}`
+                      : `Mois ${value}`}
                   </span>
                 </div>
               ))}
@@ -177,12 +297,12 @@ export default function SlaAnciennete() {
           </div>
         )}
 
-        {/* ✅ Graphique */}
+        {/* Graphique */}
         <div className="h-[300px]">
           <Bar
             data={{ labels, datasets }}
             options={{
-              indexAxis: 'y',
+              indexAxis: "y",
               responsive: true,
               plugins: {
                 legend: { display: true },
@@ -190,13 +310,13 @@ export default function SlaAnciennete() {
                   color: "black",
                   anchor: "center",
                   align: "center",
-                  formatter: (value) => value > 0 ? value : ""
-                },
+                  formatter: (value) => (value > 0 ? value : "")
+                }
               },
               scales: {
                 x: { stacked: true },
-                y: { stacked: true },
-              },
+                y: { stacked: true }
+              }
             }}
             plugins={[ChartDataLabels]}
           />

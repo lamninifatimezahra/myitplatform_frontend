@@ -22,8 +22,11 @@ export default function VolumeTicketsDivision() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("week");
   const [selectedValues, setSelectedValues] = useState([]);
-  const [disabledDivisions, setDisabledDivisions] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [multipleYearsExist, setMultipleYearsExist] = useState(false);
+  const [disabledDivisions, setDisabledDivisions] = useState([]);
 
   const colors = {
     "RESEAU": "#007bff",
@@ -35,50 +38,104 @@ export default function VolumeTicketsDivision() {
     "AUTRE DIVISION": "#f39c12"
   };
 
+  // Récupération des données et extraction des années disponibles
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
         const result = await response.json();
         setData(result);
-        setLoading(false);
 
-        const weeks = [...new Set(result.map(t => t.semaine))].sort((a, b) => a - b);
-        const months = [...new Set(result.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
-        setSelectedValues(viewMode === "week" ? weeks.slice(-5) : months.slice(-5));
+        // Extraction des années disponibles d'après la date de dernière mise à jour
+        const years = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getFullYear()))].sort();
+        setAvailableYears(years);
+        setMultipleYearsExist(years.length > 1);
+        // Sélection par défaut de l'année la plus récente
+        const latestYear = years[years.length - 1];
+        setSelectedYear(latestYear);
+
+        setLoading(false);
       } catch (error) {
         console.error("Erreur fetch :", error);
       }
     }
     fetchData();
-  }, [viewMode]);
+  }, []);
 
-  if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
+  // Mise à jour des périodes sélectionnées lorsque viewMode ou selectedYear change
+  useEffect(() => {
+    if (data.length > 0 && selectedYear) {
+      const filteredByYear = data.filter(ticket =>
+        new Date(ticket.date_derniere_maj).getFullYear() === selectedYear
+      );
+      if (viewMode === "week") {
+        const weeks = [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
+        setSelectedValues(weeks.length > 0 ? weeks.slice(-5) : []);
+      } else {
+        const months = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        setSelectedValues(months.length > 0 ? months.slice(-5) : []);
+      }
+    }
+  }, [viewMode, selectedYear, data]);
 
-  const availableWeeks = [...new Set(data.map(t => t.semaine))].sort((a, b) => a - b);
-  const availableMonths = [...new Set(data.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  // Fonction pour extraire les périodes disponibles pour l'année sélectionnée
+  const getAvailablePeriodsForYear = (year) => {
+    const filteredByYear = data.filter(ticket =>
+      new Date(ticket.date_derniere_maj).getFullYear() === year
+    );
+    if (viewMode === "week") {
+      return [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
+    } else {
+      return [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+    }
+  };
 
-  const filteredData = data.filter(ticket =>
-    selectedValues.includes(
-      viewMode === "week"
-        ? ticket.semaine
-        : new Date(ticket.date_derniere_maj).getMonth() + 1
-    )
-  );
+  const availablePeriods = getAvailablePeriodsForYear(selectedYear);
 
+  // Bouton "Tout sélectionner / Tout désélectionner"
+  const allPeriodsSelected =
+    availablePeriods.length > 0 &&
+    availablePeriods.every(period => selectedValues.includes(period));
+
+  const toggleSelectAll = () => {
+    if (allPeriodsSelected) {
+      setSelectedValues([]);
+    } else {
+      setSelectedValues([...availablePeriods]);
+    }
+  };
+
+  const handleSelectionChange = (value) => {
+    setSelectedValues(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  // Filtrer les données en fonction de l'année et des périodes sélectionnées
+  const filteredData = data.filter(ticket => {
+    const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
+    const ticketPeriod = viewMode === "week"
+      ? ticket.semaine
+      : new Date(ticket.date_derniere_maj).getMonth() + 1;
+    return ticketYear === selectedYear && selectedValues.includes(ticketPeriod);
+  });
+
+  // Calcul des statistiques par division
   const divisionCounts = {};
   filteredData.forEach(ticket => {
     const division = Object.keys(colors).includes(ticket.division) ? ticket.division : "AUTRE DIVISION";
     divisionCounts[division] = (divisionCounts[division] || 0) + 1;
   });
-
   const totalTickets = Object.values(divisionCounts).reduce((sum, val) => sum + val, 0);
   const divisionPercentages = Object.fromEntries(
     Object.entries(divisionCounts).map(([division, count]) => [
       division, ((count / totalTickets) * 100).toFixed(2)
     ])
   );
-
   const sortedDivisions = Object.keys(divisionCounts).sort((a, b) => divisionCounts[b] - divisionCounts[a]);
 
   const chartData = {
@@ -96,12 +153,6 @@ export default function VolumeTicketsDivision() {
     ],
   };
 
-  const handleSelectionChange = (value) => {
-    setSelectedValues(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
   const toggleDivision = (division) => {
     setDisabledDivisions(prev =>
       prev.includes(division) ? prev.filter(d => d !== division) : [...prev, division]
@@ -110,8 +161,8 @@ export default function VolumeTicketsDivision() {
 
   const periodeLabel = selectedValues.length > 0
     ? (viewMode === "week"
-      ? `Semaine(s) : ${selectedValues.join(", ")}`
-      : `Mois : ${selectedValues.join(", ")}`)
+        ? `Semaine(s) : ${selectedValues.join(", ")}`
+        : `Mois : ${selectedValues.join(", ")}`)
     : "Aucune période sélectionnée";
 
   return (
@@ -125,7 +176,6 @@ export default function VolumeTicketsDivision() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-
           <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
             <input
               type="checkbox"
@@ -138,29 +188,66 @@ export default function VolumeTicketsDivision() {
 
         {/* Titre + période */}
         <h3 className="text-lg font-semibold text-gray-800 mb-1">Volume des Tickets par Division</h3>
-        <p className="text-sm text-gray-500 mb-3">{periodeLabel}</p>
+        <p className="text-sm text-gray-500 mb-3">
+          {selectedYear && `Année : ${selectedYear} - `}
+          {periodeLabel}
+        </p>
 
-        {/* Filtres */}
+        {/* Popup filtres */}
         {isOpen && (
           <div className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50">
             <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-
             <div className="flex space-x-2 mb-2 mt-2">
-              <button className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                onClick={() => setViewMode("week")}>Semaine</button>
-              <button className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                onClick={() => setViewMode("month")}>Mois</button>
+              <button
+                className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => setViewMode("week")}
+              >
+                Semaine
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => setViewMode("month")}
+              >
+                Mois
+              </button>
             </div>
-
+            {/* Sélection d'années si plusieurs existent */}
+            {multipleYearsExist && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                <div className="flex flex-wrap gap-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Bouton "Tout sélectionner / Tout désélectionner" */}
+            <div className="mb-2">
+              <button
+                onClick={toggleSelectAll}
+                className={`text-xs px-2 py-1 rounded-md w-full ${allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
+              >
+                {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
             <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-              {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
+              {availablePeriods.map(value => (
                 <div key={value} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={selectedValues.includes(value)}
                     onChange={() => handleSelectionChange(value)}
                   />
-                  <span className="text-gray-500">{viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}</span>
+                  <span className="text-gray-500">
+                    {viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}
+                  </span>
                 </div>
               ))}
             </div>
@@ -219,7 +306,6 @@ export default function VolumeTicketsDivision() {
               layout: {
                 padding: { top: 20, right: 50, bottom: 20, left: 50 }
               }
-              
             }}
           />
         </div>

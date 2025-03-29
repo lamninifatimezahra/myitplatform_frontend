@@ -35,6 +35,9 @@ export default function TranticiteCriticite() {
   const [selectedValues, setSelectedValues] = useState([]);
   const [selectedSeverities, setSelectedSeverities] = useState(["Mineur", "Majeur", "Critique", "Information"]);
   const [isOpen, setIsOpen] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [multipleYearsExist, setMultipleYearsExist] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -42,47 +45,122 @@ export default function TranticiteCriticite() {
         const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
         const result = await response.json();
         setData(result);
+        
+        // Extraire les années disponibles
+        const years = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getFullYear()))].sort();
+        setAvailableYears(years);
+        setMultipleYearsExist(years.length > 1);
+        
+        // Sélectionner par défaut l'année la plus récente
+        const latestYear = years[years.length - 1];
+        setSelectedYear(latestYear);
+        
+        // Filtrer les données par la vue et l'année sélectionnée
+        const filteredByYear = result.filter(ticket => 
+          new Date(ticket.date_derniere_maj).getFullYear() === latestYear
+        );
+        
+        // Définir les valeurs de périodes sélectionnées par défaut
+        if (viewMode === "week") {
+          const availableWeeks = [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
+          setSelectedValues(availableWeeks.slice(-5));
+        } else {
+          const availableMonths = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+          setSelectedValues(availableMonths.slice(-5));
+        }
+        
         setLoading(false);
-
-        const availableWeeks = [...new Set(result.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-        const availableMonths = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
-        setSelectedValues(viewMode === "week" ? availableWeeks.slice(-5) : availableMonths.slice(-5));
       } catch (error) {
         console.error("Erreur lors du fetch des données :", error);
       }
     }
     fetchData();
-  }, [viewMode]);
+  }, []);
+
+  // Mettre à jour les valeurs sélectionnées lorsque le mode de vue ou l'année change
+  useEffect(() => {
+    if (data.length > 0 && selectedYear) {
+      const filteredByYear = data.filter(ticket => 
+        new Date(ticket.date_derniere_maj).getFullYear() === selectedYear
+      );
+      
+      if (viewMode === "week") {
+        const availableWeeks = [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
+        setSelectedValues(availableWeeks.length > 0 ? availableWeeks.slice(-5) : []);
+      } else {
+        const availableMonths = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        setSelectedValues(availableMonths.length > 0 ? availableMonths.slice(-5) : []);
+      }
+    }
+  }, [viewMode, selectedYear, data]);
 
   if (loading) {
     return <p className="text-center text-gray-500">Chargement des données...</p>;
   }
 
-  const availableWeeks = [...new Set(data.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-  const availableMonths = [...new Set(data.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  // Obtenir les périodes disponibles pour l'année sélectionnée
+  const getAvailablePeriodsForYear = (year) => {
+    const filteredByYear = data.filter(ticket => 
+      new Date(ticket.date_derniere_maj).getFullYear() === year
+    );
+    
+    if (viewMode === "week") {
+      return [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
+    } else {
+      return [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+    }
+  };
+
+  const availablePeriods = getAvailablePeriodsForYear(selectedYear);
   const availableSeverities = ["Mineur", "Majeur", "Critique", "Information"];
 
-  const filteredData = data.filter(ticket =>
-    selectedValues.includes(viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1) &&
-    selectedSeverities.includes(ticket.severite)
-  );
+  // Vérifier si toutes les périodes sont sélectionnées
+  const allPeriodsSelected = availablePeriods.length > 0 && 
+    availablePeriods.every(period => selectedValues.includes(period));
 
-  const labels = [...new Set(filteredData.map(ticket => viewMode === "week" ? `S${ticket.semaine}` : `M${new Date(ticket.date_derniere_maj).getMonth() + 1}`))];
+  // Structure pour stocker les valeurs sélectionnées avec leurs années associées
+  const selectedValuesWithYear = selectedValues.map(value => ({
+    value,
+    year: selectedYear
+  }));
 
-  const totalCounts = labels.map(label => {
-    const period = viewMode === "week" ? parseInt(label.replace("S", "")) : parseInt(label.replace("M", ""));
-    return filteredData.filter(ticket => (viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1) === period).length;
+  // Filtrer les données selon les périodes sélectionnées (avec leurs années)
+  const filteredData = data.filter(ticket => {
+    const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
+    const ticketPeriod = viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1;
+    
+    return selectedValuesWithYear.some(item => 
+      item.value === ticketPeriod && 
+      item.year === ticketYear
+    ) && selectedSeverities.includes(ticket.severite);
+  });
+
+  // Créer les labels du graphique (intégrer l'année si plusieurs années)
+  const labels = selectedValuesWithYear.map(item => {
+    const periodLabel = viewMode === "week" ? `S${item.value}` : `M${item.value}`;
+    return multipleYearsExist ? `${periodLabel}, ${item.year}` : periodLabel;
+  });
+
+  // Calculer les totaux pour chaque période
+  const totalCounts = selectedValuesWithYear.map(item => {
+    return filteredData.filter(ticket => {
+      const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
+      const ticketPeriod = viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1;
+      return ticketPeriod === item.value && ticketYear === item.year;
+    }).length;
   });
 
   const datasets = [
     ...availableSeverities.map(severity => ({
       label: severity,
-      data: labels.map(label => {
-        const period = viewMode === "week" ? parseInt(label.replace("S", "")) : parseInt(label.replace("M", ""));
-        return filteredData.filter(ticket =>
-          (viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1) === period &&
-          ticket.severite === severity
-        ).length;
+      data: selectedValuesWithYear.map(item => {
+        return filteredData.filter(ticket => {
+          const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
+          const ticketPeriod = viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1;
+          return ticketPeriod === item.value && 
+                 ticketYear === item.year && 
+                 ticket.severite === severity;
+        }).length;
       }),
       backgroundColor: getColorForSeverity(severity),
       stack: "stack1",
@@ -133,6 +211,21 @@ export default function TranticiteCriticite() {
     );
   };
 
+  const toggleSelectAll = () => {
+    if (allPeriodsSelected) {
+      // Si toutes les périodes sont sélectionnées, tout désélectionner
+      setSelectedValues([]);
+    } else {
+      // Sinon, tout sélectionner
+      setSelectedValues([...availablePeriods]);
+    }
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  // Affichage texte des périodes sélectionnées
   const periodeLabel = selectedValues.length > 0
     ? (viewMode === "week" ? `Semaine(s) : ${selectedValues.join(", ")}` : `Mois : ${selectedValues.join(", ")}`)
     : "Aucune période sélectionnée";
@@ -163,7 +256,9 @@ export default function TranticiteCriticite() {
         {/* ✅ Titre & période */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Tranticité / Criticité</h3>
-          <p className="text-sm text-gray-500">{periodeLabel}</p>
+          <p className="text-sm text-gray-500">
+            {selectedYear && `Année : ${selectedYear} - `}{periodeLabel}
+          </p>
         </div>
 
         {/* ✅ Popup filtre */}
@@ -186,8 +281,44 @@ export default function TranticiteCriticite() {
               </button>
             </div>
 
+            {/* Sélection d'année si plusieurs années */}
+            {multipleYearsExist && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                <div className="flex flex-wrap gap-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`px-2 py-1 text-xs rounded-md ${
+                        selectedYear === year
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bouton unique de sélection/désélection */}
+            <div className="mb-2">
+              <button
+                onClick={toggleSelectAll}
+                className={`text-xs px-2 py-1 rounded-md w-full ${
+                  allPeriodsSelected 
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                }`}
+              >
+                {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
+
             <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-              {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
+              {availablePeriods.map(value => (
                 <div key={value} className="flex items-center space-x-2">
                   <input
                     type="checkbox"

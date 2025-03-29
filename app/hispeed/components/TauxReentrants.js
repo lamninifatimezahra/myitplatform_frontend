@@ -18,29 +18,44 @@ export default function TauxReentrants() {
   const id = "taux-reentrants";
   const { selectedIds, toggleId } = useExport();
 
+  // États pour les données, le mode de vue, la sélection des périodes et la gestion des années
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("week");
   const [selectedValues, setSelectedValues] = useState([]);
   const [disabledCategories, setDisabledCategories] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [multipleYearsExist, setMultipleYearsExist] = useState(false);
 
   const colors = {
     "Réentrant": "#68bddd",
     "Non Réentrant": "#1b2b6b",
   };
 
+  // Récupération initiale des données, extraction des années disponibles et définition par défaut des périodes (de l'année sélectionnée)
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
         const result = await response.json();
         setData(result);
-        setLoading(false);
 
-        const weeks = [...new Set(result.map(t => t.semaine))].sort((a, b) => a - b);
-        const months = [...new Set(result.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        // Extraction des années à partir de la date de dernière mise à jour
+        const years = [...new Set(result.map(t => new Date(t.date_derniere_maj).getFullYear()))].sort();
+        setAvailableYears(years);
+        setMultipleYearsExist(years.length > 1);
+        const latestYear = years[years.length - 1];
+        setSelectedYear(latestYear);
+
+        // Filtrer les tickets pour l'année sélectionnée
+        const ticketsForYear = result.filter(t => new Date(t.date_derniere_maj).getFullYear() === latestYear);
+        const weeks = [...new Set(ticketsForYear.map(t => t.semaine))].sort((a, b) => a - b);
+        const months = [...new Set(ticketsForYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
         setSelectedValues(viewMode === "week" ? weeks.slice(-5) : months.slice(-5));
+
+        setLoading(false);
       } catch (error) {
         console.error("Erreur lors du fetch :", error);
       }
@@ -50,15 +65,47 @@ export default function TauxReentrants() {
 
   if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
-  const weeks = [...new Set(data.map(t => t.semaine))].sort((a, b) => a - b);
-  const months = [...new Set(data.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  // Filtrer les tickets pour l'année sélectionnée
+  const ticketsForYear = data.filter(t => new Date(t.date_derniere_maj).getFullYear() === selectedYear);
+  const weeks = [...new Set(ticketsForYear.map(t => t.semaine))].sort((a, b) => a - b);
+  const months = [...new Set(ticketsForYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  const availablePeriods = viewMode === "week" ? weeks : months;
 
-  const filteredData = data.filter(ticket =>
-    selectedValues.includes(viewMode === "week" ? ticket.semaine : new Date(ticket.date_derniere_maj).getMonth() + 1)
+  // Bouton "Tout sélectionner / Tout désélectionner" pour les périodes de l'année en cours
+  const allPeriodsSelected =
+    availablePeriods.length > 0 &&
+    availablePeriods.every(period => selectedValues.includes(period));
+
+  const toggleSelectAll = () => {
+    if (allPeriodsSelected) {
+      setSelectedValues([]);
+    } else {
+      setSelectedValues([...availablePeriods]);
+    }
+  };
+
+  const handleSelectionChange = (value) => {
+    setSelectedValues(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  // Filtrer les tickets pour la période sélectionnée (uniquement pour l'année en cours)
+  const filteredTickets = ticketsForYear.filter(ticket =>
+    selectedValues.includes(
+      viewMode === "week"
+        ? ticket.semaine
+        : new Date(ticket.date_derniere_maj).getMonth() + 1
+    )
   );
 
+  // Regrouper les tickets par identifiant pour calculer les réentrants
   const ticketsById = {};
-  filteredData.forEach(ticket => {
+  filteredTickets.forEach(ticket => {
     if (!ticketsById[ticket.id_ticket]) {
       ticketsById[ticket.id_ticket] = [];
     }
@@ -67,7 +114,6 @@ export default function TauxReentrants() {
 
   let nonReentrantCount = 0;
   let reentrantCount = 0;
-
   Object.values(ticketsById).forEach(tickets => {
     const sorted = tickets.sort((a, b) => new Date(a.date_derniere_maj) - new Date(b.date_derniere_maj));
     nonReentrantCount += 1;
@@ -96,12 +142,6 @@ export default function TauxReentrants() {
     ],
   };
 
-  const handleSelectionChange = (value) => {
-    setSelectedValues(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
   const toggleCategory = (category) => {
     setDisabledCategories(prev =>
       prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
@@ -110,12 +150,13 @@ export default function TauxReentrants() {
 
   const periodeLabel = selectedValues.length > 0
     ? (viewMode === "week"
-      ? `Semaine(s) : ${selectedValues.join(", ")}`
-      : `Mois : ${selectedValues.join(", ")}`)
+        ? `Semaine(s) : ${selectedValues.join(", ")}`
+        : `Mois : ${selectedValues.join(", ")}`)
     : "Aucune période sélectionnée";
 
   return (
     <div className="visualisation relative" data-id={id}>
+      {/* Boutons en haut à droite */}
       <div className="absolute top-2 right-2 z-50 flex space-x-2">
         <button
           className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
@@ -136,23 +177,76 @@ export default function TauxReentrants() {
       <div className="bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
         <div>
           <h3 className="text-lg font-semibold text-gray-800">Taux des Réentrants</h3>
-          <p className="text-sm text-gray-500 mb-3">{periodeLabel}</p>
+          <p className="text-sm text-gray-500 mb-3">
+            {selectedYear && `Année : ${selectedYear} - `}
+            {periodeLabel}
+          </p>
         </div>
 
         {isOpen && (
           <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
             <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-
+            {/* Boutons pour changer de vue */}
             <div className="flex space-x-2 mb-2">
-              <button className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => setViewMode("week")}>Semaine</button>
-              <button className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => setViewMode("month")}>Mois</button>
+              <button
+                className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => setViewMode("week")}
+              >
+                Semaine
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => setViewMode("month")}
+              >
+                Mois
+              </button>
             </div>
-
+            {/* Sélection d'années si plusieurs existent */}
+            {multipleYearsExist && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                <div className="flex flex-wrap gap-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`px-2 py-1 text-xs rounded-md ${
+                        selectedYear === year
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Bouton "Tout sélectionner / Tout désélectionner" */}
+            <div className="mb-2">
+              <button
+                onClick={toggleSelectAll}
+                className={`text-xs px-2 py-1 rounded-md w-full ${
+                  allPeriodsSelected
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                }`}
+              >
+                {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
+            {/* Sélection des périodes (semaine ou mois) pour l'année sélectionnée */}
             <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-              {(viewMode === "week" ? weeks : months).map(value => (
+              {availablePeriods.map(value => (
                 <div key={value} className="flex items-center space-x-2">
-                  <input type="checkbox" checked={selectedValues.includes(value)} onChange={() => handleSelectionChange(value)} />
-                  <span className="text-gray-500">{viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedValues.includes(value)}
+                    onChange={() => handleSelectionChange(value)}
+                  />
+                  <span className="text-gray-500">
+                    {viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}
+                  </span>
                 </div>
               ))}
             </div>
@@ -174,11 +268,12 @@ export default function TauxReentrants() {
                     font: { size: 11 },
                     boxWidth: 12,
                     padding: 8,
-                    generateLabels: (chart) => chart.data.labels.map((label, i) => ({
-                      text: label,
-                      fillStyle: colors[label],
-                      hidden: disabledCategories.includes(label),
-                    }))
+                    generateLabels: (chart) =>
+                      chart.data.labels.map((label) => ({
+                        text: label,
+                        fillStyle: colors[label],
+                        hidden: disabledCategories.includes(label),
+                      })),
                   },
                   onClick: (_, legendItem) => toggleCategory(legendItem.text),
                 },
@@ -190,7 +285,7 @@ export default function TauxReentrants() {
                       const percent = total ? ((value / total) * 100).toFixed(2) : "0.0";
                       return `${label}: ${value} (${percent}%)`;
                     },
-                  }
+                  },
                 },
                 datalabels: {
                   color: "black",
@@ -201,12 +296,12 @@ export default function TauxReentrants() {
                     const percent = ((value / total) * 100).toFixed(2);
                     return `${value} (${percent}%)`;
                   },
-                  anchor: 'end',
-                  align: 'end',
-                  offset: 8
-                }
+                  anchor: "end",
+                  align: "end",
+                  offset: 8,
+                },
               },
-              layout: { padding: 10 }
+              layout: { padding: 10 },
             }}
           />
         </div>

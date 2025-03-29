@@ -105,7 +105,7 @@ export default function KpiTicketsEntrants() {
         </div>
 
         {/* ✅ Titre + période */}
-        <h3 className="text-gray-600 text-lg font-medium">Tickets Entrants</h3>
+        <h3 className="text-gray-800 text-lg font-medium">Tickets Entrants</h3>
         <p className="text-xs text-gray-500 mb-1">{periodeLabel}</p>
 
         {/* ✅ KPI */}

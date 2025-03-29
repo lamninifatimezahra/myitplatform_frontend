@@ -11,10 +11,12 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { AiOutlineFilter } from "react-icons/ai";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { getWeek } from "date-fns";
+import { fr } from "date-fns/locale";
 import { useExport } from "./ExportContext";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartDataLabels);
@@ -23,133 +25,222 @@ export default function GroupedBarChart() {
   const id = "grouped-bar-chart";
   const { selectedIds, toggleId } = useExport();
 
+  // États liés aux données, vue, sélection et gestion des années (uniquement pour les vues semaine/mois)
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  // viewMode peut être "day", "week" ou "month"
   const [viewMode, setViewMode] = useState("day");
+  // Pour "day" : dates au format ISO, pour "week" et "month" : nombres représentant la semaine ou le mois
   const [selectedValues, setSelectedValues] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
   const [selectedDates, setSelectedDates] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  // Pour la vue "day"
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  // États pour la gestion des années en vue "week" et "month"
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [multipleYearsExist, setMultipleYearsExist] = useState(false);
+  // Pour le bouton "Tout sélectionner/Tout désélectionner" en vue non "day"
+  const [allSelected, setAllSelected] = useState(false);
 
-  const monthNames = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-  ];
+  const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
+  // Au fetch initial, on charge les données et on en déduit la sélection par défaut
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
-        const result = await response.json();
-        setData(result);
+    fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/")
+      .then(res => res.json())
+      .then(json => {
+        setData(json);
         setLoading(false);
 
-        const last10Days = [...new Set(result.map(ticket => ticket.date_derniere_maj))].sort().slice(-10);
-        const last5Weeks = [...new Set(result.map(ticket => ticket.semaine))].sort((a, b) => a - b).slice(-5);
-        const last3Months = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b).slice(-3);
+        // Pour la vue "day", on récupère les derniers jours disponibles
+        const lastDays = [...new Set(json.map(t => t.date_derniere_maj))].sort().slice(-10);
+        // Pour la gestion des années en vue "week" et "month"
+        const years = [...new Set(json.map(t => new Date(t.date_derniere_maj).getFullYear()))].sort();
+        setAvailableYears(years);
+        setMultipleYearsExist(years.length > 1);
+        const latestYear = years[years.length - 1];
+        setSelectedYear(latestYear);
 
-        setSelectedValues(viewMode === "day" ? last10Days : viewMode === "week" ? last5Weeks : last3Months);
-        if (viewMode === "day") setSelectedDates(last10Days.map(dateStr => new Date(dateStr)));
-      } catch (error) {
-        console.error("Erreur lors du chargement des données :", error);
-      }
-    }
-    fetchData();
+        if (viewMode === "day") {
+          setSelectedValues(lastDays);
+          setSelectedDates(lastDays.map(d => new Date(d)));
+          if (lastDays.length > 0) {
+            setCalendarMonth(new Date(lastDays[lastDays.length - 1]));
+          }
+        } else if (viewMode === "week") {
+          // Filtrer par année sélectionnée
+          const filteredByYear = json.filter(t => new Date(t.date_derniere_maj).getFullYear() === latestYear);
+          const lastWeeks = [...new Set(filteredByYear.map(t => t.semaine))].sort((a, b) => a - b).slice(-5);
+          setSelectedValues(lastWeeks);
+          setAllSelected(false);
+        } else if (viewMode === "month") {
+          const filteredByYear = json.filter(t => new Date(t.date_derniere_maj).getFullYear() === latestYear);
+          const lastMonths = [...new Set(filteredByYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b).slice(-3);
+          setSelectedValues(lastMonths);
+          setAllSelected(false);
+        }
+      });
   }, [viewMode]);
 
+  // Pour la vue "day", mettre à jour selectedValues en fonction de selectedDates
   useEffect(() => {
-    if (viewMode === "day" && selectedDates.length > 0) {
-      const formattedDates = selectedDates.map(date => {
-        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-        return local.toISOString().split("T")[0];
-      });
-      
-      setSelectedValues(formattedDates);
+    if (viewMode === "day") {
+      const formatted = selectedDates.map(d =>
+        new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0]
+      );
+      setSelectedValues(formatted);
     }
   }, [selectedDates, viewMode]);
 
-  if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
+  // Recalcule automatique de la sélection lorsque selectedYear ou viewMode change (pour week et month)
+  useEffect(() => {
+    if (viewMode === "week" || viewMode === "month") {
+      const filteredByYear = data.filter(t => new Date(t.date_derniere_maj).getFullYear() === selectedYear);
+      if (viewMode === "week") {
+        const weeks = [...new Set(filteredByYear.map(t => t.semaine))].sort((a, b) => a - b);
+        setSelectedValues(weeks.slice(-5));
+        setAllSelected(false);
+      } else if (viewMode === "month") {
+        const months = [...new Set(filteredByYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        setSelectedValues(months.slice(-3));
+        setAllSelected(false);
+      }
+    }
+  }, [selectedYear, viewMode, data]);
 
-  const availableDays = [...new Set(data.map(ticket => ticket.date_derniere_maj))].sort();
-  const availableWeeks = [...new Set(data.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-  const availableMonths = [...new Set(data.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  if (loading) return <p className="text-center text-gray-500">Chargement...</p>;
 
-  const filteredDataEntrants = data.filter(ticket =>
-    selectedValues.includes(
-      viewMode === "day" ? ticket.date_derniere_maj
-      : viewMode === "week" ? ticket.semaine
-      : new Date(ticket.date_derniere_maj).getMonth() + 1
-    )
-  );
+  // Pour la vue "day", on utilise toutes les dates disponibles ; pour "week"/"month", on filtre par année
+  const availableDays = [...new Set(data.map(t => t.date_derniere_maj))].sort();
+  const filteredByYear = viewMode === "day" ? data : data.filter(t => new Date(t.date_derniere_maj).getFullYear() === selectedYear);
+  const availablePeriods =
+    viewMode === "day"
+      ? availableDays
+      : viewMode === "week"
+      ? [...new Set(filteredByYear.map(t => t.semaine))].sort((a, b) => a - b)
+      : [...new Set(filteredByYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
 
-  const allSortants = data.filter(ticket => ticket.date_sortie);
+  const allPeriodsSelected =
+    availablePeriods.length > 0 && availablePeriods.every(period => selectedValues.includes(period));
 
+  // Gestion du bouton "Tout sélectionner/Tout désélectionner" pour la vue week/month
+  const handleSelectAll = () => {
+    if (allPeriodsSelected) {
+      setSelectedValues([]);
+      setAllSelected(false);
+    } else {
+      setSelectedValues([...availablePeriods]);
+      setAllSelected(true);
+    }
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  // Pour le filtrage des entrants, si on est en vue day on ne filtre pas par année, sinon on vérifie l'année
+  const filteredEntrants = data.filter(t => {
+    if (viewMode === "day") {
+      return selectedValues.includes(t.date_derniere_maj);
+    } else {
+      if (new Date(t.date_derniere_maj).getFullYear() !== selectedYear) return false;
+      if (viewMode === "week") return selectedValues.includes(t.semaine);
+      if (viewMode === "month") return selectedValues.includes(new Date(t.date_derniere_maj).getMonth() + 1);
+    }
+    return false;
+  });
+
+  // Pour les sortants, on ne prend que ceux dont la date_sortie est définie et (en week/month) appartenant à l'année sélectionnée
+  const filteredSortants = data.filter(t => {
+    if (!t.date_sortie) return false;
+    if (viewMode === "day") return true;
+    return new Date(t.date_sortie).getFullYear() === selectedYear;
+  });
+
+  // Calcul des labels pour le graphique ; si week ou month, on ajoute l'année si plusieurs années existent
   let labels = [];
   if (viewMode === "day") {
     labels = selectedValues.slice().sort();
   } else if (viewMode === "week") {
-    labels = selectedValues.sort((a, b) => a - b).map(week => `S${week}`);
+    labels = selectedValues.slice().sort((a, b) => a - b).map(w =>
+      multipleYearsExist ? `S${w}, ${selectedYear}` : `S${w}`
+    );
   } else {
-    labels = selectedValues.sort((a, b) => a - b).map(month => monthNames[month - 1]);
+    labels = selectedValues.slice().sort((a, b) => a - b).map(m =>
+      multipleYearsExist ? `${monthNames[m - 1]}, ${selectedYear}` : monthNames[m - 1]
+    );
   }
 
-  const entrantsData = labels.map(label => {
-    let period = label;
-    if (viewMode === "week") period = parseInt(label.replace("S", ""));
-    else if (viewMode === "month") period = monthNames.indexOf(label) + 1;
-
-    return filteredDataEntrants.filter(ticket => {
+  // Calcul des données pour les entrants
+  const entrantsData = selectedValues
+    .slice()
+    .sort((a, b) => a - b)
+    .map(val => {
       if (viewMode === "day") {
-        return ticket.date_derniere_maj === period;
+        return filteredEntrants.filter(t => t.date_derniere_maj === val).length;
       } else if (viewMode === "week") {
-        return ticket.semaine === period;
+        return filteredEntrants.filter(t => t.semaine === val).length;
       } else {
-        return new Date(ticket.date_derniere_maj).getMonth() + 1 === period;
+        return filteredEntrants.filter(t => new Date(t.date_derniere_maj).getMonth() + 1 === val).length;
       }
-    }).length;
-  });
-
-  const sortantsData = labels.map(label => {
-    let periodValue;
-    let periodField;
-
-    if (viewMode === "day") {
-      periodValue = label;
-      periodField = "date_sortie";
-    } else if (viewMode === "week") {
-      periodValue = parseInt(label.replace("S", ""));
-      periodField = "semaine_date_sortant";
-    } else {
-      periodValue = monthNames.indexOf(label) + 1;
-      periodField = ticket => ticket.date_sortie ? new Date(ticket.date_sortie).getMonth() + 1 : null;
-    }
-
-    return allSortants.filter(ticket => {
-      if (typeof periodField === "function") {
-        return periodField(ticket) === periodValue;
-      } else {
-        return ticket[periodField] === periodValue;
-      }
-    }).length;
-  });
-
-  const handleDateChange = (date) => {
-    setSelectedDates(prevDates => {
-      const isoDate = date.toISOString().split("T")[0];
-      const exists = prevDates.some(d => d.toISOString().split("T")[0] === isoDate);
-      return exists ? prevDates.filter(d => d.toISOString().split("T")[0] !== isoDate) : [...prevDates, date];
     });
+
+  // Calcul des données pour les sortants
+  const sortantsData = selectedValues
+    .slice()
+    .sort((a, b) => a - b)
+    .map(val => {
+      if (viewMode === "day") {
+        return filteredSortants.filter(t => t.date_sortie === val).length;
+      } else if (viewMode === "week") {
+        return filteredSortants.filter(t => t.semaine_date_sortant === val).length;
+      } else {
+        return filteredSortants.filter(t => new Date(t.date_sortie).getMonth() + 1 === val).length;
+      }
+    });
+
+  // Fonction de formatage de la date pour la vue "day"
+  const formatDate = (str) => {
+    const d = new Date(str);
+    return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${d.getFullYear()}`;
   };
 
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  // Pour la gestion du calendrier en vue "day"
+  const handleDateChange = (date) => {
+    const iso = date.toISOString().split("T")[0];
+    setSelectedDates(prev =>
+      prev.some(d => d.toISOString().split("T")[0] === iso)
+        ? prev.filter(d => d.toISOString().split("T")[0] !== iso)
+        : [...prev, date]
+    );
+  };
+
+  const handleWeekClick = (_, weekNum) => {
+    // Conserver le mois courant du calendrier
+    const currentMonth = calendarMonth;
+    const weekDates = availableDays
+      .map(d => new Date(d))
+      .filter(d => getWeek(d, { locale: fr }) === weekNum);
+    setSelectedDates(prev => {
+      const existing = weekDates.filter(
+        d => !prev.some(p => p.toISOString().split("T")[0] === d.toISOString().split("T")[0])
+      );
+      return [...prev, ...existing];
+    });
+    setTimeout(() => {
+      setCalendarMonth(currentMonth);
+    }, 10);
   };
 
   return (
     <div className="visualisation relative" data-id={id}>
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full">
+        {/* Bouton filtre et case d'inclusion */}
         <div className="absolute top-2 right-2 flex items-center space-x-2 z-50">
-          <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setIsOpen(!isOpen)}>
+          <button className="bg-gray-300 p-2 rounded-full" onClick={() => setIsOpen(!isOpen)}>
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
           <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
@@ -158,94 +249,133 @@ export default function GroupedBarChart() {
           </label>
         </div>
 
-        <h3 className="text-lg font-semibold mb-3 text-gray-500">Tickets Entrants vs. Sortants</h3>
+        <h3 className="text-lg font-semibold mb-3 text-gray-800">Tickets Entrants vs. Sortants</h3>
 
         {isOpen && (
           <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
             <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-            <div className="flex space-x-2 mb-2 mt-2">
-              <button className={`px-3 py-1 rounded-md ${viewMode === "day" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => setViewMode("day")}>Jour</button>
-              <button className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => setViewMode("week")}>Semaine</button>
-              <button className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => setViewMode("month")}>Mois</button>
+            <div className="flex space-x-2 mt-2 mb-2">
+              {["day", "week", "month"].map(mode => (
+                <button
+                  key={mode}
+                  className={`px-3 py-1 rounded-md ${viewMode === mode ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  onClick={() => setViewMode(mode)}
+                >
+                  {mode === "day" ? "Jour" : mode === "week" ? "Semaine" : "Mois"}
+                </button>
+              ))}
             </div>
 
             {viewMode === "day" ? (
               <div>
                 <DatePicker
-                  selected={null}
+                  selected={calendarMonth}
                   onChange={handleDateChange}
                   highlightDates={selectedDates}
-                  includeDates={availableDays.map(date => new Date(date))}
+                  includeDates={availableDays.map(d => new Date(d))}
                   inline
+                  calendarStartDay={1}
+                  showWeekNumbers
+                  onWeekSelect={handleWeekClick}
+                  locale={fr}
+                  onMonthChange={month => setCalendarMonth(month)}
                 />
-                <div className="mt-2">
-                  <h5 className="font-medium text-gray-500 mb-1">Jours sélectionnés:</h5>
-                  <div className="max-h-32 overflow-y-auto">
-                    {selectedDates.length > 0 ? (
-                      <ul className="space-y-1">
-                        {selectedDates.map((date, index) => (
-                          <li key={index} className="flex justify-between items-center bg-gray-100 px-2 py-1 rounded">
-                            <span>{formatDate(date)}</span>
-                            <button className="text-red-500 hover:text-red-700" onClick={() => handleDateChange(date)}>×</button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-gray-400">Aucun jour sélectionné</p>
-                    )}
-                  </div>
-                </div>
               </div>
             ) : (
-              <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-                {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
-                  <div key={value} className="flex items-center space-x-2">
-                    <input type="checkbox" checked={selectedValues.includes(value)} onChange={() => setSelectedValues(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])} />
-                    <span className="text-gray-500">{viewMode === "week" ? `Semaine ${value}` : monthNames[value - 1]}</span>
+              <>
+                {/* Affichage du filtre d'années (si plusieurs années existent) */}
+                {multipleYearsExist && (
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {availableYears.map(year => (
+                        <button
+                          key={year}
+                          onClick={() => handleYearChange(year)}
+                          className={`px-2 py-1 text-xs rounded-md ${
+                            selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          {year}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
+                )}
+
+                {/* Bouton "Tout sélectionner/Tout désélectionner" avec le même style que dans Tranticité/Criticité */}
+                <div className="mb-2">
+                  <button
+                    onClick={handleSelectAll}
+                    className={`text-xs px-2 py-1 rounded-md w-full ${
+                      allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    }`}
+                  >
+                    {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+                  </button>
+                </div>
+
+                <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
+                  {(viewMode === "week" ? availablePeriods : availablePeriods).map(val => (
+                    <div key={val} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedValues.includes(val)}
+                        onChange={() =>
+                          setSelectedValues(prev =>
+                            prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
+                          )
+                        }
+                      />
+                      <span className="text-gray-600">
+                        {viewMode === "week" ? `Semaine ${val}` : monthNames[val - 1]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
 
-        <div className="h-[300px]">
-          <Bar
-            data={{
-              labels: viewMode === "day" ? labels.map(formatDate) : labels,
-              datasets: [
-                { label: "Entrants", data: entrantsData, backgroundColor: "#68bddd" },
-                { label: "Sortants", data: sortantsData, backgroundColor: "#1b2b6b" }
-              ]
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                datalabels: {
-                  display: true,
-                  color: '#000',
-                  font: { weight: 'bold', size: 11 },
-                  formatter: (value) => value > 0 ? value : '',
-                  anchor: 'end',
-                  align: 'top',
-                  offset: -2
+        <div className="h-[300px] flex justify-center items-center">
+          <div className="w-11/12">
+            <Bar
+              data={{
+                labels: viewMode === "day" ? labels.map(formatDate) : labels,
+                datasets: [
+                  { label: "Entrants", data: entrantsData, backgroundColor: "#68bddd", borderRadius: 6 },
+                  { label: "Sortants", data: sortantsData, backgroundColor: "#1b2b6b", borderRadius: 6 }
+                ]
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  datalabels: {
+                    display: true,
+                    color: "#000",
+                    font: { weight: "bold", size: 11 },
+                    formatter: val => val > 0 ? val : "",
+                    anchor: "end",
+                    align: "top",
+                    offset: -2
+                  },
+                  legend: { position: "top" },
+                  tooltip: { mode: "index", intersect: false }
                 },
-                legend: { position: 'top' },
-                tooltip: { mode: 'index', intersect: false }
-              },
-              scales: {
-                x: { grid: { display: false } },
-                y: {
-                  beginAtZero: true,
-                  grid: { drawBorder: false },
-                  ticks: { precision: 0 }
+                scales: {
+                  x: { grid: { display: false } },
+                  y: {
+                    beginAtZero: true,
+                    grid: { drawBorder: false },
+                    ticks: { precision: 0 }
+                  }
                 }
-              },
-              layout: { padding: { top: 20 } }
-            }}
-            plugins={[ChartDataLabels]}
-          />
+              }}
+              plugins={[ChartDataLabels]}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -35,17 +35,33 @@ export default function ClientCoupeChart() {
   const [selectedValues, setSelectedValues] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
+  // États pour la gestion des années
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [multipleYearsExist, setMultipleYearsExist] = useState(false);
+
+  // Récupération initiale des données, extraction des années et définition par défaut des périodes pour l'année sélectionnée
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
         const result = await response.json();
         setData(result);
-        setLoading(false);
 
-        const weeks = [...new Set(result.map(t => t.semaine))].sort((a, b) => a - b);
-        const months = [...new Set(result.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        // Extraction des années depuis date_derniere_maj
+        const years = [...new Set(result.map(t => new Date(t.date_derniere_maj).getFullYear()))].sort((a, b) => a - b);
+        setAvailableYears(years);
+        setMultipleYearsExist(years.length > 1);
+        const latestYear = years[years.length - 1];
+        setSelectedYear(latestYear);
+
+        // Filtrer les tickets pour l'année sélectionnée
+        const ticketsForYear = result.filter(t => new Date(t.date_derniere_maj).getFullYear() === latestYear);
+        const weeks = [...new Set(ticketsForYear.map(t => t.semaine))].sort((a, b) => a - b);
+        const months = [...new Set(ticketsForYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
         setSelectedValues(viewMode === "week" ? weeks.slice(-5) : months.slice(-5));
+
+        setLoading(false);
       } catch (error) {
         console.error("Erreur fetch :", error);
       }
@@ -53,12 +69,49 @@ export default function ClientCoupeChart() {
     fetchData();
   }, [viewMode]);
 
+  // Mise à jour des périodes sélectionnées lorsque l'année sélectionnée change ou que les données se modifient
+  useEffect(() => {
+    if (data.length > 0 && selectedYear) {
+      const ticketsForYear = data.filter(t => new Date(t.date_derniere_maj).getFullYear() === selectedYear);
+      const weeks = [...new Set(ticketsForYear.map(t => t.semaine))].sort((a, b) => a - b);
+      const months = [...new Set(ticketsForYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+      setSelectedValues(viewMode === "week" ? weeks.slice(-5) : months.slice(-5));
+    }
+  }, [selectedYear, data, viewMode]);
+
   if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
-  const availableWeeks = [...new Set(data.map(t => t.semaine))].sort((a, b) => a - b);
-  const availableMonths = [...new Set(data.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  // Filtrer les tickets pour l'année sélectionnée
+  const ticketsForYear = data.filter(t => new Date(t.date_derniere_maj).getFullYear() === selectedYear);
+  const availableWeeks = [...new Set(ticketsForYear.map(t => t.semaine))].sort((a, b) => a - b);
+  const availableMonths = [...new Set(ticketsForYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+  const availablePeriods = viewMode === "week" ? availableWeeks : availableMonths;
 
-  const filteredData = data.filter(ticket =>
+  // Bouton "Tout sélectionner / Tout désélectionner" pour les périodes de l'année en cours
+  const allPeriodsSelected =
+    availablePeriods.length > 0 &&
+    availablePeriods.every(period => selectedValues.includes(period));
+
+  const toggleSelectAll = () => {
+    if (allPeriodsSelected) {
+      setSelectedValues([]);
+    } else {
+      setSelectedValues([...availablePeriods]);
+    }
+  };
+
+  const handleSelectionChange = (value) => {
+    setSelectedValues(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  // Filtrer les tickets selon les périodes sélectionnées (dans l'année en cours)
+  const filteredData = ticketsForYear.filter(ticket =>
     selectedValues.includes(
       viewMode === "week"
         ? ticket.semaine
@@ -66,25 +119,21 @@ export default function ClientCoupeChart() {
     )
   );
 
-  const labels = [...new Set(
-    filteredData.map(ticket =>
-      viewMode === "week"
-        ? `S${ticket.semaine}`
-        : `M${new Date(ticket.date_derniere_maj).getMonth() + 1}`
-    )
-  )];
+  // On s'assure que les périodes sélectionnées sont triées chronologiquement
+  const sortedSelectedValues = [...selectedValues].sort((a, b) => a - b);
+  const labels = sortedSelectedValues.map(period =>
+    viewMode === "week" ? `S${period}` : `M${period}`
+  );
 
-  const clientCoupeCounts = labels.map(label => {
-    const period = viewMode === "week"
-      ? parseInt(label.replace("S", ""))
-      : parseInt(label.replace("M", ""));
-    return filteredData.filter(ticket =>
+  // Comptage des clients coupés pour chaque période (filtrée et triée)
+  const clientCoupeCounts = sortedSelectedValues.map(period =>
+    filteredData.filter(ticket =>
       (viewMode === "week"
         ? ticket.semaine
         : new Date(ticket.date_derniere_maj).getMonth() + 1) === period &&
       ticket.client_coupe === "OK"
-    ).length;
-  });
+    ).length
+  );
 
   const chartData = {
     labels,
@@ -103,23 +152,17 @@ export default function ClientCoupeChart() {
     ],
   };
 
-  const handleSelectionChange = (value) => {
-    setSelectedValues(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
   const periodeLabel = selectedValues.length > 0
     ? (viewMode === "week"
-      ? `Semaine(s) : ${selectedValues.join(", ")}`
-      : `Mois : ${selectedValues.join(", ")}`)
+        ? `Semaine(s) : ${sortedSelectedValues.join(", ")}`
+        : `Mois : ${sortedSelectedValues.join(", ")}`)
     : "Aucune période sélectionnée";
 
   return (
     <div className="visualisation relative" data-id={id}>
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full">
 
-        {/* ✅ Coin supérieur droit : bouton filtre + inclure */}
+        {/* Boutons en haut à droite : filtre et inclure */}
         <div className="absolute top-2 right-2 flex items-center space-x-2 z-50">
           <button
             className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
@@ -127,7 +170,6 @@ export default function ClientCoupeChart() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-
           <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
             <input
               type="checkbox"
@@ -138,17 +180,21 @@ export default function ClientCoupeChart() {
           </label>
         </div>
 
-        {/* ✅ Titre & période */}
+        {/* Titre & affichage de la période */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Client Coupé</h3>
-          <p className="text-sm text-gray-500">{periodeLabel}</p>
+          <p className="text-sm text-gray-500">
+            {selectedYear && `Année : ${selectedYear} - `}
+            {periodeLabel}
+          </p>
         </div>
 
-        {/* ✅ Popup filtre */}
+        {/* Popup filtre */}
         {isOpen && (
           <div className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50">
             <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
 
+            {/* Boutons pour changer de vue */}
             <div className="flex space-x-2 mb-2 mt-2">
               <button
                 className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
@@ -164,6 +210,39 @@ export default function ClientCoupeChart() {
               </button>
             </div>
 
+            {/* Sélection d'années si plusieurs existent */}
+            {multipleYearsExist && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                <div className="flex flex-wrap gap-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`px-2 py-1 text-xs rounded-md ${
+                        selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bouton "Tout sélectionner / Tout désélectionner" */}
+            <div className="mb-2">
+              <button
+                onClick={toggleSelectAll}
+                className={`text-xs px-2 py-1 rounded-md w-full ${
+                  allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                }`}
+              >
+                {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
+
+            {/* Sélection des périodes (semaines ou mois) pour l'année sélectionnée */}
             <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
               {(viewMode === "week" ? availableWeeks : availableMonths).map(value => (
                 <div key={value} className="flex items-center space-x-2">
@@ -181,7 +260,7 @@ export default function ClientCoupeChart() {
           </div>
         )}
 
-        {/* ✅ Graphique */}
+        {/* Graphique */}
         <div className="h-[300px] mt-4">
           <Bar
             data={chartData}
