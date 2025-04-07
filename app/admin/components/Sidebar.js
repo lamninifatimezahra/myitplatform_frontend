@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import {
   AiOutlineDashboard,
   AiOutlineMessage,
@@ -20,9 +21,17 @@ export default function Sidebar() {
   const [showDashboards, setShowDashboards] = useState(false);
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/logout/`, {
+        method: 'POST',
+        credentials: 'include', // Envoie les cookies
+      });
+    } catch (error) {
+      console.error('Erreur de déconnexion :', error);
+    } finally {
+      router.push('/login');
+    }
   };
 
   return (

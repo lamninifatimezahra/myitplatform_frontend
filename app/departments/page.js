@@ -36,10 +36,10 @@ export default function HomePage() {
       {/* Top Navigation Bar */}
       <div className="absolute top-0 left-0 w-full flex justify-between items-center p-4 z-30">
         <div className="flex space-x-3">
-          <button className="p-2 bg-[#6f80ac] text-white rounded-full shadow-md hover:bg-[#68bddd] transition-all duration-300">
+          <button className="p-2 bg-[#465b91] text-white rounded-full shadow-md hover:bg-[#68bddd] transition-all duration-300">
             <AiOutlineArrowLeft size={24} />
           </button>
-          <button className="p-2 bg-[#6f80ac] text-white rounded-full shadow-md hover:bg-[#68bddd] transition-all duration-300">
+          <button className="p-2 bg-[#465b91] text-white rounded-full shadow-md hover:bg-[#68bddd] transition-all duration-300">
             <AiOutlineArrowRight size={24} />
           </button>
         </div>
@@ -48,7 +48,7 @@ export default function HomePage() {
           <div className="relative popup-container">
             <AiOutlineBell
               size={24}
-              className="text-[#6f80ac] cursor-pointer hover:text-[#68bddd]"
+              className="text-[#465b91] cursor-pointer hover:text-[#68bddd]"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowAlertPopup(!showAlertPopup);
@@ -70,8 +70,8 @@ export default function HomePage() {
                 setShowUserPopup(!showUserPopup);
               }}
             >
-              <AiOutlineUser size={24} className="text-[#6f80ac]" />
-              <span className="text-[#6f80ac] font-semibold">User</span>
+              <AiOutlineUser size={24} className="text-[#465b91]" />
+              <span className="text-[#465b91] font-semibold">User</span>
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function HomePage() {
                 >
                   {hasAccess ? (
                     <Link href={`/${dept.toLowerCase()}`}>
-                      <div className="w-full p-6 border border-[#6f80ac] text-[#6f80ac] font-bold text-2xl rounded-lg hover:bg-[#68bddd] hover:text-white transition-all duration-300 cursor-pointer mb-6">
+                      <div className="w-full p-6 border border-[#465b91] text-[#465b91] font-bold text-2xl rounded-lg hover:bg-[#465b91] hover:text-white transition-all duration-300 cursor-pointer mb-6">
                         {dept}
                       </div>
                     </Link>

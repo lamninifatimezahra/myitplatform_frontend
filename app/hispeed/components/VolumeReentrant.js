@@ -14,11 +14,13 @@ import {
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { AiOutlineFilter } from "react-icons/ai";
 import { useExport } from "./ExportContext";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartDataLabels);
 
 export default function VolumeReentrants() {
-  const id = "volume-reentrants";
+  const id = "Volume des Réentrants";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
@@ -83,7 +85,7 @@ export default function VolumeReentrants() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setData(result);
 
@@ -185,14 +187,6 @@ export default function VolumeReentrants() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
         </div>
 
         {/* Titre et affichage de l'année et des périodes */}

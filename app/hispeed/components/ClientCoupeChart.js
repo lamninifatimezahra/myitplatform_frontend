@@ -13,6 +13,7 @@ import {
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { AiOutlineFilter } from "react-icons/ai";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useExport } from "./ExportContext"; // adapte le chemin si besoin
 
 ChartJS.register(
@@ -26,7 +27,7 @@ ChartJS.register(
 );
 
 export default function ClientCoupeChart() {
-  const id = "client-coupe";
+  const id = "Client Coupé";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
@@ -44,7 +45,7 @@ export default function ClientCoupeChart() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setData(result);
 
@@ -170,18 +171,10 @@ export default function ClientCoupeChart() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
         </div>
 
         {/* Titre & affichage de la période */}
-        <div className="mb-4">
+        <div className="mb-3">
           <h3 className="text-lg font-semibold text-gray-800">Client Coupé</h3>
           <p className="text-sm text-gray-500">
             {selectedYear && `Année : ${selectedYear} - `}

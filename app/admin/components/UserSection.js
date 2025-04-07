@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { User, Trash2, Key, Copy } from "lucide-react";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 export default function UserSection() {
     const [email, setEmail] = useState("");
@@ -33,14 +35,12 @@ export default function UserSection() {
 
     const handleAddUser = async () => {
         try {
-            const token = localStorage.getItem("access_token");
-
-            const res = await fetch("http://localhost:8000/api/admin/create-user/", {
+            const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/create-user/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
+                credentials: "include", // ✅ ENVOI DES COOKIES
                 body: JSON.stringify({
                     email,
                     password,
@@ -50,12 +50,12 @@ export default function UserSection() {
                         .map(([key]) => key),
                 }),
             });
-
+    
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.detail || "Erreur serveur");
             }
-
+    
             setShowCredentials(true);
             setCopyMessage("");
             alert("✅ Utilisateur ajouté avec succès !");
@@ -63,31 +63,29 @@ export default function UserSection() {
             alert("❌ Erreur lors de l'ajout : " + err.message);
         }
     };
-
+    
     const handleDeleteUser = async () => {
         try {
-            const token = localStorage.getItem("access_token");
-
-            const res = await fetch("http://localhost:8000/api/admin/delete-user/", {
+            const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete-user/`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
+                credentials: "include", // ✅ ENVOI DES COOKIES
                 body: JSON.stringify({ email: deleteEmail }),
             });
-
+    
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.detail || "Erreur de suppression");
             }
-
+    
             alert("✅ Utilisateur supprimé avec succès !");
         } catch (err) {
             alert("❌ Erreur : " + err.message);
         }
     };
-
+    
     const copyToClipboard = () => {
         const text = `Identifiants utilisateur :
 Email : ${email}
@@ -114,7 +112,7 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                         <input
                             type="email"
                             placeholder="Adresse E-mail (intelcia.com ou sfr.com)"
-                            className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 placeholder-gray-500"
+                            className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black placeholder:text-black"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
@@ -142,12 +140,12 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                     <div className="flex items-center">
                         <label className="w-32 text-gray-700 font-medium">Rôle</label>
                         <select
-                            className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200"
+                            className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black"
                             value={role}
                             onChange={(e) => setRole(e.target.value)}
                         >
-                            <option value="user" className="text-grey-800">Utilisateur</option>
-                            <option value="admin" className="text-grey-800">Administrateur</option>
+                            <option value="user" className="text-black">Utilisateur</option>
+                            <option value="admin" className="text-black">Administrateur</option>
                         </select>
                     </div>
 
@@ -184,7 +182,7 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
             {showCredentials && (
                 <div className="bg-gray-50 border border-gray-200 p-4 rounded-md shadow space-y-3">
                     <h3 className="font-semibold text-gray-800">Identifiants à transmettre :</h3>
-                    <pre className="bg-white p-3 rounded text-sm text-gray-700 overflow-x-auto whitespace-pre-wrap">
+                    <pre className="bg-white p-3 rounded text-sm text-black overflow-x-auto whitespace-pre-wrap">
                         {`Email : ${email}
 Mot de passe : ${password}
 Rôle : ${role}
@@ -216,7 +214,7 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                         <input
                             type="email"
                             placeholder="Adresse E-mail (intelcia.com ou sfr.com)"
-                            className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-red-200 placeholder-gray-500"
+                            className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-red-200 text-black placeholder:text-black"
                             value={deleteEmail}
                             onChange={(e) => setDeleteEmail(e.target.value)}
                         />

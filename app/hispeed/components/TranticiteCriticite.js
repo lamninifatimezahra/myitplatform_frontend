@@ -14,6 +14,8 @@ import {
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { AiOutlineFilter } from "react-icons/ai";
 import { useExport } from "./ExportContext";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 ChartJS.register(
   BarElement,
@@ -26,7 +28,7 @@ ChartJS.register(
 );
 
 export default function TranticiteCriticite() {
-  const id = "tranticite-criticite";
+  const id = "Tranticité / Criticité";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
@@ -42,7 +44,7 @@ export default function TranticiteCriticite() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setData(result);
         
@@ -243,18 +245,10 @@ export default function TranticiteCriticite() {
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
 
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
         </div>
 
         {/* ✅ Titre & période */}
-        <div className="mb-4">
+        <div className="mb-3">
           <h3 className="text-lg font-semibold text-gray-800">Tranticité / Criticité</h3>
           <p className="text-sm text-gray-500">
             {selectedYear && `Année : ${selectedYear} - `}{periodeLabel}
@@ -265,7 +259,7 @@ export default function TranticiteCriticite() {
         {isOpen && (
           <div className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50">
             <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-
+            
             <div className="flex space-x-2 mb-2 mt-2">
               <button
                 className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}

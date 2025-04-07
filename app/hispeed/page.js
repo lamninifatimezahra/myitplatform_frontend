@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import useAuth from "@/hooks/useAuth";
 import Sidebar from "./components/Sidebar";
@@ -18,23 +18,27 @@ import RapportSortantsEntrants from "./components/RapportSortantsEntrants";
 import TicketsReentrantsTable from "./components/TicketsReentrantsTable";
 import TicketsEnCoursTable from "./components/TicketsEncoursTable";
 import { ExportProvider } from "./components/ExportContext";
+import KpiTicketsEnCoursPlus2S from "./components/KpiTicketsEnCoursPlus2S";
 import { useState } from "react";
 
-export default function HispeedDashboard() {
-  const { user, loading } = useAuth(null, "HISPEED");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 🔁 pour sidebar dynamique
+// ✅ Import du News Ticker
+import NewsTickerRetard14 from "./components/NewsTickerRetard14";
 
-  if (loading || !user) {
+export default function HispeedDashboard() {
+  const { user, loading, authorized, hydrated } = useAuth(null, "HISPEED");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  if (!hydrated || loading || !authorized) {
     return (
-      <div className="flex justify-center items-center h-screen text-gray-600">
-        Chargement sécurisé...
+      <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
+        Chargement...
       </div>
     );
   }
 
   return (
     <ExportProvider>
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex h-screen w-full">
         {/* Sidebar dynamique avec animation */}
         <div
           className={`bg-white shadow-md transition-all duration-300 ${
@@ -51,12 +55,16 @@ export default function HispeedDashboard() {
           <Header />
 
           <main className="p-6 flex-1 space-y-6 overflow-y-auto">
+            {/* ✅ Le News Ticker tout en haut */}
+            <NewsTickerRetard14 />
+
             {/* Ligne 1 : KPI Cards */}
             <div className="flex justify-center space-x-6">
               <KpiTicketsEntrants />
               <KpiCard />
-              <KpiTicketsEnCours />
               <KpiReentrant />
+              <KpiTicketsEnCours />
+              <KpiTicketsEnCoursPlus2S />
             </div>
 
             {/* Ligne 2 */}

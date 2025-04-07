@@ -1,6 +1,39 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AiOutlineUpload } from "react-icons/ai";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
+function FileUploadWithButton({ accept, onFileSelected, file }) {
+  const inputRef = useRef(null);
+  const handleBrowse = () => inputRef.current?.click();
+  const handleFileChange = (e) => e.target.files && onFileSelected(e.target.files[0]);
+
+  return (
+    <div className="border border-gray-300 p-2 rounded flex items-center">
+      <input
+        type="text"
+        readOnly
+        value={file ? file.name : ""}
+        placeholder="Aucun fichier choisi"
+        className="flex-grow outline-none border-none bg-transparent text-black"
+      />
+      <button
+        type="button"
+        onClick={handleBrowse}
+        className="ml-2 text-blue-600"
+      >
+        Parcourir
+      </button>
+      <input
+        type="file"
+        accept={accept}
+        onChange={handleFileChange}
+        ref={inputRef}
+        className="hidden"
+      />
+    </div>
+  );
+}
 
 function UploadCard({ title, inputs, onUpload, helpText }) {
   return (
@@ -22,6 +55,8 @@ export default function UploadSection() {
   const [hispeedFile, setHispeedFile] = useState(null);
   const [ftthStock, setFtthStock] = useState(null);
   const [ftthRegle, setFtthRegle] = useState(null);
+  const [dslFile, setDslFile] = useState(null);
+  const [fttbFile, setFttbFile] = useState(null);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState(""); // "success" | "error"
 
@@ -31,11 +66,12 @@ export default function UploadSection() {
   };
 
   const uploadHispeed = async () => {
-    if (!hispeedFile) return showMessage("Veuillez sélectionner un fichier Hispeed.", true);
+    if (!hispeedFile)
+      return showMessage("Veuillez sélectionner un fichier Hispeed.", true);
     const formData = new FormData();
     formData.append("document", hispeedFile);
     try {
-      const res = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/upload/", {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/upload/`, {
         method: "POST",
         body: formData,
       });
@@ -47,14 +83,13 @@ export default function UploadSection() {
   };
 
   const uploadFTTH = async () => {
-    if (!ftthStock || !ftthRegle) {
+    if (!ftthStock || !ftthRegle)
       return showMessage("Veuillez sélectionner les deux fichiers FTTH.", true);
-    }
     const formData = new FormData();
     formData.append("stock_file", ftthStock);
     formData.append("regle_file", ftthRegle);
     try {
-      const res = await fetch("http://127.0.0.1:8000/dashboard/api/upload/", {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/upload/`, {
         method: "POST",
         body: formData,
       });
@@ -65,20 +100,53 @@ export default function UploadSection() {
     }
   };
 
+  const uploadDSL = async () => {
+    if (!dslFile)
+      return showMessage("Veuillez sélectionner un fichier DSL.", true);
+    const formData = new FormData();
+    formData.append("document", dslFile);
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/dsl/upload/`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      showMessage(res.ok ? data.message : data.error, !res.ok);
+    } catch {
+      showMessage("Erreur lors de l’upload DSL.", true);
+    }
+  };
+
+  const uploadFTTB = async () => {
+    if (!fttbFile)
+      return showMessage("Veuillez sélectionner un fichier FTTB.", true);
+    const formData = new FormData();
+    formData.append("document", fttbFile);
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/fttb/upload/`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      showMessage(res.ok ? data.message : data.error, !res.ok);
+    } catch {
+      showMessage("Erreur lors de l’upload FTTB.", true);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-black">
       <UploadCard
         title="Uploader Hispeed"
         onUpload={uploadHispeed}
         inputs={
-          <input
-            type="file"
+          <FileUploadWithButton
             accept=".xlsx"
-            onChange={(e) => setHispeedFile(e.target.files[0])}
-            className="border border-gray-300 p-2 rounded"
+            onFileSelected={setHispeedFile}
+            file={hispeedFile}
           />
         }
-        helpText="📄 Format Excel requis"
+        helpText="📄 Format Excel requis (.xlsx)"
       />
 
       <UploadCard
@@ -86,27 +154,53 @@ export default function UploadSection() {
         onUpload={uploadFTTH}
         inputs={
           <>
-            <input
-              type="file"
+            <FileUploadWithButton
               accept=".xlsx"
-              onChange={(e) => setFtthStock(e.target.files[0])}
-              className="border border-gray-300 p-2 rounded"
+              onFileSelected={setFtthStock}
+              file={ftthStock}
             />
-            <input
-              type="file"
+            <FileUploadWithButton
               accept=".xlsx"
-              onChange={(e) => setFtthRegle(e.target.files[0])}
-              className="border border-gray-300 p-2 rounded"
+              onFileSelected={setFtthRegle}
+              file={ftthRegle}
             />
           </>
         }
-        helpText="📄 Deux fichiers requis : stock et regle (.xlsx)"
+        helpText="📄 Deux fichiers requis : stock et règle (.xlsx)"
+      />
+
+      <UploadCard
+        title="Uploader DSL"
+        onUpload={uploadDSL}
+        inputs={
+          <FileUploadWithButton
+            accept=".xlsx"
+            onFileSelected={setDslFile}
+            file={dslFile}
+          />
+        }
+        helpText="📄 Format Excel requis (.xlsx)"
+      />
+
+      <UploadCard
+        title="Uploader FTTB"
+        onUpload={uploadFTTB}
+        inputs={
+          <FileUploadWithButton
+            accept=".xlsx"
+            onFileSelected={setFttbFile}
+            file={fttbFile}
+          />
+        }
+        helpText="📄 Format Excel requis (.xlsx)"
       />
 
       {message && (
         <div
           className={`col-span-1 md:col-span-2 mt-2 text-center text-sm p-3 rounded shadow ${
-            status === "error" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
+            status === "error"
+              ? "bg-red-100 text-red-600"
+              : "bg-green-100 text-green-700"
           }`}
         >
           {message}

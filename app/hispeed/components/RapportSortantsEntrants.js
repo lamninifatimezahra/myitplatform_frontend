@@ -13,6 +13,7 @@ import {
   Filler
 } from "chart.js";
 import { AiOutlineFilter } from "react-icons/ai";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useExport } from "./ExportContext";
 
 ChartJS.register(
@@ -26,7 +27,7 @@ ChartJS.register(
 );
 
 export default function RapportSortantsEntrants() {
-  const id = "rapport-sortants-entrants";
+  const id = "Rapport Sortants Entrants";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
@@ -61,7 +62,7 @@ export default function RapportSortantsEntrants() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setData(result);
 
@@ -171,14 +172,6 @@ export default function RapportSortantsEntrants() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
         </div>
 
         {/* Titre et période affichée */}

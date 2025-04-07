@@ -7,15 +7,13 @@ export default function ProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Exemple de données utilisateur
   const user = {
     name: "Ayoub LAHDOUD",
     department: "DOOR",
     activity: "FTTH",
-    avatar: "/profile.png", // Assurez-vous d'avoir une image dans /public
+    avatar: "/profile.png",
   };
 
-  // ✅ Fermer le menu quand on clique en dehors
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -42,7 +40,7 @@ export default function ProfileMenu() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden"
+          className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden z-100"
         >
           <div className="p-4 text-center border-b">
             <img src={user.avatar} alt="User" className="w-12 h-12 rounded-full mx-auto" />

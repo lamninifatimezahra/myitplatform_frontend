@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { AiOutlineCalendar } from "react-icons/ai";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useExport } from "./ExportContext"; // adapte le chemin si nécessaire
 
 // Fonction pour obtenir le numéro de semaine ISO
@@ -33,7 +34,7 @@ const renderCustomHeader = ({
 );
 
 export default function KpiTicketsEntrants() {
-  const id = "kpi-tickets-entrants";
+  const id = "KPI Tickets Entrants";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
@@ -43,7 +44,7 @@ export default function KpiTicketsEntrants() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/")
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`)
       .then((res) => res.json())
       .then((jsonData) => {
         setData(jsonData);
@@ -92,18 +93,6 @@ export default function KpiTicketsEntrants() {
           </button>
         </div>
 
-        {/* ✅ Bouton inclure (coin inférieur droit) */}
-        <div className="absolute bottom-3 right-3 z-50">
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
-        </div>
-
         {/* ✅ Titre + période */}
         <h3 className="text-gray-800 text-lg font-medium">Tickets Entrants</h3>
         <p className="text-xs text-gray-500 mb-1">{periodeLabel}</p>
@@ -128,6 +117,7 @@ export default function KpiTicketsEntrants() {
               formatWeekNumber={getWeekNumber}
               showWeekNumbers
               inline
+              
             />
           </div>
         )}

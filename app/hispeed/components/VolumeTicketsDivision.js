@@ -10,12 +10,13 @@ import {
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { AiOutlineFilter } from "react-icons/ai";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useExport } from "./ExportContext"; // adapte le chemin si besoin
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 export default function VolumeTicketsDivision() {
-  const id = "volume-division";
+  const id = "Volume des Tickets par Division";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
@@ -42,7 +43,7 @@ export default function VolumeTicketsDivision() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setData(result);
 
@@ -70,7 +71,7 @@ export default function VolumeTicketsDivision() {
       );
       if (viewMode === "week") {
         const weeks = [...new Set(filteredByYear.map(ticket => ticket.semaine))].sort((a, b) => a - b);
-        setSelectedValues(weeks.length > 0 ? weeks.slice(-5) : []);
+        setSelectedValues(weeks.length > 0 ? [...weeks] : []);
       } else {
         const months = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
         setSelectedValues(months.length > 0 ? months.slice(-5) : []);
@@ -176,14 +177,6 @@ export default function VolumeTicketsDivision() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
         </div>
 
         {/* Titre + période */}

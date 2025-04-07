@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import { AiOutlineMail, AiOutlineLock, AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 export default function Login() {
@@ -16,6 +17,7 @@ export default function Login() {
 
   const [error, setError] = useState({ email: '', password: '', general: '' });
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [userRole, setUserRole] = useState('');
 
   const router = useRouter();
 
@@ -31,25 +33,26 @@ export default function Login() {
 
     if (!errors.email && !errors.password) {
       try {
-        // 1. Login
-        const loginRes = await fetch('http://localhost:8000/api/login/', {
+        // 1. Login : les tokens sont mis en cookie HttpOnly par le backend
+        const loginRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/login/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
+          credentials: 'include', // Envoie les cookies à l'API
         });
 
         if (!loginRes.ok) throw new Error('Identifiants invalides');
 
-        const tokens = await loginRes.json();
-        localStorage.setItem('access_token', tokens.access);
-
-        // 2. Appeler /me
-        const userRes = await fetch('http://localhost:8000/api/me/', {
-          headers: { Authorization: `Bearer ${tokens.access}` },
+        // 2. Appeler /me pour récupérer les infos
+        const userRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/me/`, {
+          method: 'GET',
+          credentials: 'include',
         });
 
+        if (!userRes.ok) throw new Error();
+
         const user = await userRes.json();
-        localStorage.setItem('user_role', user.role);
+        setUserRole(user.role);
 
         // 3. Vérifie si c’est un premier login
         if (user.first_login) {
@@ -77,12 +80,12 @@ export default function Login() {
     }
 
     try {
-      const res = await fetch('http://localhost:8000/api/change-password/', {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/change-password/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ new_password: newPassword, confirm_password: confirmPassword }),
       });
 
@@ -92,8 +95,7 @@ export default function Login() {
       }
 
       // Redirection après mot de passe changé
-      const role = localStorage.getItem('user_role');
-      if (role === 'admin') router.push('/admin');
+      if (userRole === 'admin') router.push('/admin');
       else router.push('/departments');
     } catch (err) {
       console.error(err);
@@ -124,7 +126,7 @@ export default function Login() {
 
             <input
               type={showNewPassword ? 'text' : 'password'}
-              className="w-full p-3 rounded-lg border bg-white/90"
+              className="w-full p-3 rounded-lg border bg-white/90 text-black"
               placeholder="Nouveau mot de passe"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -132,7 +134,7 @@ export default function Login() {
 
             <input
               type={showNewPassword ? 'text' : 'password'}
-              className="w-full p-3 rounded-lg border bg-white/90"
+              className="w-full p-3 rounded-lg border bg-white/90 text-black"
               placeholder="Confirmer le mot de passe"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -153,7 +155,7 @@ export default function Login() {
               </span>
               <input
                 type="email"
-                className="w-full pl-12 p-3 rounded-lg bg-white/90 border"
+                className="w-full pl-12 p-3 rounded-lg bg-white/90 border text-black"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -168,8 +170,8 @@ export default function Login() {
               </span>
               <input
                 type={showPassword ? 'text' : 'password'}
-                className="w-full pl-12 p-3 pr-10 rounded-lg bg-white/90 border"
-                placeholder="Password"
+                className="w-full pl-12 p-3 pr-10 rounded-lg bg-white/90 border text-black"
+                placeholder="Mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -184,7 +186,7 @@ export default function Login() {
             </div>
 
             <button type="submit" className="w-full bg-[#6f80ac] text-white p-4 rounded-xl hover:bg-[#68bddd] transition-all font-semibold text-lg">
-              Login
+              Connexion
             </button>
             {error.general && <p className="text-red-500 text-sm mt-2">{error.general}</p>}
           </form>

@@ -1,31 +1,29 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import fetchWithAuth from "@/utils/fetchWithAuth";
 
 export default function useAuth(requiredRole = null, requiredDashboard = null) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
-  const [hydrated, setHydrated] = useState(false); // ✅
+  const [hydrated, setHydrated] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // ✅ Marque que le composant est monté côté client
+    let isMounted = true;
     setHydrated(true);
 
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    const checkAuth = async () => {
+      try {
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/me/`, {
+          method: 'GET',
+          credentials: 'include',
+        });
 
-    fetch('http://localhost:8000/api/me/', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error("Non autorisé");
         const data = await res.json();
+        if (!isMounted) return;
+
         setUser(data);
 
         if (requiredRole && data.role !== requiredRole) {
@@ -43,13 +41,18 @@ export default function useAuth(requiredRole = null, requiredDashboard = null) {
         }
 
         setAuthorized(true);
-      })
-      .catch(() => {
-        router.push('/login');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      } catch (err) {
+        if (isMounted) router.push('/login');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, [requiredRole, requiredDashboard]);
 
   return { user, loading, authorized, hydrated };

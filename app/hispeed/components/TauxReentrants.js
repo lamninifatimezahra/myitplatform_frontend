@@ -10,13 +10,30 @@ import {
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { AiOutlineFilter } from "react-icons/ai";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useExport } from "./ExportContext"; // 📦 à adapter selon le chemin réel
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 export default function TauxReentrants() {
-  const id = "taux-reentrants";
+  const id = "Taux des Réentrants";
   const { selectedIds, toggleId } = useExport();
+
+  // Noms des mois en français
+  const moisFrancais = {
+    1: "Janvier",
+    2: "Février",
+    3: "Mars",
+    4: "Avril",
+    5: "Mai",
+    6: "Juin",
+    7: "Juillet",
+    8: "Août",
+    9: "Septembre",
+    10: "Octobre",
+    11: "Novembre",
+    12: "Décembre"
+  };
 
   // États pour les données, le mode de vue, la sélection des périodes et la gestion des années
   const [data, setData] = useState([]);
@@ -38,7 +55,7 @@ export default function TauxReentrants() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setData(result);
 
@@ -53,7 +70,9 @@ export default function TauxReentrants() {
         const ticketsForYear = result.filter(t => new Date(t.date_derniere_maj).getFullYear() === latestYear);
         const weeks = [...new Set(ticketsForYear.map(t => t.semaine))].sort((a, b) => a - b);
         const months = [...new Set(ticketsForYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
-        setSelectedValues(viewMode === "week" ? weeks.slice(-5) : months.slice(-5));
+        
+        // Sélectionner toutes les semaines par défaut ou tous les mois selon le viewMode
+        setSelectedValues(viewMode === "week" ? weeks : months);
 
         setLoading(false);
       } catch (error) {
@@ -62,6 +81,20 @@ export default function TauxReentrants() {
     }
     fetchData();
   }, [viewMode]);
+
+  // Effet pour mettre à jour les périodes sélectionnées lorsque l'année ou le mode change
+  useEffect(() => {
+    if (!loading && data.length > 0 && selectedYear) {
+      const ticketsForYear = data.filter(t => new Date(t.date_derniere_maj).getFullYear() === selectedYear);
+      if (viewMode === "week") {
+        const weeks = [...new Set(ticketsForYear.map(t => t.semaine))].sort((a, b) => a - b);
+        setSelectedValues(weeks);
+      } else {
+        const months = [...new Set(ticketsForYear.map(t => new Date(t.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+        setSelectedValues(months);
+      }
+    }
+  }, [viewMode, selectedYear, loading]);
 
   if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
@@ -148,10 +181,11 @@ export default function TauxReentrants() {
     );
   };
 
+  // Construction du label de période avec noms des mois en français
   const periodeLabel = selectedValues.length > 0
     ? (viewMode === "week"
         ? `Semaine(s) : ${selectedValues.join(", ")}`
-        : `Mois : ${selectedValues.join(", ")}`)
+        : `Mois : ${selectedValues.map(m => moisFrancais[m]).join(", ")}`)
     : "Aucune période sélectionnée";
 
   return (
@@ -164,14 +198,6 @@ export default function TauxReentrants() {
         >
           <AiOutlineFilter size={20} className="text-gray-600" />
         </button>
-        <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-          <input
-            type="checkbox"
-            checked={selectedIds.includes(id)}
-            onChange={() => toggleId(id)}
-          />
-          <span>Inclure</span>
-        </label>
       </div>
 
       <div className="bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
@@ -245,7 +271,9 @@ export default function TauxReentrants() {
                     onChange={() => handleSelectionChange(value)}
                   />
                   <span className="text-gray-500">
-                    {viewMode === "week" ? `Semaine ${value}` : `Mois ${value}`}
+                    {viewMode === "week" 
+                      ? `Semaine ${value}` 
+                      : moisFrancais[value]}
                   </span>
                 </div>
               ))}

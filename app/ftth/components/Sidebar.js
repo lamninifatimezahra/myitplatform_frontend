@@ -23,10 +23,18 @@ export default function Sidebar() {
     ? dashboards
     : dashboards.filter(d => user?.dashboards?.includes(d.toUpperCase()));
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push("/login");
-  };
+    const handleLogout = async () => {
+      try {
+        await fetch('http://localhost:8000/api/logout/', {
+          method: 'POST',
+          credentials: 'include', // Envoie les cookies
+        });
+      } catch (error) {
+        console.error('Erreur de déconnexion :', error);
+      } finally {
+        router.push('/login');
+      }
+    };
 
   return (
     <div

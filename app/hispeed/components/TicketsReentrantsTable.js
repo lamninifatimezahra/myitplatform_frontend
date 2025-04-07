@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { AiOutlineFilter } from "react-icons/ai";
 import { useExport } from "./ExportContext";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 export default function TicketsReentrantsTable() {
-  const id = "table-reentrants";
+  const id = "Détail des Réitérations des Tickets";
   const { selectedIds, toggleId } = useExport();
 
   // Stockage des données brutes et des données traitées (par année)
@@ -67,7 +69,7 @@ export default function TicketsReentrantsTable() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setRawData(result);
 
@@ -149,17 +151,9 @@ export default function TicketsReentrantsTable() {
           >
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
         </div>
 
-        <h3 className="text-lg font-semibold mb-3 text-black">Détail des Itérations des Tickets</h3>
+        <h3 className="text-lg font-semibold mb-3 text-black">Détail des Réitérations des Tickets</h3>
 
         {/* Popup filtres */}
         {isOpen && (

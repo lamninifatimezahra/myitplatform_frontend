@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { AiOutlineFilter } from "react-icons/ai";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useExport } from "./ExportContext"; // adapte le chemin si nécessaire
 
 export default function TicketsEnCoursTable() {
-  const id = "tickets-en-cours";
+  const id = "Tickets en cours - Plus de 2 semaines";
   const { selectedIds, toggleId } = useExport();
 
   const [tickets, setTickets] = useState([]);
@@ -19,7 +20,7 @@ export default function TicketsEnCoursTable() {
 
   useEffect(() => {
     async function fetchData() {
-      const res = await fetch("http://127.0.0.1:8000/dashboard/api/hispeed/data/");
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
       const raw = await res.json();
       const now = new Date();
       const grouped = {};
@@ -97,14 +98,6 @@ export default function TicketsEnCoursTable() {
             <AiOutlineFilter size={20} className="text-gray-600" />
           </button>
 
-          <label className="bg-white px-2 py-1 rounded shadow-sm text-sm flex items-center space-x-1">
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(id)}
-              onChange={() => toggleId(id)}
-            />
-            <span>Inclure</span>
-          </label>
         </div>
 
         <h3 className="text-lg font-semibold mb-3 text-black">Tickets en cours - Plus de 2 semaines</h3>

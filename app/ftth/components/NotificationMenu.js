@@ -2,19 +2,19 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 export default function NotificationMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Exemple de notifications
   const [notifications] = useState([
     { id: 1, message: "Nouvelle commande ajoutée", time: "Il y a 2 min" },
     { id: 2, message: "Mise à jour du backlog", time: "Il y a 10 min" },
     { id: 3, message: "Maintenance prévue demain", time: "Il y a 1h" },
   ]);
 
-  // ✅ Fermer le menu quand on clique en dehors
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -44,7 +44,7 @@ export default function NotificationMenu() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg overflow-hidden"
+          className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg overflow-hidden z-100"
         >
           <div className="p-4 border-b font-semibold">Notifications</div>
           <div className="max-h-56 overflow-auto">
