@@ -2,8 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 export default function KPIBacklogJ1({ onComponentReady }) {
   const [currentValue, setCurrentValue] = useState(null);
@@ -17,7 +15,7 @@ export default function KPIBacklogJ1({ onComponentReady }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/stock/`);
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/stock/");
         const json = await res.json();
         if (Array.isArray(json) && json.length > 1) {
           const sorted = json.sort((a, b) => new Date(b.date) - new Date(a.date));

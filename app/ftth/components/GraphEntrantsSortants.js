@@ -8,8 +8,6 @@ import { FaExpand, FaPencilAlt, FaSyncAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
@@ -95,7 +93,7 @@ export default function GraphVueEnsemble({
       const normEnd = normalizeDate(end);
 
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/stock/`)
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/stock/");
         const json = await res.json();
         const filtered = json.filter(item => {
           const itemDate = normalizeDate(item.date);
@@ -282,29 +280,41 @@ export default function GraphVueEnsemble({
       <div id="canvas-graph-entrants-sortants" ref={chartRef}
         className={`bg-white rounded-xl shadow-inner p-4 relative transition-all duration-300 ${loading ? "blur-sm pointer-events-none" : ""}`}
         style={{ height: 300 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, maxY]} />
-            <Tooltip />
-            <Legend onClick={(e) => setVisibleKeys([e.dataKey])} />
-            {visibleKeys.includes("stock") && (
-              <Bar dataKey="stock" name="Stock de la veille" fill={colors[0]} radius={[4, 4, 0, 0]}>
-                <LabelList dataKey="stock" position="top" style={labelStyle} />
-              </Bar>
-            )}
-            {visibleKeys.includes("non_traite") && (
-              <Bar dataKey="non_traite" name="Fermé hier" fill={colors[1]} radius={[4, 4, 0, 0]}>
-                <LabelList dataKey="non_traite" position="top" style={labelStyle} />
-              </Bar>
-            )}
-            {visibleKeys.includes("traite") && (
-              <Bar dataKey="traite" name="Nouveaux cas" fill={colors[2]} radius={[4, 4, 0, 0]}>
-                <LabelList dataKey="traite" position="top" style={labelStyle} />
-              </Bar>
-            )}
-          </BarChart>
-        </ResponsiveContainer>
+<ResponsiveContainer width="100%" height="100%">
+  <BarChart data={data}>
+    <XAxis
+      dataKey="date"
+      angle={-35}
+      textAnchor="end"
+      height={85}
+      tick={{ fontSize: 14, fill: "#1f2937", fontWeight: 600 }}
+      tickFormatter={(value, index) => {
+        const [day, month] = value.split("/");
+        return index % 2 === 0 ? `${day}/${month}` : "";
+      }}
+    />
+    <YAxis domain={[0, maxY]} />
+    <Tooltip />
+    <Legend onClick={(e) => setVisibleKeys([e.dataKey])} />
+    
+    {visibleKeys.includes("stock") && (
+      <Bar dataKey="stock" name="Stock de la veille" fill={colors[0]} radius={[4, 4, 0, 0]}>
+        <LabelList dataKey="stock" position="top" style={labelStyle} />
+      </Bar>
+    )}
+    {visibleKeys.includes("non_traite") && (
+      <Bar dataKey="non_traite" name="Fermé hier" fill={colors[1]} radius={[4, 4, 0, 0]}>
+        <LabelList dataKey="non_traite" position="top" style={labelStyle} />
+      </Bar>
+    )}
+    {visibleKeys.includes("traite") && (
+      <Bar dataKey="traite" name="Nouveaux cas" fill={colors[2]} radius={[4, 4, 0, 0]}>
+        <LabelList dataKey="traite" position="top" style={labelStyle} />
+      </Bar>
+    )}
+  </BarChart>
+</ResponsiveContainer>
+
         {renderAnnotations(chartRef)}
       </div>
 

@@ -12,8 +12,6 @@ import {
   Tooltip as ChartTooltip,
   Legend as ChartLegend,
 } from "chart.js";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
 
@@ -49,7 +47,7 @@ export default function GraphObjectif({
     const fetchLatestNonTraite = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/stock/`);
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/stock/");
         const json = await res.json();
         const sorted = json.sort((a, b) => new Date(b.date) - new Date(a.date));
         const latest = sorted[0];

@@ -7,8 +7,6 @@ import { FaExpand, FaPencilAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
@@ -60,7 +58,7 @@ export default function GraphTopReglesParJour({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/regle/`);
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/regles/");
         const json = await res.json();
 
         const dates = json.map(i => new Date(i.date));

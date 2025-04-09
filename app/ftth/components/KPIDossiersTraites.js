@@ -5,8 +5,6 @@ import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 export default function KPIDossiersTraites({ onComponentReady }) {
   const [data, setData] = useState([]);
@@ -68,7 +66,7 @@ export default function KPIDossiersTraites({ onComponentReady }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/stock/`);
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/stock/");
         const json = await res.json();
         const sorted = json.sort((a, b) => new Date(b.date) - new Date(a.date));
         setData(sorted);

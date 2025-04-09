@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import useAuth from "@/hooks/useAuth"; // ✅ Hook d'authentification
+
 import KPIBacklogJ1 from "./components/KPIBacklogJ1";
 import KPIBacklogJ from "./components/KPIBacklogJ";
 import KPIObjectif from "./components/KPIObjectif";
@@ -15,20 +15,9 @@ import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 
 export default function DashboardFTTH() {
-  const { user, loading, authorized, hydrated } = useAuth(null, "FTTH");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [globalStartDate, setGlobalStartDate] = useState(null);
   const [globalEndDate, setGlobalEndDate] = useState(null);
-
-  
-    if (!hydrated || loading || !authorized) {
-      return (
-        <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
-          Chargement...
-        </div>
-      );
-    }
-
 
   const handleGlobalFilter = (start, end) => {
     setGlobalStartDate(new Date(start));
@@ -76,7 +65,3 @@ export default function DashboardFTTH() {
     </div>
   );
 }
-// Compare this snippet from app/ftth%20copy/components/KPIDossiersTraites.js:
-//       >  
-//       </select>
-//         <div className="absolute top-0 left-0 w-full h-full bg-white opacity-90 rounded-lg shadow-md p-4">
