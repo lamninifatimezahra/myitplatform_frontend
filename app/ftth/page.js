@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-
+import useAuth from "@/hooks/useAuth"; // ✅ Hook d'authentification
 import KPIBacklogJ1 from "./components/KPIBacklogJ1";
 import KPIBacklogJ from "./components/KPIBacklogJ";
 import KPIObjectif from "./components/KPIObjectif";
@@ -15,9 +15,20 @@ import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 
 export default function DashboardFTTH() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user, loading, authorized, hydrated } = useAuth(null, "FTTH");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [globalStartDate, setGlobalStartDate] = useState(null);
   const [globalEndDate, setGlobalEndDate] = useState(null);
+
+  
+    if (!hydrated || loading || !authorized) {
+      return (
+        <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
+          Chargement...
+        </div>
+      );
+    }
+
 
   const handleGlobalFilter = (start, end) => {
     setGlobalStartDate(new Date(start));
