@@ -15,7 +15,7 @@ export default function useAuth(requiredRole = null, requiredDashboard = null) {
 
     const checkAuth = async () => {
       try {
-        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/`, {
+        const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/", {
           method: 'GET',
           credentials: 'include',
         });

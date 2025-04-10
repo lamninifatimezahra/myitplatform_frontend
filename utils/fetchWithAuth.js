@@ -5,7 +5,7 @@ export default async function fetchWithAuth(url, options = {}) {
     let res = await fetch(url, options);
 
     if (res.status === 401) {
-      const refreshRes = await fetch(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/refresh/`, {
+      const refreshRes = await fetch("https://myit-backend-ed72239b4b8e.herokuapp.com/api/refresh/", {
         method: 'POST',
         credentials: 'include',
       });
