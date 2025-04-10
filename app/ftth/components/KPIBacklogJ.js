@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
 import fetchWithAuth from "@/utils/fetchWithAuth";
-import fetchWithAuth from "@/utils/fetchWithAuth";
 
 
 
