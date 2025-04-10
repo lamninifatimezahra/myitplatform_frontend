@@ -34,7 +34,7 @@ export default function Login() {
     if (!errors.email && !errors.password) {
       try {
         // 1. Login : les tokens sont mis en cookie HttpOnly par le backend
-        const loginRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/login/`, {
+        const loginRes = await fetchWithAuth(`${procesPUBLICs.env.NEXT_PUBLIC_API_URL}/api/login/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
