@@ -8,8 +8,6 @@ import { FaExpand, FaPencilAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
@@ -94,7 +92,11 @@ export default function GraphRepartitionManuelle({
           [start, end] = getPeriodRange();
         }
 
+<<<<<<< HEAD
         const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/regle/`)        ;
+=======
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/regles/");
+>>>>>>> b5cd662d704bc9b8675eba915da13ecd01c3f05d
         const all = await res.json();
         const filtered = all.filter((item) => {
           const d = normalizeDate(item.date);

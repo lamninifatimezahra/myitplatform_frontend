@@ -12,8 +12,6 @@ import {
   Tooltip as ChartTooltip,
   Legend as ChartLegend,
 } from "chart.js";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
 
@@ -49,7 +47,11 @@ export default function GraphObjectif({
     const fetchLatestNonTraite = async () => {
       setLoading(true);
       try {
+<<<<<<< HEAD
         const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/`);
+=======
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/stock/");
+>>>>>>> b5cd662d704bc9b8675eba915da13ecd01c3f05d
         const json = await res.json();
         const sorted = json.sort((a, b) => new Date(b.date) - new Date(a.date));
         const latest = sorted[0];
@@ -278,8 +280,9 @@ export default function GraphObjectif({
           <p className="text-4xl font-bold text-gray-900">{value}</p>
           <p className="text-base text-gray-600">commandes</p>
           <p className={`mt-3 text-xl font-bold ${value <= objective ? "text-green-600" : "text-red-600"}`}>
-            {value <= objective ? "✓ Dans l’objectif" : "✗ Au-dessus de l’objectif"}
+          {value <= objective ? "✓ Dans l&apos;objectif" : "✗ Au-dessus de l&apos;objectif"}
           </p>
+
         </div>
         {renderAnnotations(chartRef)}
       </div>
@@ -303,8 +306,9 @@ export default function GraphObjectif({
               <p className="text-5xl font-bold text-gray-900">{value}</p>
               <p className="text-lg text-gray-600">commandes</p>
               <p className={`mt-3 text-2xl font-bold ${value <= objective ? "text-green-600" : "text-red-600"}`}>
-                {value <= objective ? "✓ Dans l’objectif" : "✗ Au-dessus de l’objectif"}
-              </p>
+  {value <= objective ? "✓ Dans l'objectif" : "✗ Au-dessus de l'objectif"}
+</p>
+
             </div>
             {renderAnnotations(modalChartRef)}
           </div>

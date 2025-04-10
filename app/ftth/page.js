@@ -76,7 +76,3 @@ export default function DashboardFTTH() {
     </div>
   );
 }
-// Compare this snippet from app/ftth%20copy/components/KPIDossiersTraites.js:
-//       >  
-//       </select>
-//         <div className="absolute top-0 left-0 w-full h-full bg-white opacity-90 rounded-lg shadow-md p-4">

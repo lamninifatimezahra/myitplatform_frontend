@@ -224,8 +224,8 @@ export default function TicketsReentrantsTable() {
               {allWeeks.map(week => selectedWeeks.includes(week) && (
                 <th key={week} className="border p-2">Semaine {week}</th>
               ))}
-              <th className="border p-2">Semaines d'Apparition</th>
-              <th className="border p-2">Total Itérations</th>
+<th className="border p-2">Semaines d&apos;Apparition</th>
+<th className="border p-2">Total Itérations</th>
             </tr>
           </thead>
           <tbody>

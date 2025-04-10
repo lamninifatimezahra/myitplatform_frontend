@@ -5,8 +5,18 @@ import { FaSearch, FaDownload, FaFilter } from "react-icons/fa";
 import ProfileMenu from "./ProfileMenu";
 import NotificationMenu from "./NotificationMenu";
 import { generateWordFromGraphs } from "../utils/exportWord";
+import { generatePPTFromGraphs } from "../utils/exportPPTX";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { toPng } from "html-to-image";
+
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
 
 export default function Header({ onGlobalFilter }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -15,9 +25,10 @@ export default function Header({ onGlobalFilter }) {
   const [selectedGraphs, setSelectedGraphs] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [periodText, setPeriodText] = useState("");
 
   const dropdownRef = useRef();
-  const endDateRef = useRef(null);
+  const endDateRef = useRef();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -53,7 +64,18 @@ export default function Header({ onGlobalFilter }) {
       alert("Veuillez sélectionner une période valide.");
       return;
     }
-    alert(`Filtrage global du ${startDate.toLocaleDateString()} au ${endDate.toLocaleDateString()}`);
+
+    const diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    const startWeek = getWeekNumber(startDate);
+    const endWeek = getWeekNumber(endDate);
+
+    const text = `📅 Du ${startDate.toLocaleDateString()} au ${endDate.toLocaleDateString()} 
+      (S${startWeek}-${endWeek}) – ${diffDays} jour(s)`;
+    const confirmed = window.confirm(`Confirmez-vous la période sélectionnée ?\n\n${text}`);
+
+    if (!confirmed) return;
+
+    setPeriodText(text);
     onGlobalFilter(startDate, endDate);
   };
 
@@ -117,8 +139,15 @@ export default function Header({ onGlobalFilter }) {
             <FaFilter />
             <span>Filtrer</span>
           </button>
+
+          {periodText && (
+            <span className="text-sm text-blue-700 font-medium whitespace-nowrap ml-3">
+              {periodText}
+            </span>
+          )}
         </div>
 
+        {/* Export Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -138,27 +167,18 @@ export default function Header({ onGlobalFilter }) {
                   📄 CR (Format Word)
                 </div>
                 <div
-                  onClick={() => alert("Format PPTX en cours de développement")}
+                  onClick={() => setFormat("pptx")}
                   className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded"
                 >
                   📊 CR (Format PPTX)
                 </div>
               </div>
 
-              {format === "word" && (
+              {(format === "word" || format === "pptx") && (
                 <div className="border-t pt-2 space-y-2">
-                  <div className="flex justify-between text-sm px-2 text-blue-600 font-medium">
-                    <button onClick={() => toggleAll(true)}>Tout cocher</button>
-                    <button onClick={() => toggleAll(false)}>Tout décocher</button>
-                  </div>
-
-                  <div className="border-b border-gray-300 mt-2 mb-2"></div>
-
-                  <div className="grid grid-cols-2 gap-2 px-2 text-sm text-gray-800 font-semibold">
-                    <div># KPI Backlog J-1</div>
-                    <div># KPI Backlog J</div>
-                    <div># KPI Objectif</div>
-                    <div># KPI Dossiers Traités</div>
+                  <div className="flex justify-between text-sm px-2 font-medium">
+                    <button onClick={() => toggleAll(true)} className="text-blue-600">Tout cocher</button>
+                    <button onClick={() => toggleAll(false)} className="text-red-600">Tout décocher</button>
                   </div>
 
                   <div className="border-b border-gray-300 mt-2 mb-2"></div>
@@ -185,14 +205,50 @@ export default function Header({ onGlobalFilter }) {
                     }`}
                     onClick={async () => {
                       const confirmed = window.confirm(
-                        `Vous avez sélectionné ${selectedGraphs.length} graphique(s).\nLe téléchargement du document Word va commencer.`
+                        `Vous avez sélectionné ${selectedGraphs.length} graphique(s).\nLe téléchargement du document ${format.toUpperCase()} va commencer.`
                       );
-                      if (confirmed) {
-                        await generateWordFromGraphs(selectedGraphs, graphList, {}, startDate, endDate);
+                      if (!confirmed) return;
+
+                      const kpis = ["Backlog J-1", "Backlog J", "Objectif", "Dossiers traités"];
+                      const fileDate = new Date().toLocaleDateString("fr-FR").replace(/\//g, "-");
+                      const weekPart =
+                        startDate && endDate
+                          ? `S${getWeekNumber(startDate)}-S${getWeekNumber(endDate)}`
+                          : "Date";
+
+                      const graphs = await Promise.all(
+                        selectedGraphs.map(async (id) => {
+                          const el = document.querySelector(`#canvas-${id}`);
+                          if (!el) return null;
+                          const dataUrl = await toPng(el);
+                          return {
+                            title: graphList.find((g) => g.id === id)?.label,
+                            imagePath: dataUrl,
+                            comment: "[Aucun commentaire fourni]",
+                          };
+                        })
+                      );
+
+                      if (format === "word") {
+                        await generateWordFromGraphs(
+                          selectedGraphs,
+                          graphList,
+                          {},
+                          startDate,
+                          endDate
+                        );
+                      } else if (format === "pptx") {
+                        await generatePPTFromGraphs({
+                          selectedGraphIds: selectedGraphs,
+                          graphList,
+                          commentMap: {},
+                          globalStartDate: startDate,
+                          globalEndDate: endDate,
+                        });
                       }
                     }}
                   >
-                    Télécharger le CR WORD
+                    Télécharger le CR {format === "pptx" ? "PPTX" : "WORD"}
                   </button>
                 </div>
               )}

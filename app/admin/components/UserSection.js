@@ -172,7 +172,7 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                             className="mt-2 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md flex items-center space-x-2"
                         >
                             <User size={18} />
-                            <span>Ajouter l'utilisateur</span>
+                            <span>Ajouter l&#39;utilisateur</span>
                         </button>
                     </div>
                 </div>
@@ -226,7 +226,7 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                             className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md flex items-center space-x-2"
                         >
                             <Trash2 size={18} />
-                            <span>Supprimer l'utilisateur</span>
+                            <span>Supprimer l&#39;utilisateur</span>
                         </button>
                     </div>
                 </div>

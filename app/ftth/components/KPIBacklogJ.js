@@ -3,8 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
-import fetchWithAuth from "@/utils/fetchWithAuth";
-
 
 export default function KPIBacklogJ({ onComponentReady }) {
   const [todayValue, setTodayValue] = useState(0);
@@ -18,7 +16,11 @@ export default function KPIBacklogJ({ onComponentReady }) {
   useEffect(() => {
     const fetchStockData = async () => {
       try {
+<<<<<<< HEAD
         const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/`);
+=======
+        const res = await fetch("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/stock/");
+>>>>>>> b5cd662d704bc9b8675eba915da13ecd01c3f05d
         const data = await res.json();
 
         const sorted = data.sort((a, b) => new Date(b.date) - new Date(a.date));
