@@ -34,7 +34,7 @@ export default function Login() {
     if (!errors.email && !errors.password) {
       try {
         // 1. Login : les tokens sont mis en cookie HttpOnly par le backend
-        const loginRes = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/login/`, {
+        const loginRes = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/login/", {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
@@ -44,7 +44,7 @@ export default function Login() {
         if (!loginRes.ok) throw new Error('Identifiants invalides');
 
         // 2. Appeler /me pour récupérer les infos
-        const userRes = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/`, {
+        const userRes = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/", {
           method: 'GET',
           credentials: 'include',
         });
@@ -80,7 +80,7 @@ export default function Login() {
     }
 
     try {
-      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/change-password/`, {
+      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/change-password/", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
