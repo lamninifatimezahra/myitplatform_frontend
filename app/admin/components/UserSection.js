@@ -35,7 +35,7 @@ export default function UserSection() {
 
     const handleAddUser = async () => {
         try {
-            const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/create-user/", {
+            const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/create-user/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export default function UserSection() {
     
     const handleDeleteUser = async () => {
         try {
-            const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/delete-user/", {
+            const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/delete-user/`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -87,11 +87,11 @@ export default function UserSection() {
     };
     
     const copyToClipboard = () => {
-        const text = "Identifiants utilisateur :
+        const text = `Identifiants utilisateur :
 Email : ${email}
 Mot de passe : ${password}
 Rôle : ${role}
-Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}";
+Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}`;
         navigator.clipboard.writeText(text);
         setCopyMessage("✅ Identifiants copiés !");
         setTimeout(() => setCopyMessage(""), 2000);
@@ -172,7 +172,7 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                             className="mt-2 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md flex items-center space-x-2"
                         >
                             <User size={18} />
-                            <span>Ajouter l&#39;utilisateur</span>
+                            <span>Ajouter l'utilisateur</span>
                         </button>
                     </div>
                 </div>
@@ -183,10 +183,10 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                 <div className="bg-gray-50 border border-gray-200 p-4 rounded-md shadow space-y-3">
                     <h3 className="font-semibold text-gray-800">Identifiants à transmettre :</h3>
                     <pre className="bg-white p-3 rounded text-sm text-black overflow-x-auto whitespace-pre-wrap">
-                        {"Email : ${email}
+                        {`Email : ${email}
 Mot de passe : ${password}
 Rôle : ${role}
-Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}"}
+Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}`}
                     </pre>
                     <div className="flex items-center justify-between">
                         <button
@@ -226,7 +226,7 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                             className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md flex items-center space-x-2"
                         >
                             <Trash2 size={18} />
-                            <span>Supprimer l&#39;utilisateur</span>
+                            <span>Supprimer l'utilisateur</span>
                         </button>
                     </div>
                 </div>
