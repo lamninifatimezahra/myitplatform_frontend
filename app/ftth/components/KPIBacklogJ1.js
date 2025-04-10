@@ -17,7 +17,7 @@ export default function KPIBacklogJ1({ onComponentReady }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/stock/");
+        const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/");
         const json = await res.json();
         if (Array.isArray(json) && json.length > 1) {
           const sorted = json.sort((a, b) => new Date(b.date) - new Date(a.date));
