@@ -16,7 +16,7 @@ import { useExport } from "./ExportContext"; // adapte le chemin si besoin
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 export default function VolumeTicketsDivision() {
-  const id = "volume-division";
+  const id = "Volume des Tickets par Division";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);

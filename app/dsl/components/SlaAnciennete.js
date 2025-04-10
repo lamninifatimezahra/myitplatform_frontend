@@ -27,7 +27,7 @@ ChartJS.register(
 );
 
 export default function SlaAnciennete() {
-  const id = "sla-anciennete";
+  const id = "SLA d'Anciennete";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);

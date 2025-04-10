@@ -20,7 +20,7 @@ import fetchWithAuth from "@/utils/fetchWithAuth";
 ChartJS.register(BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartDataLabels);
 
 export default function VolumeReentrants() {
-  const id = "volume-reentrants";
+  const id = "Volume des Réentrants";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);

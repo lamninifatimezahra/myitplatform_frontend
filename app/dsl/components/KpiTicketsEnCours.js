@@ -34,7 +34,7 @@ const renderCustomHeader = ({
 );
 
 export default function KpiTicketsEnCours() {
-  const id = "kpi-tickets-en-cours";
+  const id = "KPI Tickets en Cours";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);

@@ -7,7 +7,7 @@ import fetchWithAuth from "@/utils/fetchWithAuth";
 
 
 export default function TicketsReentrantsTable() {
-  const id = "table-reentrants";
+  const id = "Détail des Réitérations des Tickets";
   const { selectedIds, toggleId } = useExport();
 
   // Stockage des données brutes et des données traitées (par année)

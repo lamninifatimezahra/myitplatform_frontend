@@ -27,7 +27,7 @@ ChartJS.register(
 );
 
 export default function RapportSortantsEntrants() {
-  const id = "rapport-sortants-entrants";
+  const id = "Rapport Sortants Entrants";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);

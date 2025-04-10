@@ -28,7 +28,7 @@ ChartJS.register(
 );
 
 export default function TranticiteCriticite() {
-  const id = "tranticite-criticite";
+  const id = "Transité / Criticité";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
@@ -249,7 +249,7 @@ export default function TranticiteCriticite() {
 
         {/* ✅ Titre & période */}
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Tranticité / Criticité</h3>
+          <h3 className="text-lg font-semibold text-gray-800">Transité / Criticité</h3>
           <p className="text-sm text-gray-500">
             {selectedYear && `Année : ${selectedYear} - `}{periodeLabel}
           </p>

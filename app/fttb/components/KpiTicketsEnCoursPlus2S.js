@@ -34,7 +34,7 @@ const renderCustomHeader = ({
 );
 
 export default function KpiTicketsEnCoursPlus2S() {
-  const id = "kpi-tickets-en-cours-plus-2S";
+  const id = "KPI Tickets en Cours +14j";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);

@@ -34,7 +34,7 @@ const renderCustomHeader = ({
 );
 
 export default function KpiReentrant() {
-  const id = "kpi-reentrant";
+  const id = "KPI Tickets Réentrants";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);

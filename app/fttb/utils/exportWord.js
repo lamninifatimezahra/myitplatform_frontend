@@ -1,12 +1,10 @@
+// ✅ fttb/utils/exportWord.js harmonisé avec HISPEED
+
 import htmlDocx from "html-docx-js/dist/html-docx";
 
 export async function generateWordFromImages(imageList) {
-  // Debug : Affichage complet de l'imageList reçue
-  console.log("DEBUG: Contenu de imageList :", imageList);
-
   const today = new Date().toLocaleDateString("fr-FR");
 
-  // Tableau fixe des KPI à inclure dans tous les compte-rendus
   const fixedKpiLabels = [
     "KPI Tickets Entrants",
     "KPI Tickets Traités",
@@ -15,34 +13,28 @@ export async function generateWordFromImages(imageList) {
     "KPI Tickets en Cours +14j"
   ];
 
-  // Création d'une version normalisée des labels (trim + lowercase)
   const normalizedFixedLabels = fixedKpiLabels.map(label => label.trim().toLowerCase());
 
-  // Extraction des images KPI depuis l'imageList en utilisant item.label si disponible sinon item.id
   const kpiImages = fixedKpiLabels.map(label => {
     const normalizedLabel = label.trim().toLowerCase();
     const found = imageList.find(item => {
-      // Utiliser label si présent, sinon id
       const currentLabel = (item.label != null ? item.label : item.id);
       return currentLabel.trim().toLowerCase() === normalizedLabel;
     });
     return found ? found : { label, image: null };
   });
 
-  // Extraction des images graphiques qui ne font pas partie des KPI fixes
   const graphImagesList = imageList.filter(item => {
     const currentLabel = (item.label != null ? item.label : item.id);
     return !normalizedFixedLabels.includes(currentLabel.trim().toLowerCase());
   });
 
-  // Fonction générant un bloc HTML pour un KPI
-  // Utilisation de dimensions fixes
   const generateKpiBlock = (kpi) => {
     const currentLabel = kpi.label != null ? kpi.label : kpi.id;
     const imageHtml = kpi.image
       ? `<img src="${kpi.image}" width="150" height="150" style="border-radius:5px;" />`
       : `<div style="width:40px; height:40px; border:1px dashed #cdcdcd; text-align:center; color:#999;">N/A</div>`;
-    
+
     return `
       <div style="background:#ffffff; padding:15px; border:1px solid #cdcdcd;">
         <h2 style="color:#31327e; font-size:12pt; text-align:center; margin-bottom:10px;">
@@ -60,14 +52,13 @@ export async function generateWordFromImages(imageList) {
     `;
   };
 
-  // Regroupement des KPI en lignes de deux
   let kpiRowsHtml = "";
   for (let i = 0; i < kpiImages.length; i += 2) {
     if (i + 1 < kpiImages.length) {
       kpiRowsHtml += `
         <tr>
           <td style="padding:10px; text-align:center; width:50%;">${generateKpiBlock(kpiImages[i])}</td>
-          <td style="padding:10px; text-align:center; width:50%;">${generateKpiBlock(kpiImages[i+1])}</td>
+          <td style="padding:10px; text-align:center; width:50%;">${generateKpiBlock(kpiImages[i + 1])}</td>
         </tr>
       `;
     } else {
@@ -87,7 +78,7 @@ export async function generateWordFromImages(imageList) {
             📊 KPI – Key Performance Indicators
           </h2>
           <p style="color:#6b7280; font-size:8pt;">
-            Suivi des indicateurs essentiels de performance HISPEED.
+            Suivi des indicateurs essentiels de performance FTTB.
           </p>
         </td>
       </tr>
@@ -95,7 +86,6 @@ export async function generateWordFromImages(imageList) {
     </table>
   `;
 
-  // Génération des graphiques avec dimensions fixes
   const graphBlocks = graphImagesList.map(item => {
     const currentLabel = item.label != null ? item.label : item.id;
     return `
@@ -115,7 +105,6 @@ export async function generateWordFromImages(imageList) {
     `;
   });
 
-  // Regroupement des graphiques par paires pour les sauts de page
   let pagesHtml = "";
   for (let i = 0; i < graphBlocks.length; i += 2) {
     let pageContent = graphBlocks[i];
@@ -125,7 +114,6 @@ export async function generateWordFromImages(imageList) {
     pagesHtml += `<div style="page-break-after:always;">${pageContent}</div>`;
   }
 
-  // Construction complète du document Word
   const html = `
   <html>
     <head>
@@ -136,11 +124,10 @@ export async function generateWordFromImages(imageList) {
       </style>
     </head>
     <body>
-        <!-- Entête -->
         <table style="width:100%; margin-bottom:10px; border-collapse:collapse;">
           <tr>
-            <td><img src="http://localhost:3000/logo-intelcia-small_1.png" style="height:26px;" /></td>
-            <td style="text-align:right;"><img src="http://localhost:3000/logo_sfr_small.png" style="height:26px;" /></td>
+            <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:26px;" /></td>
+            <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:26px;" /></td>
           </tr>
           <tr>
             <td></td>
@@ -150,31 +137,25 @@ export async function generateWordFromImages(imageList) {
           </tr>
         </table>
 
-        <!-- Titre principal -->
         <div style="background:#31327e; padding:20px; text-align:center; color:white;">
           <h1 style="font-size:16pt; margin:0;">
             Compte rendu détaillé de l'activité FTTB
           </h1>
         </div>
 
-        <!-- Date -->
         <p style="margin-top:15px; font-size:10pt;">
           <strong>Date du jour :</strong> ${today}
         </p>
 
-        <!-- Section KPI -->
         ${kpiSection}
 
-        <!-- Titre section Graphiques -->
         <div style="background:#68bddd; padding:15px; text-align:center; margin-top:20px; margin-bottom:20px;">
           <h2 style="font-size:16pt; color:#ffffff; margin:0;">Vue d'ensemble des graphiques</h2>
           <p style="font-size:8pt; color:#f0f9ff; margin-top:5px;">Rapport généré le ${today}</p>
         </div>
 
-        <!-- Section Graphiques (2 par page) -->
         ${pagesHtml}
 
-        <!-- Pied de page -->
         <table style="width:100%; margin-top:30px; background:#cdcdcd; padding:10px 0; border-collapse:collapse;">
           <tr>
             <td style="text-align:center; font-size:8pt; color:#374151;">
@@ -185,8 +166,6 @@ export async function generateWordFromImages(imageList) {
     </body>
   </html>
   `;
-
-  console.log("DEBUG: HTML final :", html);
 
   const blob = htmlDocx.asBlob(html);
   const url = URL.createObjectURL(blob);

@@ -6,7 +6,7 @@ import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useExport } from "./ExportContext"; // adapte le chemin si nécessaire
 
 export default function TicketsEnCoursTable() {
-  const id = "tickets-en-cours";
+  const id = "Tickets en cours - Plus de 2 semaines";
   const { selectedIds, toggleId } = useExport();
 
   const [tickets, setTickets] = useState([]);

@@ -51,7 +51,7 @@ function formatDate(dateInput) {
 }
 
 export default function GroupedBarChart() {
-  const id = "Tickets Entrants vs. Sortants";
+  const id = "Rapport : Sortants/Entrants";
   const { selectedIds, toggleId } = useExport();
 
   // États liés aux données, vue et sélections

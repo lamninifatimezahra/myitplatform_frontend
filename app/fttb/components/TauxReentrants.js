@@ -16,7 +16,7 @@ import { useExport } from "./ExportContext"; // 📦 à adapter selon le chemin 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 export default function TauxReentrants() {
-  const id = "taux-reentrants";
+  const id = "Taux des Réentrants";
   const { selectedIds, toggleId } = useExport();
 
   // Noms des mois en français

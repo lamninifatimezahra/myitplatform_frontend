@@ -35,7 +35,7 @@ const renderCustomHeader = ({
 );
 
 export default function KpiTicketTraite() {
-  const id = "kpi-ticket-traite";
+  const id = "KPI Tickets Traités";
   const { selectedIds, toggleId } = useExport();
 
   const [data, setData] = useState([]);
