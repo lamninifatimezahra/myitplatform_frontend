@@ -276,8 +276,9 @@ export default function GraphObjectif({
           <p className="text-4xl font-bold text-gray-900">{value}</p>
           <p className="text-base text-gray-600">commandes</p>
           <p className={`mt-3 text-xl font-bold ${value <= objective ? "text-green-600" : "text-red-600"}`}>
-            {value <= objective ? "✓ Dans l’objectif" : "✗ Au-dessus de l’objectif"}
+          {value <= objective ? "✓ Dans l&apos;objectif" : "✗ Au-dessus de l&apos;objectif"}
           </p>
+
         </div>
         {renderAnnotations(chartRef)}
       </div>
@@ -301,8 +302,9 @@ export default function GraphObjectif({
               <p className="text-5xl font-bold text-gray-900">{value}</p>
               <p className="text-lg text-gray-600">commandes</p>
               <p className={`mt-3 text-2xl font-bold ${value <= objective ? "text-green-600" : "text-red-600"}`}>
-                {value <= objective ? "✓ Dans l’objectif" : "✗ Au-dessus de l’objectif"}
-              </p>
+  {value <= objective ? "✓ Dans l'objectif" : "✗ Au-dessus de l'objectif"}
+</p>
+
             </div>
             {renderAnnotations(modalChartRef)}
           </div>

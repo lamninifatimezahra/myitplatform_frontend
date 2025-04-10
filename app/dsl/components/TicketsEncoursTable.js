@@ -141,8 +141,8 @@ export default function TicketsEnCoursTable() {
               <th className="border p-2">ID Ticket</th>
               <th className="border p-2">Titre</th>
               <th className="border p-2">Délai (jours)</th>
-              <th className="border p-2">Semaines d'apparition</th>
-            </tr>
+              <th className="border p-2">Semaines d&apos;apparition</th>
+              </tr>
           </thead>
           <tbody>
             {filtered.slice(0, visibleCount).map(ticket => (

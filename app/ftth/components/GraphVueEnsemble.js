@@ -226,7 +226,7 @@ export default function GraphVueEnsemble({
   return (
     <div
       data-graph-id="graph-vue-ensemble"
-      data-graph-label="Vue d'ensemble combinée du Backlog"
+      data-graph-label="Vue d&apos;ensemble combinée du Backlog"
       className="bg-white shadow-xl rounded-2xl p-6 relative"
       onClick={() => {
         setShowCommentPopup(false);
