@@ -79,7 +79,7 @@ export default function GraphTopRegles({
       }
 
       try {
-        const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/regle/");
+        const res = await fetchWithAuth("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/regle/");
         const json = await res.json();
         const startNorm = normalizeDate(start);
         const endNorm = normalizeDate(end);
