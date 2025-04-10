@@ -26,7 +26,7 @@ export default function Sidebar() {
 
     const handleLogout = async () => {
       try {
-        await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/logout/`, {
+        await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/`, {
           method: 'POST',
           credentials: 'include', // Envoie les cookies
         });

@@ -20,7 +20,7 @@ export default function TicketsEnCoursTable() {
 
   useEffect(() => {
     async function fetchData() {
-      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
+      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/data/`);
       const raw = await res.json();
       const now = new Date();
       const grouped = {};

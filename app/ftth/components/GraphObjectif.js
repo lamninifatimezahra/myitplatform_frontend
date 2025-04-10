@@ -49,7 +49,7 @@ export default function GraphObjectif({
     const fetchLatestNonTraite = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/stock/`);
+        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/`);
         const json = await res.json();
         const sorted = json.sort((a, b) => new Date(b.date) - new Date(a.date));
         const latest = sorted[0];

@@ -18,7 +18,7 @@ export default function KPIBacklogJ({ onComponentReady }) {
   useEffect(() => {
     const fetchStockData = async () => {
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/stock/`);
+        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/`);
         const data = await res.json();
 
         const sorted = data.sort((a, b) => new Date(b.date) - new Date(a.date));

@@ -73,7 +73,7 @@ export default function GroupedBarChart() {
   ];
 
   useEffect(() => {
-    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/dsl/data/`)
+    fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/data/`)
       .then(res => res.json())
       .then(json => {
         setData(json);

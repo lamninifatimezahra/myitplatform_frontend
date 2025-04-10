@@ -11,7 +11,7 @@ export default function NewsTickerRetard14() {
     async function fetchData() {
       try {
         const res = await fetchWithAuth(
-          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/dsl/data/`
+          `https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/data/`
         );
         const raw = await res.json();
         const now = new Date();

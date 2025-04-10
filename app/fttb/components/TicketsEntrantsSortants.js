@@ -73,7 +73,7 @@ export default function GroupedBarChart() {
   ];
 
   useEffect(() => {
-    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/fttb/data/`)
+    fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/fttb/data/`)
       .then(res => res.json())
       .then(json => {
         setData(json);

@@ -60,7 +60,7 @@ export default function GraphTopReglesParJour({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/ftth/regle/`);
+        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/regle/`);
         const json = await res.json();
 
         const dates = json.map(i => new Date(i.date));

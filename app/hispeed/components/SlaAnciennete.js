@@ -45,7 +45,7 @@ export default function SlaAnciennete() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`);
+        const response = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.comherokuapp.com/dashboard/api/hispeed/data/`);
         const result = await response.json();
         setData(result);
 

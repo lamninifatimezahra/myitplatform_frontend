@@ -44,7 +44,7 @@ export default function KpiReentrant() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
-    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/hispeed/data/`)
+    fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.comherokuapp.com/dashboard/api/hispeed/data/`)
       .then((response) => response.json())
       .then((jsonData) => {
         setData(jsonData);

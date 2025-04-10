@@ -44,7 +44,7 @@ export default function KpiTicketsEnCoursPlus2S() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
-    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/api/fttb/data/`)
+    fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/fttb/data/`)
       .then((response) => response.json())
       .then((jsonData) => {
         setData(jsonData);
