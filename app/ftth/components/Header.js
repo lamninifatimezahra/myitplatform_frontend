@@ -9,6 +9,8 @@ import { generatePPTFromGraphs } from "../utils/exportPPTX";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { toPng } from "html-to-image";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 function getWeekNumber(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

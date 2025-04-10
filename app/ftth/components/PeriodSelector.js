@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 export default function PeriodSelector({ onChange }) {
   const [selected, setSelected] = useState("year");

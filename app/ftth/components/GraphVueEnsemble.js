@@ -7,6 +7,8 @@ import { FaExpand, FaPencilAlt, FaSyncAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 

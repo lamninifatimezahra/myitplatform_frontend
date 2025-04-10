@@ -6,6 +6,8 @@ import { FaExpand, FaPencilAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 import {
   Chart as ChartJS,
   ArcElement,

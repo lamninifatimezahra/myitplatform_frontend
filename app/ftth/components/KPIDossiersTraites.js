@@ -5,6 +5,8 @@ import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 export default function KPIDossiersTraites({ onComponentReady }) {
   const [data, setData] = useState([]);

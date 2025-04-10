@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 import {
   AiOutlineDashboard,
   AiOutlineMessage,

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, LogOut } from "lucide-react";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 
 export default function ProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);

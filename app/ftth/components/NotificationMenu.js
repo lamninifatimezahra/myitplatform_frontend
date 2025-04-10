@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 export default function NotificationMenu() {
   const [isOpen, setIsOpen] = useState(false);

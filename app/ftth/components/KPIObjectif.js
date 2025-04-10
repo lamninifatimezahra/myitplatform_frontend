@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { Target } from "lucide-react";
 import { motion } from "framer-motion";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+
 
 export default function KPIObjectif({ onComponentReady }) {
   const [value, setValue] = useState(null);
