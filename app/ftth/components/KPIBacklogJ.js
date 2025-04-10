@@ -12,6 +12,7 @@ export default function KPIBacklogJ({ onComponentReady }) {
   const [isPositive, setIsPositive] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchStockData = async () => {
       try {

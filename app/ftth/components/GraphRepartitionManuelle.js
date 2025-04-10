@@ -92,7 +92,7 @@ export default function GraphRepartitionManuelle({
           [start, end] = getPeriodRange();
         }
 
-        const res = await fetchWithAuth("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/regle/")        ;
+        const res = await fetchWithAuth("https://ftth-backend-ayoub-31fb8bb58dc2.herokuapp.com/dashboard/api/regles/")        ;
         const all = await res.json();
         const filtered = all.filter((item) => {
           const d = normalizeDate(item.date);
