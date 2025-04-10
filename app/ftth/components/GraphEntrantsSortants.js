@@ -93,7 +93,7 @@ export default function GraphVueEnsemble({
       const normEnd = normalizeDate(end);
 
       try {
-        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/`)
+        const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/")
         const json = await res.json();
         const filtered = json.filter(item => {
           const itemDate = normalizeDate(item.date);

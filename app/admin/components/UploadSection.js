@@ -71,7 +71,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", hispeedFile);
     try {
-      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/upload/`, {
+      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/upload/", {
         method: "POST",
         body: formData,
       });
@@ -89,7 +89,7 @@ export default function UploadSection() {
     formData.append("stock_file", ftthStock);
     formData.append("regle_file", ftthRegle);
     try {
-      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/upload/`, {
+      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/upload/", {
         method: "POST",
         body: formData,
       });
@@ -106,7 +106,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", dslFile);
     try {
-      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/upload/`, {
+      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/upload/", {
         method: "POST",
         body: formData,
       });
@@ -123,7 +123,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", fttbFile);
     try {
-      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/fttb/upload/`, {
+      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/fttb/upload/", {
         method: "POST",
         body: formData,
       });

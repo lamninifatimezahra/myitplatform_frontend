@@ -35,7 +35,7 @@ export default function UserSection() {
 
     const handleAddUser = async () => {
         try {
-            const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/create-user/`, {
+            const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/create-user/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export default function UserSection() {
     
     const handleDeleteUser = async () => {
         try {
-            const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/delete-user/`, {
+            const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/delete-user/", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -87,11 +87,11 @@ export default function UserSection() {
     };
     
     const copyToClipboard = () => {
-        const text = `Identifiants utilisateur :
+        const text = "Identifiants utilisateur :
 Email : ${email}
 Mot de passe : ${password}
 Rôle : ${role}
-Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}`;
+Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}";
         navigator.clipboard.writeText(text);
         setCopyMessage("✅ Identifiants copiés !");
         setTimeout(() => setCopyMessage(""), 2000);
@@ -183,10 +183,10 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
                 <div className="bg-gray-50 border border-gray-200 p-4 rounded-md shadow space-y-3">
                     <h3 className="font-semibold text-gray-800">Identifiants à transmettre :</h3>
                     <pre className="bg-white p-3 rounded text-sm text-black overflow-x-auto whitespace-pre-wrap">
-                        {`Email : ${email}
+                        {"Email : ${email}
 Mot de passe : ${password}
 Rôle : ${role}
-Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}`}
+Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}"}
                     </pre>
                     <div className="flex items-center justify-between">
                         <button

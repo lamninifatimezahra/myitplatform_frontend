@@ -139,8 +139,8 @@ export async function generateWordFromImages(imageList) {
         <!-- Entête -->
         <table style="width:100%; margin-bottom:10px; border-collapse:collapse;">
           <tr>
-            <td><img src="http://localhost:3000/logo-intelcia-small_1.png" style="height:26px;" /></td>
-            <td style="text-align:right;"><img src="http://localhost:3000/logo_sfr_small.png" style="height:26px;" /></td>
+            <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:26px;" /></td>
+            <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:26px;" /></td>
           </tr>
           <tr>
             <td></td>

@@ -11,7 +11,7 @@ export default function NewsTickerRetard14() {
     async function fetchData() {
       try {
         const res = await fetchWithAuth(
-          `https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/fttb/data/`
+          "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/fttb/data/"
         );
         const raw = await res.json();
         const now = new Date();

@@ -62,7 +62,7 @@ export default function RapportSortantsEntrants() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/data/`);
+        const response = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/data/");
         const result = await response.json();
         setData(result);
 

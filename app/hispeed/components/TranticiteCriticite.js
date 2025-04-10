@@ -44,7 +44,7 @@ export default function TranticiteCriticite() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/data/`);
+        const response = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/data/");
         const result = await response.json();
         setData(result);
         

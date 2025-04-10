@@ -44,7 +44,7 @@ export default function KpiTicketsEntrants() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
-    fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/data/`)
+    fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/data/")
       .then((res) => res.json())
       .then((jsonData) => {
         setData(jsonData);

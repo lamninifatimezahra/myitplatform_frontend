@@ -149,7 +149,7 @@ export default function Header() {
       
       // Logos dans les coins supérieurs
       introSlide.addImage({
-        path: "http://localhost:3000/logo-intelcia-small.png",
+        path: "https://myit-three.vercel.app/logo-intelcia-small.png",
         x: 0.5,
         y: 0.4,
         w: 1.2,
@@ -157,7 +157,7 @@ export default function Header() {
       });
       
       introSlide.addImage({
-        path: "http://localhost:3000/logo_sfr_small.png",
+        path: "https://myit-three.vercel.app/logo_sfr_small.png",
         x: 8.3,
         y: 0.4,
         w: 1.2,
