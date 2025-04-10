@@ -63,7 +63,7 @@ export default function UserSection() {
 
   const handleDeleteUser = async () => {
     try {
-      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/delete-user/", {
+      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/admideleten/-user/", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
