@@ -225,7 +225,7 @@ export default function TicketsReentrantsTable() {
                 <th key={week} className="border p-2">Semaine {week}</th>
               ))}
               <th className="border p-2">Semaines d'Apparition</th>
-              <th className="border p-2">Total Itérations</th>
+              <th className="border p-2">Total Réitérations</th>
             </tr>
           </thead>
           <tbody>

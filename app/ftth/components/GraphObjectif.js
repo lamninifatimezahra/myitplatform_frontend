@@ -278,7 +278,7 @@ export default function GraphObjectif({
           <p className="text-4xl font-bold text-gray-900">{value}</p>
           <p className="text-base text-gray-600">commandes</p>
           <p className={`mt-3 text-xl font-bold ${value <= objective ? "text-green-600" : "text-red-600"}`}>
-          {value <= objective ? "✓ Dans l&apos;objectif" : "✗ Au-dessus de l&apos;objectif"}
+          {value <= objective ? "✓ Dans l'objectif" : "✗ Au-dessus de l'objectif"}
           </p>
 
         </div>

@@ -153,7 +153,7 @@ export default function TicketsReentrantsTable() {
           </button>
         </div>
 
-        <h3 className="text-lg font-semibold mb-3 text-black">Détail des Itérations des Tickets</h3>
+        <h3 className="text-lg font-semibold mb-3 text-black">Détail des Réitérations des Tickets</h3>
 
         {/* Popup filtres */}
         {isOpen && (
@@ -225,7 +225,7 @@ export default function TicketsReentrantsTable() {
                 <th key={week} className="border p-2">Semaine {week}</th>
               ))}
               <th className="border p-2">Semaines d'Apparition</th>
-              <th className="border p-2">Total Itérations</th>
+              <th className="border p-2">Total Réitérations</th>
             </tr>
           </thead>
           <tbody>
