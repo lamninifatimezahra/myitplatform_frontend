@@ -1,7 +1,7 @@
 'use client';
 
 import useAuth from "@/hooks/useAuth";
-import Sidebar from "./components/Sidebar";
+import Sidebar from "../components/Sidebar";
 import Header from "./components/Header";
 import PageCentrale from "./components/PageCentrale";
 
