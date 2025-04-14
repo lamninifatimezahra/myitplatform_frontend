@@ -119,7 +119,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
     intro.addText("SFR", { x: 8.3, y: 0.4, w: 1.2, h: 0.6, color: "FF0000", fontSize: 14, bold: true });
   }
   
-  intro.addText("Compte Rendu HISPEED", { x: 2, y: 1.8, w: 6, fontSize: 28, bold: true, color: "FFFFFF", align: "center" });
+  intro.addText("Compte Rendu FTTB", { x: 2, y: 1.8, w: 6, fontSize: 28, bold: true, color: "FFFFFF", align: "center" });
   intro.addText("Suivi d'activité et analyse des performances", { x: 2, y: 2.2, w: 6, fontSize: 16, color: "FFFFFF", align: "center" });
   
   // Ajout de la date d'édition
@@ -558,7 +558,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   }
 
   try {
-    await ppt.writeFile({ fileName: `compte_rendu_HISPEED_${todayStr}.pptx` });
+    await ppt.writeFile({ fileName: `compte_rendu_FTTB_${todayStr}.pptx` });
     console.log("Fichier PPTX généré avec succès");
   } catch (error) {
     console.error("Erreur lors de la génération du fichier PPTX:", error);

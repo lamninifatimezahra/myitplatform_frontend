@@ -7,11 +7,11 @@ import { registerLocale, setDefaultLocale } from "react-datepicker";
 import fr from 'date-fns/locale/fr';
 import { FaFilter } from "react-icons/fa";
 import { AiOutlineBell, AiOutlineUser, AiOutlineDownload } from "react-icons/ai";
-import { generateWordFromImages } from "../utils/exportWord";
-import { generatePPTFromImages } from "../utils/exportPPTX";
+import { generateWordFromImages } from "../dsl/utils/exportWord";
+import { generatePPTFromImages } from "../dsl/utils/exportPPTX";
 import html2canvas from "html2canvas-pro";
 // Import du contexte global de filtre
-import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
+import { useGlobalFilter } from "./GlobalFilterContext";
 
 // Enregistrement de la localisation française
 registerLocale('fr', fr);
@@ -256,7 +256,7 @@ export default function Header() {
       <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-            <span className="text-blue-600">Dashboard FTTB</span>
+            <span className="text-blue-600">Dashboard DSL</span>
           </h1>
           <p className="text-gray-500 text-sm">Bienvenue !</p>
         </div>

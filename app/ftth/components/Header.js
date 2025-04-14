@@ -88,7 +88,7 @@ export default function Header({ onGlobalFilter }) {
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
             <span className="text-blue-600">Dashboard FTTH</span>
           </h1>
-          <p className="text-gray-500 text-sm">Bienvenue, Ayoub!</p>
+          <p className="text-gray-500 text-sm">Bienvenue</p>
         </div>
 
         <div className="flex items-center gap-4 flex-wrap justify-end flex-1">

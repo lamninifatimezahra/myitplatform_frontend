@@ -12,54 +12,79 @@ import {
   AiOutlineUser,
   AiOutlineSetting,
   AiOutlineLogout,
-  AiOutlineQuestionCircle,
+  AiOutlineArrowLeft,
 } from 'react-icons/ai';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import fetchWithAuth from '@/utils/fetchWithAuth';
+import useAuth from '@/hooks/useAuth';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showDashboards, setShowDashboards] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
+
+  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb'];
+  const accessibleDashboards = user?.role === 'admin'
+    ? dashboards
+    : dashboards.filter(d => user?.dashboards?.includes(d.toUpperCase()));
+
+  const isDashboardPage = dashboards.some(d => pathname.includes(d));
 
   const handleLogout = async () => {
     try {
-      await fetch("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
+      // Tentative de déconnexion côté serveur
+      const response = await fetch("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
         method: 'POST',
         credentials: 'include',
       });
+      
+      console.log("Déconnexion - Statut:", response.status);
+      
     } catch (error) {
-      console.error('Erreur de déconnexion :', error);
+      console.log("Erreur pendant la déconnexion:", error);
     } finally {
+      // Dans tous les cas, on force un rechargement complet pour effacer l'état
+      localStorage.removeItem('userInfo');
+      sessionStorage.clear();
       window.location.href = '/login';
     }
   };
-
-  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb'];
-  const isDashboardPage = dashboards.some(d => pathname.includes(d));
-
+  
+  
   return (
     <div
-      className={`h-screen bg-white shadow-md flex flex-col justify-between py-6 transition-all duration-300 
+      className={`h-screen bg-white shadow-md flex flex-col justify-between py-6 transition-all duration-300
         ${isOpen ? 'w-56' : 'w-16'}`}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      {/* Logo */}
+      {/* Logo + retour admin */}
       <div className="flex flex-col items-center mb-4 space-y-2">
         <Image src="/logo-myit.png" alt="MyIT Logo" width={isOpen ? 200 : 40} height={40} />
+        {user?.role === 'admin' && (
+          <Link
+            href="/admin"
+            className={`flex items-center text-blue-600 hover:text-blue-800 transition-all duration-200 ${
+              isOpen ? 'space-x-2' : 'justify-center'
+            }`}
+          >
+            <AiOutlineArrowLeft size={18} />
+            {isOpen && <span className="text-sm font-semibold">Admin</span>}
+          </Link>
+        )}
       </div>
 
       {/* Navigation */}
       <nav className="flex flex-col flex-1 space-y-2 px-2">
-        {/* Menu Dashboard avec sous-menu */}
+        {/* Dashboard avec sous-menu */}
         <div>
           <button
             onClick={() => setShowDashboards(!showDashboards)}
-            className={`flex items-center px-3 py-2 rounded-lg w-full transition-all duration-200 
-              ${isDashboardPage ? 'bg-[#4f72c3] text-white font-semibold' : 'text-gray-700 hover:text-[#4f72c3] hover:bg-gray-100'} 
-              ${isOpen ? 'justify-start' : 'justify-center'}`}
+            className={`flex items-center px-3 py-2 rounded-lg w-full transition-all duration-200 ${
+              isDashboardPage ? 'bg-[#4f72c3] text-white font-semibold' : 'text-gray-700 hover:text-[#4f72c3] hover:bg-gray-100'
+            } ${isOpen ? 'justify-start' : 'justify-center'}`}
           >
             <AiOutlineDashboard size={28} className={isDashboardPage ? 'text-white' : 'text-gray-700'} />
             {isOpen && (
@@ -73,13 +98,14 @@ export default function Sidebar() {
           </button>
 
           {showDashboards && isOpen && (
-            <ul className="ml-8 mt-2 space-y-1 text-sm">
-              {dashboards.map((dash) => (
+            <ul className="ml-8 mt-2 space-y-1 text-sm text-gray-100">
+              {accessibleDashboards.map((dash) => (
                 <li key={dash}>
                   <Link
                     href={`/${dash}`}
-                    className={`block px-2 py-1 rounded transition-all duration-150 
-                      ${pathname === `/${dash}` ? 'font-bold text-[#4f72c3] bg-gray-100' : 'text-gray-700 hover:text-[#4f72c3]'}`}
+                    className={`block px-2 py-1 rounded hover:text-[#4f72c3] ${
+                      pathname === `/${dash}` ? 'font-bold text-[#4f72c3] bg-gray-100' : 'text-gray-700'
+                    }`}
                   >
                     {dash.toUpperCase()}
                   </Link>
@@ -92,12 +118,12 @@ export default function Sidebar() {
         {/* Autres liens */}
         <SidebarItem icon={<AiOutlineMessage size={24} />} text="MyForum" href="/forum" pathname={pathname} isOpen={isOpen} />
         <SidebarItem icon={<AiOutlineRobot size={24} />} text="MyAI" href="/ai" pathname={pathname} isOpen={isOpen} />
-        <SidebarItem icon={<AiOutlineFile size={24} />} text="MyFile" href="/files" pathname={pathname} isOpen={isOpen} />
+        <SidebarItem icon={<AiOutlineFile size={24} />} text="MyFile" href="/file" pathname={pathname} isOpen={isOpen} />
 
-        {/* Paramètres / Profil */}
         <div className="border-t border-gray-300 pt-4 space-y-2 mt-2">
-          <SidebarItem icon={<AiOutlineUser size={24} />} text="Mon Profil" href="/admin" pathname={pathname} isOpen={isOpen} />
+          <SidebarItem icon={<AiOutlineUser size={24} />} text="Mon Profil" href="/profile" pathname={pathname} isOpen={isOpen} />
           <SidebarItem icon={<AiOutlineSetting size={24} />} text="Paramètres" href="/settings" pathname={pathname} isOpen={isOpen} />
+
           <button
             onClick={handleLogout}
             className="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-red-500 hover:text-red-600 hover:bg-gray-100 w-full"
@@ -107,18 +133,13 @@ export default function Sidebar() {
             {isOpen && <span className="ml-3">Se Déconnecter</span>}
           </button>
         </div>
-
-        {/* Aide */}
-        <div className="border-t border-gray-300 pt-4 space-y-2 mt-2">
-          <SidebarItem icon={<AiOutlineQuestionCircle size={24} />} text="Aide" href="/help" pathname={pathname} isOpen={isOpen} />
-        </div>
       </nav>
 
-      {/* Logos SFR / Intelcia */}
+      {/* Logos SFR et Intelcia */}
       {isOpen && (
         <div className="flex justify-center items-center space-x-2 px-4">
           <Image src="/logo-sfr.png" alt="SFR" width={40} height={40} />
-          <Image src="/intelcia_it_solutions_logo.jpg" alt="Intelcia IT Solutions" width={100} height={40} />
+          <Image src="/logo-intelcia.png" alt="Intelcia IT Solutions" width={100} height={40} />
         </div>
       )}
     </div>

@@ -1,10 +1,38 @@
 import htmlDocx from "html-docx-js/dist/html-docx";
 
-export async function generateWordFromImages(imageList) {
+// Fonction pour calculer le numéro de semaine d'une date
+const getWeekNumber = (date) => {
+  if (!date) return null;
+  
+  // Création d'une copie de la date pour ne pas modifier l'originale
+  const d = new Date(date);
+  
+  // Définir le premier jour de l'année
+  const startOfYear = new Date(d.getFullYear(), 0, 1);
+  
+  // Nombre de jours écoulés depuis le début de l'année
+  const days = Math.floor((d - startOfYear) / (24 * 60 * 60 * 1000));
+  
+  // Calculer le numéro de semaine
+  // getDay() retourne 0 pour dimanche, donc on ajuste pour que lundi soit le premier jour
+  const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+  
+  return weekNum;
+};
+
+export async function generateWordFromImages(imageList, startDate = null, endDate = null) {
   // Debug : Affichage complet de l'imageList reçue
   console.log("DEBUG: Contenu de imageList :", imageList);
 
   const today = new Date().toLocaleDateString("fr-FR");
+  
+  // Formatage de la période sélectionnée si disponible
+  let periodText = "";
+  if (startDate && endDate) {
+    const startWeek = getWeekNumber(startDate);
+    const endWeek = getWeekNumber(endDate);
+    periodText = `${startDate.toLocaleDateString("fr-FR")} (S${startWeek}) → ${endDate.toLocaleDateString("fr-FR")} (S${endWeek})`;
+  }
 
   // Tableau fixe des KPI à inclure dans tous les compte-rendus
   const fixedKpiLabels = [
@@ -79,6 +107,19 @@ export async function generateWordFromImages(imageList) {
     }
   }
 
+  // Ajout du bloc de période sélectionnée dans la section KPI si disponible
+  const periodBlock = periodText ? `
+    <tr>
+      <td colspan="2" style="text-align:center; padding:10px;">
+        <div style="background:#e6f7ff; border:1px solid #68bddd; padding:10px; display:inline-block; margin:0 auto;">
+          <p style="font-size:10pt; color:#31327e; font-weight:bold; margin:0;">
+            <span style="font-weight:normal;">Période sélectionnée :</span> ${periodText}
+          </p>
+        </div>
+      </td>
+    </tr>
+  ` : '';
+
   const kpiSection = `
     <table style="width:100%; background:#f9fafb; border:1px solid #cdcdcd; padding:20px; margin-top:30px; margin-bottom:30px; border-collapse:collapse;">
       <tr>
@@ -91,6 +132,7 @@ export async function generateWordFromImages(imageList) {
           </p>
         </td>
       </tr>
+      ${periodBlock}
       ${kpiRowsHtml}
     </table>
   `;
@@ -125,6 +167,18 @@ export async function generateWordFromImages(imageList) {
     pagesHtml += `<div style="page-break-after:always;">${pageContent}</div>`;
   }
 
+  // Préparation du bloc de période pour la section "Date du jour"
+  const periodDateBlock = periodText ? `
+    <p style="margin-top:10px; font-size:10pt;">
+      <strong>Période sélectionnée :</strong> ${periodText}
+    </p>
+  ` : '';
+
+  // Préparation du bloc de période pour l'en-tête de la section Graphiques
+  const periodGraphHeaderBlock = periodText ? `
+    <p style="font-size:9pt; color:#f0f9ff; margin-top:5px;">Période : ${periodText}</p>
+  ` : '';
+
   // Construction complète du document Word
   const html = `
   <html>
@@ -139,8 +193,8 @@ export async function generateWordFromImages(imageList) {
         <!-- Entête -->
         <table style="width:100%; margin-bottom:10px; border-collapse:collapse;">
           <tr>
-            <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:26px;" /></td>
-            <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:26px;" /></td>
+            <td><img src="http://localhost:3000/logo-intelcia-small_1.png" style="height:26px;" /></td>
+            <td style="text-align:right;"><img src="http://localhost:3000/logo_sfr_small.png" style="height:26px;" /></td>
           </tr>
           <tr>
             <td></td>
@@ -161,6 +215,7 @@ export async function generateWordFromImages(imageList) {
         <p style="margin-top:15px; font-size:10pt;">
           <strong>Date du jour :</strong> ${today}
         </p>
+        ${periodDateBlock}
 
         <!-- Section KPI -->
         ${kpiSection}
@@ -169,6 +224,7 @@ export async function generateWordFromImages(imageList) {
         <div style="background:#68bddd; padding:15px; text-align:center; margin-top:20px; margin-bottom:20px;">
           <h2 style="font-size:16pt; color:#ffffff; margin:0;">Vue d'ensemble des graphiques</h2>
           <p style="font-size:8pt; color:#f0f9ff; margin-top:5px;">Rapport généré le ${today}</p>
+          ${periodGraphHeaderBlock}
         </div>
 
         <!-- Section Graphiques (2 par page) -->
