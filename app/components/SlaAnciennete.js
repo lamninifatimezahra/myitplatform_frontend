@@ -246,7 +246,7 @@ export default function SlaAnciennete({
   }, [globalStartDate, globalEndDate, globalModifiedAt]);
 
   if (loading)
-    return <p className="text-center text-gray-500">Chargement des données...</p>;
+    return <p className="text-center text-gray-500">Chargement des données..</p>;
 
   // Obtention des périodes disponibles pour l'année sélectionnée
   const getAvailablePeriodsForYear = (year) => {
