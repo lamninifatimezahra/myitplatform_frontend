@@ -35,7 +35,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       // Tentative de déconnexion côté serveur
-      const response = await fetch("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
+      const response = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
         method: 'POST',
         credentials: 'include',
       });

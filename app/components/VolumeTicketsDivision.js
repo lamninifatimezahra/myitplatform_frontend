@@ -496,7 +496,7 @@ export default function VolumeTicketsDivision({
           color: "black",
           font: { size: 10 },
           boxWidth: 10,
-          padding: 15,
+          padding: 10,
           generateLabels: (chart) => {
             const labels = chart.data.labels || [];
             return labels.map((label, i) => ({
@@ -535,7 +535,7 @@ export default function VolumeTicketsDivision({
         display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
       }
     },
-    layout: { padding: { top: 50, right: 80, bottom: 20, left: 50 } },
+    layout: { padding: { top: 50, right: 50, bottom: 20, left: 70 } },
   };
 
   return (
