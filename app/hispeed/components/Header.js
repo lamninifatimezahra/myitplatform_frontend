@@ -147,9 +147,10 @@ export default function Header() {
   const generateWord = async () => {
     if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
     const images = await captureScreenshots();
-    await generateWordFromImages(images);
+    // Passage des dates du filtre global à la fonction generateWordFromImages
+    await generateWordFromImages(images, globalStartDate, globalEndDate);
   };
-
+  
   const generatePPT = async () => {
     if (selectedGraphs.length === 0)
       return alert("Sélectionnez au moins une visualisation.");
@@ -159,7 +160,7 @@ export default function Header() {
     // Passage des dates du filtre global à la fonction generatePPTFromImages
     await generatePPTFromImages(images, globalStartDate, globalEndDate);
   };
-  
+
   const handleDownload = () => {
     // Selon le format sélectionné, lancez la bonne fonction
     if (selectedFormat === "word") {
