@@ -20,7 +20,6 @@ import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
 // ---- NOUVEAU ----
 import CommentButton from "./CommentButton"; // Assurez-vous que le chemin est correct
 
-// Configurer le Modal pour l'accessibilité
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 // --- Fonctions Utilitaires pour Périodes ---
