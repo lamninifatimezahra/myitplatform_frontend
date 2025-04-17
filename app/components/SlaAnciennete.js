@@ -17,6 +17,7 @@ import { FaExpand } from "react-icons/fa";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { useGlobalFilter } from "./GlobalFilterContext";
 import Modal from "react-modal";
+import CommentButton from "./CommentButton";
 
 // Configurer le Modal pour l'accessibilité
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
@@ -38,6 +39,18 @@ const getWeekNumber = (date) => {
   tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
   return Math.ceil(((tempDate - yearStart) / 86400000 + 1) / 7);
+};
+
+// Fonction pour obtenir le trimestre d'une date
+const getQuarter = (date) => {
+  const month = date.getMonth() + 1;
+  return Math.ceil(month / 3);
+};
+
+// Fonction pour obtenir le semestre d'une date
+const getSemester = (date) => {
+  const month = date.getMonth() + 1;
+  return month <= 6 ? 1 : 2;
 };
 
 export default function SlaAnciennete({
@@ -65,6 +78,8 @@ export default function SlaAnciennete({
   const globalFilterApplied = useRef(false);
   const prevViewMode = useRef(null);
   const filterPanelRef = useRef(null);
+  const chartContainerRef = useRef(null);
+  const modalChartContainerRef = useRef(null);
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,14 +91,19 @@ export default function SlaAnciennete({
   const [multipleYearsExist, setMultipleYearsExist] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
-
+  const [annotations, setAnnotations] = useState([]);
   // États pour mémoriser les sélections pour chaque vue
   const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
   const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
+  // Ajouter aux états existants
+  const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
+  const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
 
   // États pour gérer la priorisation de la sélection des périodes
   const [weekSelectionModifiedAt, setWeekSelectionModifiedAt] = useState(0);
   const [monthSelectionModifiedAt, setMonthSelectionModifiedAt] = useState(0);
+  const [quarterSelectionModifiedAt, setQuarterSelectionModifiedAt] = useState(0);
+  const [semesterSelectionModifiedAt, setSemesterSelectionModifiedAt] = useState(0);
 
   // Définition des catégories SLA
   const slaCategories = ["Jour", "2J", "3J", "Semaine", "2semaines", "Plus 2S"];
@@ -94,15 +114,21 @@ export default function SlaAnciennete({
     "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
   ];
 
+  // Noms des trimestres
+  const quarterNames = ["T1", "T2", "T3", "T4"];
+
+  // Noms des semestres
+  const semesterNames = ["S1", "S2"];
+
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
   // Effet pour gérer les clics extérieurs au panneau de filtre
   useEffect(() => {
     function handleClickOutside(event) {
       if (isOpen &&
-          filterPanelRef.current &&
-          !filterPanelRef.current.contains(event.target) &&
-          !event.target.closest('button[data-filter-toggle]')) {
+        filterPanelRef.current &&
+        !filterPanelRef.current.contains(event.target) &&
+        !event.target.closest('button[data-filter-toggle]')) {
         setIsOpen(false);
       }
     }
@@ -150,6 +176,44 @@ export default function SlaAnciennete({
     return monthsArray;
   }
 
+  function getAllQuartersBetween(startDate, endDate) {
+    if (!startDate || !endDate) return [];
+    const quartersArray = [];
+    const startQuarter = getQuarter(startDate);
+    const endQuarter = getQuarter(endDate);
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    if (startYear === endYear) {
+      for (let quarter = startQuarter; quarter <= endQuarter; quarter++) quartersArray.push(quarter);
+    } else {
+      for (let year = startYear; year <= endYear; year++) {
+        const maxQuarter = year === endYear ? endQuarter : 4;
+        const minQuarter = year === startYear ? startQuarter : 1;
+        for (let quarter = minQuarter; quarter <= maxQuarter; quarter++) quartersArray.push(quarter);
+      }
+    }
+    return quartersArray;
+  }
+
+  function getAllSemestersBetween(startDate, endDate) {
+    if (!startDate || !endDate) return [];
+    const semestersArray = [];
+    const startSemester = getSemester(startDate);
+    const endSemester = getSemester(endDate);
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    if (startYear === endYear) {
+      for (let semester = startSemester; semester <= endSemester; semester++) semestersArray.push(semester);
+    } else {
+      for (let year = startYear; year <= endYear; year++) {
+        const maxSemester = year === endYear ? endSemester : 2;
+        const minSemester = year === startYear ? startSemester : 1;
+        for (let semester = minSemester; semester <= maxSemester; semester++) semestersArray.push(semester);
+      }
+    }
+    return semestersArray;
+  }
+
   // Application du filtre global aux différentes vues
   const applyGlobalFilter = () => {
     if (!globalStartDate || !globalEndDate) return;
@@ -157,6 +221,12 @@ export default function SlaAnciennete({
     setWeekViewSelection({ values: weekList, year: globalStartDate.getFullYear() });
     const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
     setMonthViewSelection({ values: monthList, year: globalStartDate.getFullYear() });
+    const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
+    setQuarterViewSelection({ values: quarterList, year: globalStartDate.getFullYear() });
+
+    const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
+    setSemesterViewSelection({ values: semesterList, year: globalStartDate.getFullYear() });
+
     if (viewMode === "week") {
       setSelectedValues(weekList);
       setSelectedYear(globalStartDate.getFullYear());
@@ -164,7 +234,16 @@ export default function SlaAnciennete({
       setSelectedValues(monthList);
       setSelectedYear(globalStartDate.getFullYear());
     }
+    // Dans la condition if/else, ajouter ces cas
+    else if (viewMode === "quarter") {
+      setSelectedValues(quarterList);
+      setSelectedYear(globalStartDate.getFullYear());
+    } else if (viewMode === "semester") {
+      setSelectedValues(semesterList);
+      setSelectedYear(globalStartDate.getFullYear());
+    }
     setHasGlobalFilter(true);
+
   };
 
   // Changement de vue et préservation des sélections précédentes
@@ -178,12 +257,27 @@ export default function SlaAnciennete({
     } else if (prevViewMode.current === "month") {
       setMonthViewSelection({ values: selectedValues, year: selectedYear });
     }
+    // Ajouter dans la condition de sauvegarde
+    else if (prevViewMode.current === "quarter") {
+      setQuarterViewSelection({ values: selectedValues, year: selectedYear });
+    } else if (prevViewMode.current === "semester") {
+      setSemesterViewSelection({ values: selectedValues, year: selectedYear });
+    }
+
     if (viewMode === "week" && weekViewSelection.values.length > 0) {
       setSelectedValues(weekViewSelection.values);
       setSelectedYear(weekViewSelection.year || selectedYear);
     } else if (viewMode === "month" && monthViewSelection.values.length > 0) {
       setSelectedValues(monthViewSelection.values);
       setSelectedYear(monthViewSelection.year || selectedYear);
+    }
+    // Ajouter dans la condition de restauration
+    else if (viewMode === "quarter" && quarterViewSelection.values.length > 0) {
+      setSelectedValues(quarterViewSelection.values);
+      setSelectedYear(quarterViewSelection.year || selectedYear);
+    } else if (viewMode === "semester" && semesterViewSelection.values.length > 0) {
+      setSelectedValues(semesterViewSelection.values);
+      setSelectedYear(semesterViewSelection.year || selectedYear);
     }
     prevViewMode.current = viewMode;
   }, [viewMode]);
@@ -215,7 +309,19 @@ export default function SlaAnciennete({
             const lastWeeks = weeks.slice(-defaultNumPeriods);
             setSelectedValues(lastWeeks);
             setWeekViewSelection({ values: lastWeeks, year: latestYear });
-          } else {
+          }
+          else if (viewMode === "quarter") {
+            const quarters = [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket.date_derniere_maj))))].sort((a, b) => a - b);
+            const lastQuarters = quarters.slice(-defaultNumPeriods);
+            setSelectedValues(lastQuarters);
+            setQuarterViewSelection({ values: lastQuarters, year: latestYear });
+          } else if (viewMode === "semester") {
+            const semesters = [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket.date_derniere_maj))))].sort((a, b) => a - b);
+            const lastSemesters = semesters.slice(-defaultNumPeriods);
+            setSelectedValues(lastSemesters);
+            setSemesterViewSelection({ values: lastSemesters, year: latestYear });
+          }
+          else {
             const months = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
             const lastMonths = months.slice(-defaultNumPeriods);
             setSelectedValues(lastMonths);
@@ -255,7 +361,16 @@ export default function SlaAnciennete({
       return [...new Set(filteredByYear.map(ticket => ticket.semaine))]
         .filter(week => !isNaN(Number(week)))
         .sort((a, b) => a - b);
-    } else {
+    }
+    // Ajouter ces conditions
+    else if (viewMode === "quarter") {
+      return [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket.date_derniere_maj))))]
+        .sort((a, b) => a - b);
+    } else if (viewMode === "semester") {
+      return [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket.date_derniere_maj))))]
+        .sort((a, b) => a - b);
+    }
+    else {
       return [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))]
         .sort((a, b) => a - b);
     }
@@ -272,7 +387,16 @@ export default function SlaAnciennete({
     if (viewMode === "week") {
       setWeekViewSelection({ values: newSelectedValues, year: selectedYear });
       setWeekSelectionModifiedAt(Date.now());
-    } else {
+    }
+    // Ajouter ces conditions
+    else if (viewMode === "quarter") {
+      setQuarterViewSelection({ values: newSelectedValues, year: selectedYear });
+      setQuarterSelectionModifiedAt(Date.now());
+    } else if (viewMode === "semester") {
+      setSemesterViewSelection({ values: newSelectedValues, year: selectedYear });
+      setSemesterSelectionModifiedAt(Date.now());
+    }
+    else {
       setMonthViewSelection({ values: newSelectedValues, year: selectedYear });
       setMonthSelectionModifiedAt(Date.now());
     }
@@ -287,7 +411,16 @@ export default function SlaAnciennete({
     if (viewMode === "week") {
       setWeekViewSelection({ values: newSelectedValues, year: selectedYear });
       setWeekSelectionModifiedAt(Date.now());
-    } else {
+    }
+    // Ajouter ces conditions
+    else if (viewMode === "quarter") {
+      setQuarterViewSelection({ values: newSelectedValues, year: selectedYear });
+      setQuarterSelectionModifiedAt(Date.now());
+    } else if (viewMode === "semester") {
+      setSemesterViewSelection({ values: newSelectedValues, year: selectedYear });
+      setSemesterSelectionModifiedAt(Date.now());
+    }
+    else {
       setMonthViewSelection({ values: newSelectedValues, year: selectedYear });
       setMonthSelectionModifiedAt(Date.now());
     }
@@ -314,7 +447,44 @@ export default function SlaAnciennete({
           setWeekViewSelection({ values: lastWeeks, year });
         }
       }
-    } else {
+    }
+    // Ajouter ces conditions
+    else if (viewMode === "quarter") {
+      if (hasGlobalFilter && globalStartDate && globalEndDate) {
+        const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate)
+          .filter(q => availablePeriods.includes(q));
+        setSelectedValues(quarterList);
+        setQuarterViewSelection({ values: quarterList, year });
+      } else {
+        const intersection = quarterViewSelection.values.filter(q => availablePeriods.includes(q));
+        if (intersection.length > 0) {
+          setSelectedValues(intersection);
+          setQuarterViewSelection({ values: intersection, year });
+        } else {
+          const lastQuarters = availablePeriods.slice(-defaultNumPeriods);
+          setSelectedValues(lastQuarters);
+          setQuarterViewSelection({ values: lastQuarters, year });
+        }
+      }
+    } else if (viewMode === "semester") {
+      if (hasGlobalFilter && globalStartDate && globalEndDate) {
+        const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate)
+          .filter(s => availablePeriods.includes(s));
+        setSelectedValues(semesterList);
+        setSemesterViewSelection({ values: semesterList, year });
+      } else {
+        const intersection = semesterViewSelection.values.filter(s => availablePeriods.includes(s));
+        if (intersection.length > 0) {
+          setSelectedValues(intersection);
+          setSemesterViewSelection({ values: intersection, year });
+        } else {
+          const lastSemesters = availablePeriods.slice(-defaultNumPeriods);
+          setSelectedValues(lastSemesters);
+          setSemesterViewSelection({ values: lastSemesters, year });
+        }
+      }
+    }
+    else {
       if (hasGlobalFilter && globalStartDate && globalEndDate) {
         const monthList = getAllMonthsBetween(globalStartDate, globalEndDate)
           .filter(m => availablePeriods.includes(m));
@@ -342,10 +512,15 @@ export default function SlaAnciennete({
   const selectedValuesWithYear = selectedValues.map(value => ({ value, year: selectedYear }));
   const labels = selectedValuesWithYear.map(item => {
     let periodLabel;
+    // Remplacer la condition existante par
     if (viewMode === "week") {
       periodLabel = `S${item.value}`;
-    } else {
+    } else if (viewMode === "month") {
       periodLabel = monthNames[item.value - 1];
+    } else if (viewMode === "quarter") {
+      periodLabel = quarterNames[item.value - 1];
+    } else if (viewMode === "semester") {
+      periodLabel = semesterNames[item.value - 1];
     }
     return multipleYearsExist ? `${periodLabel}, ${item.year}` : periodLabel;
   });
@@ -355,12 +530,21 @@ export default function SlaAnciennete({
     data: selectedValuesWithYear.map(item => {
       return data.filter(ticket => {
         const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
-        const ticketPeriod = viewMode === "week"
-          ? ticket.semaine
-          : new Date(ticket.date_derniere_maj).getMonth() + 1;
+        let ticketPeriod;
+
+        if (viewMode === "week") {
+          ticketPeriod = ticket.semaine;
+        } else if (viewMode === "month") {
+          ticketPeriod = new Date(ticket.date_derniere_maj).getMonth() + 1;
+        } else if (viewMode === "quarter") {
+          ticketPeriod = getQuarter(new Date(ticket.date_derniere_maj));
+        } else if (viewMode === "semester") {
+          ticketPeriod = getSemester(new Date(ticket.date_derniere_maj));
+        }
+
         return ticketYear === item.year &&
-               ticketPeriod === item.value &&
-               ticket.age1 === category;
+          ticketPeriod === item.value &&
+          ticket.age1 === category;
       }).length;
     }),
     backgroundColor: getColorForSlaCategory(category),
@@ -383,7 +567,11 @@ export default function SlaAnciennete({
   const periodeLabelText = selectedValues.length > 0
     ? viewMode === "week"
       ? `Semaine(s) : ${selectedValues.join(", ")}`
-      : `Mois : ${selectedValues.map(m => monthNames[m - 1]).join(", ")}`
+      : viewMode === "month"
+        ? `Mois : ${selectedValues.map(m => monthNames[m - 1]).join(", ")}`
+        : viewMode === "quarter"
+          ? `Trimestre(s) : ${selectedValues.map(q => quarterNames[q - 1]).join(", ")}`
+          : `Semestre(s) : ${selectedValues.map(s => semesterNames[s - 1]).join(", ")}`
     : "Aucune période sélectionnée";
 
   const chartOptions = {
@@ -405,6 +593,7 @@ export default function SlaAnciennete({
     }
   };
 
+
   return (
     <div className="visualisation relative" data-id={id}>
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
@@ -417,14 +606,24 @@ export default function SlaAnciennete({
             </p>
           </div>
           <div className="flex gap-2">
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
+            <button
+              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
               onClick={() => setIsOpen(!isOpen)}
               data-filter-toggle="true">
               <AiOutlineFilter size={20} className="text-gray-600" />
             </button>
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
+            <CommentButton
+              containerRef={chartContainerRef}
+              comments={annotations}
+              onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
+              onUpdateComment={(updatedComment) =>
+                setAnnotations(annotations.map(a => a.id === updatedComment.id ? updatedComment : a))
+              }
+              onDeleteComment={(commentId) =>
+                setAnnotations(annotations.filter(a => a.id !== commentId))
+              }
+            />              <button
+              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
               onClick={() => setModalIsOpen(true)}>
               <FaExpand size={18} className="text-gray-600" />
             </button>
@@ -432,18 +631,30 @@ export default function SlaAnciennete({
           {isOpen && (
             <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
               <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-              <div className="flex space-x-2 mb-2 mt-2">
+              <div className="flex space-x-2 mb-2 mt-2 flex-wrap">
                 <button
-                  className={`px-3 py-1 rounded-md ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
                   onClick={() => handleViewModeChange("week")}
                 >
                   Semaine
                 </button>
                 <button
-                  className={`px-3 py-1 rounded-md ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
                   onClick={() => handleViewModeChange("month")}
                 >
                   Mois
+                </button>
+                <button
+                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  onClick={() => handleViewModeChange("quarter")}
+                >
+                  Trimestre
+                </button>
+                <button
+                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  onClick={() => handleViewModeChange("semester")}
+                >
+                  Semestre
                 </button>
               </div>
               {multipleYearsExist && (
@@ -479,7 +690,14 @@ export default function SlaAnciennete({
                       onChange={() => handleSelectionChange(value)}
                     />
                     <span className="text-gray-500">
-                      {viewMode === "week" ? `Semaine ${value}` : monthNames[value - 1]}
+                      {viewMode === "week"
+                        ? `Semaine ${value}`
+                        : viewMode === "month"
+                          ? monthNames[value - 1]
+                          : viewMode === "quarter"
+                            ? quarterNames[value - 1]
+                            : semesterNames[value - 1]
+                      }
                     </span>
                   </div>
                 ))}
@@ -488,7 +706,7 @@ export default function SlaAnciennete({
           )}
         </div>
 
-        <div className="flex-grow flex justify-center items-center h-[350px]">
+        <div className="flex-grow flex justify-center items-center h-[350px]" ref={chartContainerRef}>
           <Bar
             data={{ labels, datasets }}
             options={chartOptions}
@@ -513,11 +731,23 @@ export default function SlaAnciennete({
             </div>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
-          <div className="relative h-[400px] flex items-center justify-center">
+          <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
             <Bar
               data={{ labels, datasets }}
               options={chartOptions}
               plugins={[ChartDataLabels]}
+            />
+            <CommentButton
+              containerRef={modalChartContainerRef}
+              hideButton={true}
+              comments={annotations}
+              onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
+              onUpdateComment={(updatedComment) =>
+                setAnnotations(annotations.map(a => a.id === updatedComment.id ? updatedComment : a))
+              }
+              onDeleteComment={(commentId) =>
+                setAnnotations(annotations.filter(a => a.id !== commentId))
+              }
             />
           </div>
         </div>

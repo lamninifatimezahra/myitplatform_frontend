@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"; // <-- Ajout de useMemo ici
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -16,603 +16,841 @@ import { AiOutlineFilter } from "react-icons/ai";
 import { FaExpand } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { getWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useGlobalFilter } from "./GlobalFilterContext";
 import Modal from "react-modal";
+import CommentButton from "./CommentButton"; // Assurez-vous que le chemin est correct
 
-// Définir le conteneur principal pour le modal
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
-//
-// -------------------------
-// Fonctions utilitaires
-// -------------------------
-//
-// Renvoie une chaîne "YYYY-MM-DD" basée sur la date locale
+// =========================================
+// Fonctions Utilitaires
+// =========================================
+
 function getLocalDateString(date) {
+  if (!date || isNaN(date.getTime())) return null;
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const day = date.getDate().toString().padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
-// Convertit une chaîne "YYYY-MM-DD" en objet Date
 function parseLocalDate(dateStr) {
-  if (typeof dateStr !== "string") {
-    console.error("parseLocalDate: dateStr is not a string", dateStr);
-    return new Date();
+  if (typeof dateStr !== "string") return null;
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return null;
+  const [year, month, day] = parts.map(Number);
+  if (isNaN(year) || isNaN(month) || isNaN(day) || month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const date = new Date(year, month - 1, day);
+  if (isNaN(date.getTime()) || date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+      return null;
   }
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
+  return date;
 }
 
-// Formate une date (en chaîne "YYYY-MM-DD") au format "JJ/MM (Sx)"
 function formatDayLabel(dateStr) {
-  if (typeof dateStr !== "string") {
-    console.error("formatDayLabel: dateStr is not a string", dateStr);
-    return `Date invalide (${dateStr})`;
-  }
+  if (typeof dateStr !== "string") return `Date invalide`;
   const d = parseLocalDate(dateStr);
+  if (!d || isNaN(d.getTime())) return `Date invalide`;
   const day = d.getDate().toString().padStart(2, "0");
   const month = (d.getMonth() + 1).toString().padStart(2, "0");
   const week = getWeekNumber(d);
-  return `${day}/${month} (S${week})`;
+  return `${day}/${month}${week ? ` (S${week})` : ''}`; // Affiche semaine seulement si calculable
 }
 
-// Fonction pour obtenir le numéro de semaine ISO
 const getWeekNumber = (date) => {
-  const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = tempDate.getUTCDay() || 7;
-  tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
-  return Math.ceil(((tempDate - yearStart) / 86400000 + 1) / 7);
+  if (!date || isNaN(date.getTime())) return null;
+  try {
+    const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = tempDate.getUTCDay() || 7;
+    tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
+    return Math.ceil(((tempDate - yearStart) / 86400000 + 1) / 7);
+  } catch (e) {
+    console.error("Error calculating week number:", e);
+    return null;
+  }
 };
 
-// Fonction pour obtenir tous les jours ouvrables entre deux dates
+const getQuarter = (date) => {
+  if (!date || isNaN(date.getTime())) return null;
+  const month = date.getMonth() + 1;
+  return Math.ceil(month / 3);
+};
+
+const getSemester = (date) => {
+  if (!date || isNaN(date.getTime())) return null;
+  const month = date.getMonth() + 1;
+  return month <= 6 ? 1 : 2;
+};
+
 function getAllWorkingDaysBetween(startDate, endDate) {
-  if (!startDate || !endDate) return [];
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return [];
   const daysArray = [];
   let currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
+  // Assurer que l'heure est à minuit pour éviter les problèmes de comparaison
+  currentDate.setHours(0, 0, 0, 0);
+  const finalEndDate = new Date(endDate);
+  finalEndDate.setHours(0, 0, 0, 0);
+
+  while (currentDate <= finalEndDate) {
     const dayOfWeek = currentDate.getDay();
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      daysArray.push(getLocalDateString(currentDate));
+      const dateString = getLocalDateString(currentDate);
+      if (dateString) { // Vérifier si la conversion a réussi
+          daysArray.push(dateString);
+      }
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
   return daysArray;
 }
 
-// Fonction pour obtenir tous les semaines entre deux dates
 function getAllWeeksBetween(startDate, endDate) {
-  if (!startDate || !endDate) return [];
-  const weeksArray = [];
-  const startWeek = getWeekNumber(startDate);
-  const endWeek = getWeekNumber(endDate);
-  const startYear = startDate.getFullYear();
-  const endYear = endDate.getFullYear();
-  if (startYear === endYear) {
-    for (let week = startWeek; week <= endWeek; week++) {
-      weeksArray.push(week);
-    }
-  } else {
+    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return [];
+    const weeksArray = new Set(); // Utiliser un Set pour éviter les doublons dès le départ
+    const startWeek = getWeekNumber(startDate);
+    const endWeek = getWeekNumber(endDate);
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+
+    if (startWeek === null || endWeek === null) return [];
+
     for (let year = startYear; year <= endYear; year++) {
-      const maxWeeks = year === startYear ? 52 : endWeek;
-      const minWeeks = year === startYear ? startWeek : 1;
-      for (let week = minWeeks; week <= maxWeeks; week++) {
-        weeksArray.push(week);
-      }
+        const tempStart = (year === startYear) ? startDate : new Date(year, 0, 1);
+        const tempEnd = (year === endYear) ? endDate : new Date(year, 11, 31);
+
+        let currentWeekDate = new Date(tempStart);
+        currentWeekDate.setDate(currentWeekDate.getDate() - currentWeekDate.getDay() + 1); // Aller au Lundi de la semaine de début
+
+        while (currentWeekDate <= tempEnd) {
+             const weekNum = getWeekNumber(currentWeekDate);
+             const weekYear = currentWeekDate.getUTCFullYear(); // ISO week year might differ near year end/start
+             const isoWeekYear = new Date(Date.UTC(currentWeekDate.getFullYear(), currentWeekDate.getMonth(), currentWeekDate.getDate() + 4 - (currentWeekDate.getDay() || 7))).getUTCFullYear();
+
+
+             // On ne prend que les semaines qui appartiennent à l'année en cours (selon la norme ISO 8601)
+             // Et qui sont dans l'intervalle global
+             if (weekNum !== null && isoWeekYear === year) {
+                 // Vérifier si cette semaine est comprise dans l'intervalle global
+                 // (plus complexe, pour simplifier on prend toutes les semaines entre startWeek/Year et endWeek/Year)
+                 const isInGlobalRange =
+                     (year > startYear || (year === startYear && weekNum >= startWeek)) &&
+                     (year < endYear || (year === endYear && weekNum <= endWeek));
+
+                 if(isInGlobalRange){
+                      weeksArray.add(weekNum);
+                 }
+
+             }
+             // Passer à la semaine suivante
+             currentWeekDate.setDate(currentWeekDate.getDate() + 7);
+        }
     }
-  }
-  return weeksArray;
+    return Array.from(weeksArray).sort((a, b) => a - b);
 }
 
-// Fonction pour obtenir tous les mois entre deux dates
+
 function getAllMonthsBetween(startDate, endDate) {
-  if (!startDate || !endDate) return [];
-  const monthsArray = [];
-  const startMonth = startDate.getMonth() + 1;
-  const endMonth = endDate.getMonth() + 1;
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return [];
+  const monthsArray = new Set();
+  const startMonth = startDate.getMonth(); // 0-indexed
+  const endMonth = endDate.getMonth(); // 0-indexed
   const startYear = startDate.getFullYear();
   const endYear = endDate.getFullYear();
-  if (startYear === endYear) {
-    for (let month = startMonth; month <= endMonth; month++) {
-      monthsArray.push(month);
-    }
-  } else {
-    for (let year = startYear; year <= endYear; year++) {
-      const maxMonth = year === endYear ? endMonth : 12;
-      const minMonth = year === startYear ? startMonth : 1;
-      for (let month = minMonth; month <= maxMonth; month++) {
-        monthsArray.push(month);
-      }
+
+  for (let year = startYear; year <= endYear; year++) {
+    const currentStartMonth = (year === startYear) ? startMonth : 0;
+    const currentEndMonth = (year === endYear) ? endMonth : 11;
+    for (let month = currentStartMonth; month <= currentEndMonth; month++) {
+      monthsArray.add(month + 1); // Store 1-indexed month
     }
   }
-  return monthsArray;
+  return Array.from(monthsArray).sort((a, b) => a - b);
 }
 
-// Fonction pour obtenir les 10 derniers jours ouvrables
-function getLast10WorkingDays(days) {
-  const filteredDays = days.filter(dateStr => {
-    const d = parseLocalDate(dateStr);
-    const dayOfWeek = d.getDay();
-    return dayOfWeek !== 0 && dayOfWeek !== 6;
-  }).sort();
-  return filteredDays.slice(-10);
+function getAllQuartersBetween(startDate, endDate) {
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return [];
+  const quartersArray = new Set();
+  const startQuarter = getQuarter(startDate);
+  const endQuarter = getQuarter(endDate);
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startQuarter === null || endQuarter === null) return [];
+
+  for (let year = startYear; year <= endYear; year++) {
+    const currentStartQuarter = (year === startYear) ? startQuarter : 1;
+    const currentEndQuarter = (year === endYear) ? endQuarter : 4;
+    for (let quarter = currentStartQuarter; quarter <= currentEndQuarter; quarter++) {
+      quartersArray.add(quarter);
+    }
+  }
+  return Array.from(quartersArray).sort((a, b) => a - b);
 }
 
-//
-// -------------------------
+function getAllSemestersBetween(startDate, endDate) {
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return [];
+  const semestersArray = new Set();
+  const startSemester = getSemester(startDate);
+  const endSemester = getSemester(endDate);
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startSemester === null || endSemester === null) return [];
+
+  for (let year = startYear; year <= endYear; year++) {
+    const currentStartSemester = (year === startYear) ? startSemester : 1;
+    const currentEndSemester = (year === endYear) ? endSemester : 2;
+    for (let semester = currentStartSemester; semester <= currentEndSemester; semester++) {
+      semestersArray.add(semester);
+    }
+  }
+  return Array.from(semestersArray).sort((a, b) => a - b);
+}
+
+function getLastNWorkingDays(days, n = 10) {
+  const filteredDays = days
+    .map(dateStr => ({ str: dateStr, date: parseLocalDate(dateStr) }))
+    .filter(item => item.date && item.date.getDay() !== 0 && item.date.getDay() !== 6)
+    .sort((a, b) => b.date - a.date) // Sort descending first to easily get the last N
+    .slice(0, n)
+    .sort((a, b) => a.date - b.date) // Sort ascending for display
+    .map(item => item.str);
+  return filteredDays;
+}
+
+ChartJS.register(
+  BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartDataLabels
+);
+
+// =========================================
 // Composant GroupedBarChart
-// -------------------------
-//
-// Ce composant affiche un graphique groupé comparant le nombre de tickets entrants et sortants 
-// selon trois modes de vue : "day", "week" ou "month".
-// Il permet de filtrer les données via un panneau qui utilise un DatePicker pour la vue "day"
-// et une sélection multiple pour les vues "week" et "month".
-// Les champs utilisés dans le traitement des données sont configurables via les props.
+// =========================================
 export default function GroupedBarChart({
-  // Prop obligatoire
   apiUrl,
-  // Props de personnalisation avec valeurs par défaut
   id = "Rapport : Sortants/Entrants",
   chartTitle = "Tickets Entrants vs. Sortants",
-  dateUpdateField = "date_derniere_maj",     // Champ de la date de mise à jour pour les entrants
-  weekField = "semaine",                      // Champ du numéro de semaine pour les entrants
-  dateClosedField = "date_sortie",            // Champ de la date de clôture pour les sortants
-  weekClosedField = "semaine_date_sortant",     // Champ du numéro de semaine pour les sortants
-  defaultViewMode = "day"                      // Mode par défaut : "day", "week" ou "month"
+  dateUpdateField = "date_derniere_maj",
+  weekField = "semaine", // Champ semaine pour entrants
+  dateClosedField = "date_sortie",
+  weekClosedField = "semaine_date_sortant", // Champ semaine pour sortants
+  defaultViewMode = "day",
+  defaultNumPeriods = 5,
 }) {
-  // Vérifier que l'URL de l'API est fournie
   if (!apiUrl) {
     return (
       <div className="visualisation relative" data-id={id}>
         <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
-          <p className="text-red-500 text-sm mt-2">Erreur : L'URL de l'API est requise.</p>
+           <h3 className="text-lg font-semibold text-black">{chartTitle}</h3>
+           <p className="text-red-500 text-sm mt-2">Erreur : L'URL de l'API est requise.</p>
         </div>
       </div>
     );
   }
 
-  
-  // Références pour la gestion des états et du panneau de filtre
-  const chartRef = useRef(null);
+  // Références
   const initializationCompleted = useRef(false);
   const globalFilterApplied = useRef(false);
-  const prevViewMode = useRef(null);
+  const prevViewMode = useRef(defaultViewMode); // Initialiser avec defaultViewMode
   const filterPanelRef = useRef(null);
-  
-  // États de base
+  const chartContainerRef = useRef(null);
+  const modalChartContainerRef = useRef(null);
+
+  // États locaux
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  // viewMode peut être "day", "week" ou "month"
   const [viewMode, setViewMode] = useState(defaultViewMode);
-  // Pour "day" : plage de dates et sélection des jours (format "YYYY-MM-DD")
   const [selectedDates, setSelectedDates] = useState([null, null]);
-  // Pour "week" et "month" : les valeurs sélectionnées (numéros de semaine ou mois / jours)
-  const [selectedValues, setSelectedValues] = useState([]);
-  
-  // États pour mémoriser les sélections antérieures selon le mode
-  const [dayViewSelection, setDayViewSelection] = useState({
-    dates: [null, null],
-    values: []
-  });
-  const [weekViewSelection, setWeekViewSelection] = useState({
-    values: []
-  });
-  const [monthViewSelection, setMonthViewSelection] = useState({
-    values: []
-  });
-  
-  // États liés à la gestion par année
+  const [selectedValues, setSelectedValues] = useState([]); // Contient jours (string "YYYY-MM-DD") ou numéros (week, month, etc.)
+  const [isOpen, setIsOpen] = useState(false);
   const [availableYears, setAvailableYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
   const [multipleYearsExist, setMultipleYearsExist] = useState(false);
-  
-  // Pour savoir si toutes les périodes sont sélectionnées
-  const [allSelected, setAllSelected] = useState(false);
-  
-  // Pour afficher les noms des mois en français
-  const monthNames = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-  ];
-  
-  // Récupération du filtre global via le contexte
-  const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
-  
-  // État pour le panneau de filtre et pour le modal d'agrandissement
-  const [isOpen, setIsOpen] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
-  
-  // -------------------------
-  // Gestion des clics extérieurs au panneau de filtre
-  // -------------------------
+  const [annotations, setAnnotations] = useState([]);
+
+  // États pour mémoriser les sélections par vue
+  const [dayViewSelection, setDayViewSelection] = useState({ dates: [null, null], values: [] });
+  const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
+  const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
+  const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
+  const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
+
+  // Contexte Filtre Global
+  const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
+
+  // Noms des périodes
+  const monthNames = [ "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre" ];
+  const quarterNames = ["T1", "T2", "T3", "T4"];
+  const semesterNames = ["S1", "S2"];
+
+  // --- Fonction pour obtenir les périodes disponibles pour une année/mode (AMÉLIORÉE) ---
+  const getAvailablePeriodsForYear = useCallback((year, mode) => {
+      if (!year || !data || data.length === 0 || mode === "day") return [];
+
+      const periodsSet = new Set();
+
+      data.forEach(t => {
+          // Vérifier la date d'update
+          const dUpdate = parseLocalDate(t[dateUpdateField]?.split("T")[0]);
+          if (dUpdate && dUpdate.getFullYear() === year) {
+              let periodUpdate = null;
+              if (mode === "week") periodUpdate = Number(t[weekField]) || getWeekNumber(dUpdate);
+              else if (mode === "month") periodUpdate = dUpdate.getMonth() + 1;
+              else if (mode === "quarter") periodUpdate = getQuarter(dUpdate);
+              else if (mode === "semester") periodUpdate = getSemester(dUpdate);
+              if (periodUpdate !== null && !isNaN(periodUpdate)) periodsSet.add(periodUpdate);
+          }
+
+          // Vérifier la date de sortie
+          const dClose = parseLocalDate(t[dateClosedField]?.split("T")[0]);
+          if (dClose && dClose.getFullYear() === year) {
+              let periodClose = null;
+              if (mode === "week") periodClose = Number(t[weekClosedField]) || getWeekNumber(dClose);
+              else if (mode === "month") periodClose = dClose.getMonth() + 1;
+              else if (mode === "quarter") periodClose = getQuarter(dClose);
+              else if (mode === "semester") periodClose = getSemester(dClose);
+               if (periodClose !== null && !isNaN(periodClose)) periodsSet.add(periodClose);
+          }
+      });
+
+      return Array.from(periodsSet).sort((a, b) => a - b);
+  }, [data, dateUpdateField, dateClosedField, weekField, weekClosedField]); // Dépendances clés
+
+  // --- Fonction pour appliquer le filtre global ---
+  const applyGlobalFilter = useCallback(() => {
+      if (!globalStartDate || !globalEndDate || !data || data.length === 0) return;
+      const currentGlobalYear = globalStartDate.getFullYear();
+
+      // Calculer les années réellement disponibles dans les données
+      const yearsInData = [...new Set(data.flatMap(t => {
+          const dUpdate = parseLocalDate(t[dateUpdateField]?.split("T")[0]);
+          const dClose = parseLocalDate(t[dateClosedField]?.split("T")[0]);
+          return [dUpdate?.getFullYear(), dClose?.getFullYear()];
+      }).filter(y => y != null))].sort();
+
+      if (!yearsInData.includes(currentGlobalYear)) {
+        console.warn(`Année ${currentGlobalYear} du filtre global non trouvée dans les données pour ce graphique.`);
+        // Optionnel: peut-être afficher un message à l'utilisateur ou ne rien faire
+        setHasGlobalFilter(false); // Indiquer que le filtre global n'est pas applicable
+        return; // Stopper l'application
+      }
+
+      // Appliquer pour la vue "day"
+      const dayList = getAllWorkingDaysBetween(globalStartDate, globalEndDate);
+      setDayViewSelection({ dates: [globalStartDate, globalEndDate], values: dayList });
+
+      // Appliquer pour les autres vues (basé sur l'année du filtre global)
+      // Note: On ne change selectedYear que si le filtre global est appliqué
+      const yearToApply = currentGlobalYear;
+
+      const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
+      const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
+      const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
+      const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
+
+      // Filtrer par périodes réellement disponibles pour cette année
+      const availableWeeks = getAvailablePeriodsForYear(yearToApply, "week");
+      const availableMonths = getAvailablePeriodsForYear(yearToApply, "month");
+      const availableQuarters = getAvailablePeriodsForYear(yearToApply, "quarter");
+      const availableSemesters = getAvailablePeriodsForYear(yearToApply, "semester");
+
+      const finalWeekValues = weekList.filter(p => availableWeeks.includes(p));
+      const finalMonthValues = monthList.filter(p => availableMonths.includes(p));
+      const finalQuarterValues = quarterList.filter(p => availableQuarters.includes(p));
+      const finalSemesterValues = semesterList.filter(p => availableSemesters.includes(p));
+
+      setWeekViewSelection({ values: finalWeekValues, year: yearToApply });
+      setMonthViewSelection({ values: finalMonthValues, year: yearToApply });
+      setQuarterViewSelection({ values: finalQuarterValues, year: yearToApply });
+      setSemesterViewSelection({ values: finalSemesterValues, year: yearToApply });
+
+      // Appliquer la sélection et l'année au mode de vue actuel
+      if (viewMode === "day") {
+        setSelectedDates([globalStartDate, globalEndDate]);
+        setSelectedValues(dayList);
+        // Ne pas changer selectedYear pour la vue jour
+      } else {
+          // Changer l'année sélectionnée pour correspondre au filtre global
+          setSelectedYear(yearToApply);
+          if (viewMode === "week") setSelectedValues(finalWeekValues);
+          else if (viewMode === "month") setSelectedValues(finalMonthValues);
+          else if (viewMode === "quarter") setSelectedValues(finalQuarterValues);
+          else if (viewMode === "semester") setSelectedValues(finalSemesterValues);
+      }
+
+      setHasGlobalFilter(true);
+      globalFilterApplied.current = true;
+
+  }, [globalStartDate, globalEndDate, data, viewMode, getAvailablePeriodsForYear, dateUpdateField, dateClosedField]); // `viewMode` est une dépendance clé ici
+
+  // =========================================
+  // UseEffects
+  // =========================================
+
+  // Clics extérieurs au panneau de filtre
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        isOpen &&
-        filterPanelRef.current &&
-        !filterPanelRef.current.contains(event.target) &&
-        !event.target.closest('button[data-filter-toggle]')
-      ) {
+      if (isOpen && filterPanelRef.current && !filterPanelRef.current.contains(event.target) && !event.target.closest('button[data-filter-toggle]')) {
         setIsOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
-  
-  // -------------------------
-  // Gestion du changement de mode et sauvegarde/restauration des sélections
-  // -------------------------
+
+  // Chargement initial des données
   useEffect(() => {
-    if (!prevViewMode.current) {
-      prevViewMode.current = viewMode;
-      return;
+    let isMounted = true;
+    async function fetchDataInternal() {
+        if (!isMounted) return;
+        setLoading(true);
+        globalFilterApplied.current = false;
+
+        try {
+            const response = await fetchWithAuth(apiUrl);
+            const result = await response.json();
+            if (!isMounted) return;
+
+            setData(result);
+
+            const years = [...new Set(result.flatMap(t => {
+                const dUpdate = parseLocalDate(t[dateUpdateField]?.split("T")[0]);
+                const dClose = parseLocalDate(t[dateClosedField]?.split("T")[0]);
+                return [dUpdate?.getFullYear(), dClose?.getFullYear()];
+            }).filter(y => y != null))].sort((a, b) => a - b);
+
+            const latestYear = years.length > 0 ? years[years.length - 1] : new Date().getFullYear();
+            setAvailableYears(years);
+            setMultipleYearsExist(years.length > 1);
+
+            // --- Logique d'initialisation ---
+            let yearToUse = selectedYear || latestYear; // Préfère l'année déjà sélectionnée si elle existe
+            let applyGlobalOnLoad = false;
+            let performDefaultSetup = !initializationCompleted.current;
+
+            // Vérifier si le filtre global doit être appliqué au chargement
+             if (performDefaultSetup && globalStartDate && globalEndDate && years.includes(globalStartDate.getFullYear())) {
+                 applyGlobalOnLoad = true;
+                 yearToUse = globalStartDate.getFullYear(); // L'année sera définie par applyGlobalFilter
+                 performDefaultSetup = false;
+            }
+
+            // Appliquer le filtre global si nécessaire (dépend de 'data')
+            if (applyGlobalOnLoad) {
+                // applyGlobalFilter sera appelé via l'effet dépendant de globalModifiedAt
+                // pour s'assurer que 'data' est bien dans le scope
+            }
+            // Sinon, appliquer la configuration par défaut lors de la première initialisation
+            else if (performDefaultSetup) {
+                 setSelectedYear(yearToUse); // Définir l'année ici pour les vues non-jour
+
+                if (defaultViewMode === "day") {
+                    const allDaysWithData = [...new Set(result.map(t => t[dateUpdateField]?.split("T")[0]).filter(Boolean))];
+                    const last10Days = getLastNWorkingDays(allDaysWithData, 10); // Utiliser N=10
+                    if (last10Days.length > 0) {
+                        const startDate = parseLocalDate(last10Days[0]);
+                        const endDate = parseLocalDate(last10Days[last10Days.length - 1]);
+                        setSelectedDates([startDate, endDate]);
+                        setSelectedValues(last10Days);
+                        setDayViewSelection({ dates: [startDate, endDate], values: last10Days });
+                    } else { // Cas où il n'y a pas de données pour les jours ouvrés
+                        setSelectedDates([null, null]);
+                        setSelectedValues([]);
+                        setDayViewSelection({ dates: [null, null], values: [] });
+                    }
+                } else {
+                    // Pour les autres vues, utiliser getAvailablePeriodsForYear qui dépend de 'data'
+                    // et de l'année sélectionnée (yearToUse)
+                    const availablePeriods = getAvailablePeriodsForYear(yearToUse, defaultViewMode); // Appel correct
+                    const lastPeriods = availablePeriods.slice(-defaultNumPeriods);
+                    setSelectedValues(lastPeriods);
+
+                    // Mettre à jour la sélection mémorisée
+                    if (defaultViewMode === "week") setWeekViewSelection({ values: lastPeriods, year: yearToUse });
+                    else if (defaultViewMode === "month") setMonthViewSelection({ values: lastPeriods, year: yearToUse });
+                    else if (defaultViewMode === "quarter") setQuarterViewSelection({ values: lastPeriods, year: yearToUse });
+                    else if (defaultViewMode === "semester") setSemesterViewSelection({ values: lastPeriods, year: yearToUse });
+                }
+                initializationCompleted.current = true;
+            }
+            setLoading(false);
+        } catch (error) {
+            console.error("Erreur lors du chargement des données:", error);
+            if (isMounted) { setData([]); setLoading(false); }
+        }
     }
-    if (prevViewMode.current === "day") {
-      setDayViewSelection({
-        dates: selectedDates,
-        values: selectedValues
-      });
-    } else if (prevViewMode.current === "week") {
-      setWeekViewSelection({
-        values: selectedValues
-      });
-    } else if (prevViewMode.current === "month") {
-      setMonthViewSelection({
-        values: selectedValues
-      });
+    fetchDataInternal();
+    return () => { isMounted = false; };
+  }, [apiUrl, dateUpdateField, dateClosedField, weekField, weekClosedField]); // Retiré defaultViewMode, defaultNumPeriods etc. qui sont gérés par la logique interne
+
+   // Application du filtre global si changé APRÈS l'init ou si données chargées
+   useEffect(() => {
+       let isMounted = true;
+       // Appliquer si filtre global existe, que les données sont chargées, et que l'init est faite
+       // Ou si le filtre global change après coup (globalModifiedAt > 0)
+       if (initializationCompleted.current && data.length > 0 && globalStartDate && globalEndDate) {
+           // Vérifier si l'année du filtre global est présente dans les données
+           const globalYear = globalStartDate.getFullYear();
+           const yearsInData = availableYears; // Utiliser les années déjà calculées
+
+           if (yearsInData.includes(globalYear)) {
+                if (isMounted && !globalFilterApplied.current) { // Appliquer seulement s'il n'a pas déjà été appliqué dans ce cycle
+                    applyGlobalFilter();
+                }
+           } else {
+                // Si l'année du filtre global n'est pas dans les données, on ne peut pas l'appliquer
+                if(hasGlobalFilter) setHasGlobalFilter(false); // Désactiver le flag si l'année devient invalide
+                console.warn(`Filtre global ignoré: l'année ${globalYear} n'est pas dans les données disponibles (${yearsInData.join(', ')}).`);
+           }
+       }
+       // Reset flag after effect runs to allow re-application if global filter changes again
+        const timer = setTimeout(() => {
+            if (isMounted && globalFilterApplied.current) {
+                globalFilterApplied.current = false;
+            }
+        }, 150); // Slightly longer timeout
+
+       return () => { isMounted = false; clearTimeout(timer);};
+   }, [globalStartDate, globalEndDate, globalModifiedAt, data, applyGlobalFilter, availableYears, hasGlobalFilter]); // dépend de data et applyGlobalFilter
+
+
+  // ---- CORRIGÉ: Gestion du changement de mode et sauvegarde/restauration des sélections ----
+  useEffect(() => {
+    if (!initializationCompleted.current) {
+        prevViewMode.current = viewMode; // Mettre à jour pour le premier changement
+        return;
     }
-    if (viewMode === "day" && dayViewSelection.values.length > 0) {
-      setSelectedDates(dayViewSelection.dates);
-      setSelectedValues(dayViewSelection.values);
-    } else if (viewMode === "week" && weekViewSelection.values.length > 0) {
-      setSelectedValues(weekViewSelection.values);
-    } else if (viewMode === "month" && monthViewSelection.values.length > 0) {
-      setSelectedValues(monthViewSelection.values);
+     // S'assurer qu'une année est sélectionnée pour les modes non-journaliers avant de continuer
+    if (viewMode !== 'day' && !selectedYear) {
+        // Si pas d'année, on ne peut pas restaurer/calculer. On attend qu'elle soit définie.
+        // Peut arriver si l'initialisation sélectionne une année après ce hook.
+        console.warn("useEffect [viewMode]: selectedYear is null for non-day view. Waiting.");
+        prevViewMode.current = viewMode;
+        return;
     }
+
+    const previousMode = prevViewMode.current;
+
+    // --- 1. Sauvegarde (si le mode a changé) ---
+    if (previousMode && previousMode !== viewMode) {
+      const yearToSave = (previousMode !== 'day') ? selectedYear : null;
+      if (previousMode === "day") setDayViewSelection({ dates: selectedDates, values: selectedValues });
+      else if (previousMode === "week") setWeekViewSelection({ values: selectedValues, year: yearToSave });
+      else if (previousMode === "month") setMonthViewSelection({ values: selectedValues, year: yearToSave });
+      else if (previousMode === "quarter") setQuarterViewSelection({ values: selectedValues, year: yearToSave });
+      else if (previousMode === "semester") setSemesterViewSelection({ values: selectedValues, year: yearToSave });
+    }
+
+    // --- 2. Restauration / Initialisation pour le NOUVEAU mode ---
+    let newSelectedValues = [];
+    let newSelectedDates = selectedDates; // Garder par défaut
+
+    if (viewMode === "day") {
+        if (dayViewSelection.values.length > 0) {
+            newSelectedDates = dayViewSelection.dates;
+            newSelectedValues = dayViewSelection.values;
+        } else {
+            // Valeur par défaut si aucune sélection jour n'est mémorisée (ex: 10 derniers jours)
+            const allDaysWithData = [...new Set(data.map(t => t[dateUpdateField]?.split("T")[0]).filter(Boolean))];
+            const last10Days = getLastNWorkingDays(allDaysWithData, 10);
+            if(last10Days.length > 0) {
+                newSelectedDates = [parseLocalDate(last10Days[0]), parseLocalDate(last10Days[last10Days.length - 1])];
+                newSelectedValues = last10Days;
+            } else {
+                newSelectedDates = [null, null];
+                newSelectedValues = [];
+            }
+            // Mémoriser cet état par défaut
+            // setDayViewSelection({ dates: newSelectedDates, values: newSelectedValues }); // Attention: peut recréer une boucle si mal géré
+        }
+        // Mettre à jour l'état des dates seulement si nécessaire
+        if (newSelectedDates[0]?.getTime() !== selectedDates[0]?.getTime() || newSelectedDates[1]?.getTime() !== selectedDates[1]?.getTime()) {
+            setSelectedDates(newSelectedDates);
+        }
+    } else { // Vues non-journalières
+        let selectionToRestore = { values: [], year: null };
+        if (viewMode === "week") selectionToRestore = weekViewSelection;
+        else if (viewMode === "month") selectionToRestore = monthViewSelection;
+        else if (viewMode === "quarter") selectionToRestore = quarterViewSelection;
+        else if (viewMode === "semester") selectionToRestore = semesterViewSelection;
+
+        const availablePeriods = getAvailablePeriodsForYear(selectedYear, viewMode); // Utiliser selectedYear ici
+
+        if (selectionToRestore.year === selectedYear && selectionToRestore.values.length > 0) {
+            const validValues = selectionToRestore.values.filter(v => availablePeriods.includes(v));
+            newSelectedValues = validValues.length > 0 ? validValues : availablePeriods.slice(-defaultNumPeriods);
+        } else {
+            newSelectedValues = availablePeriods.slice(-defaultNumPeriods);
+            // Mettre à jour l'état mémorisé pour la nouvelle vue/année
+             const currentYear = selectedYear;
+             if (viewMode === "week") setWeekViewSelection({ values: newSelectedValues, year: currentYear });
+             else if (viewMode === "month") setMonthViewSelection({ values: newSelectedValues, year: currentYear });
+             else if (viewMode === "quarter") setQuarterViewSelection({ values: newSelectedValues, year: currentYear });
+             else if (viewMode === "semester") setSemesterViewSelection({ values: newSelectedValues, year: currentYear });
+        }
+         // Vider selectedDates quand on passe à une vue non-journalière ? Optionnel.
+         // if (selectedDates[0] || selectedDates[1]) setSelectedDates([null, null]);
+    }
+
+    // --- 3. Appliquer la sélection ---
+    // Comparaison prudente pour éviter mise à jour inutile
+    const currentSortedJSON = JSON.stringify(selectedValues.slice().sort());
+    const newSortedJSON = JSON.stringify(newSelectedValues.slice().sort());
+    if (currentSortedJSON !== newSortedJSON) {
+        setSelectedValues(newSelectedValues);
+    }
+
+    // --- 4. Mettre à jour prevViewMode ---
     prevViewMode.current = viewMode;
-  }, [viewMode]);
-  
-  // -------------------------
-  // Fonction pour gérer la sélection de la plage de jours (vue "day")
-  // -------------------------
+
+  // ---- DÉPENDANCES CORRIGÉES ----
+  }, [viewMode, selectedYear, getAvailablePeriodsForYear, defaultNumPeriods, data, dateUpdateField]); // data et dateUpdateField ajoutés car utilisés indirectement via getLastNWorkingDays
+
+  // =========================================
+  // Gestionnaires d'événements (Filtres)
+  // =========================================
+
+  const handleViewModeChange = (newMode) => {
+    if (newMode !== viewMode) {
+        setViewMode(newMode);
+        setHasGlobalFilter(false); // L'utilisateur interagit localement
+        // La logique de changement de sélection est dans l'useEffect [viewMode]
+    }
+  };
+
   const handleDayRangeChange = (dates) => {
     const [start, end] = dates;
-    setSelectedDates([start, end]);
+    setSelectedDates(dates);
     if (start && end) {
       const dayList = getAllWorkingDaysBetween(start, end);
       setSelectedValues(dayList);
-      setDayViewSelection({
-        dates: [start, end],
-        values: dayList
-      });
+      setDayViewSelection({ dates: [start, end], values: dayList });
       setHasGlobalFilter(false);
-    }
-  };
-  
-  // -------------------------
-  // Chargement initial des données
-  // -------------------------
-  useEffect(() => {
-    fetchWithAuth(apiUrl)
-      .then((res) => res.json())
-      .then((json) => {
-        setData(json);
-        setLoading(false);
-        
-        // Pour la vue "day", extraction de tous les jours ouvrables
-        let days = [...new Set(json.map(t => t[dateUpdateField].split("T")[0]))];
-        days = days.filter(dateStr => {
-          const d = parseLocalDate(dateStr);
-          const dw = d.getDay();
-          return dw !== 0 && dw !== 6;
-        }).sort();
-        
-        const years = [...new Set(json.map(t => new Date(t[dateUpdateField]).getFullYear()))].sort();
-        setAvailableYears(years);
-        setMultipleYearsExist(years.length > 1);
-        const latestYear = years[years.length - 1];
-        setSelectedYear(latestYear);
-        
-        if (!initializationCompleted.current) {
-          if (viewMode === "day") {
-            const last10Days = getLast10WorkingDays(days);
-            if (last10Days.length > 0) {
-              const startDate = parseLocalDate(last10Days[0]);
-              const endDate = parseLocalDate(last10Days[last10Days.length - 1]);
-              setSelectedDates([startDate, endDate]);
-              setSelectedValues(last10Days);
-              setDayViewSelection({
-                dates: [startDate, endDate],
-                values: last10Days
-              });
-            }
-          } else if (viewMode === "week") {
-            const filteredByYear = json.filter(t => new Date(t[dateUpdateField]).getFullYear() === latestYear);
-            const weeks = [...new Set(filteredByYear.map(t => t[weekField]))].sort((a, b) => a - b);
-            const filteredWeeks = weeks.filter(w => !isNaN(Number(w)));
-            const lastWeeks = filteredWeeks.slice(-5);
-            setSelectedValues(lastWeeks);
-            setWeekViewSelection({
-              values: lastWeeks
-            });
-          } else if (viewMode === "month") {
-            const filteredByYear = json.filter(t => new Date(t[dateUpdateField]).getFullYear() === latestYear);
-            const months = [...new Set(filteredByYear.map(t => new Date(t[dateUpdateField]).getMonth() + 1))].sort((a, b) => a - b);
-            const lastMonths = months.slice(-3);
-            setSelectedValues(lastMonths);
-            setMonthViewSelection({
-              values: lastMonths
-            });
-          }
-          initializationCompleted.current = true;
-        }
-        
-        if (globalStartDate && globalEndDate && !globalFilterApplied.current) {
-          applyGlobalFilter();
-          globalFilterApplied.current = true;
-        }
-      })
-      .catch(error => {
-        console.error("Erreur lors du chargement des données:", error);
-        setLoading(false);
-      });
-  }, [apiUrl, dateUpdateField, weekField]);
-  
-  // -------------------------
-  // Fonction pour appliquer le filtre global à toutes les vues
-  // -------------------------
-  const applyGlobalFilter = () => {
-    if (!globalStartDate || !globalEndDate) return;
-    // Pour la vue "day"
-    const dayList = getAllWorkingDaysBetween(globalStartDate, globalEndDate);
-    setDayViewSelection({
-      dates: [globalStartDate, globalEndDate],
-      values: dayList
-    });
-    // Pour la vue "week"
-    const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
-    setWeekViewSelection({
-      values: weekList
-    });
-    // Pour la vue "month"
-    const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
-    setMonthViewSelection({
-      values: monthList
-    });
-    if (viewMode === "day") {
-      setSelectedDates([globalStartDate, globalEndDate]);
-      setSelectedValues(dayList);
-    } else if (viewMode === "week") {
-      setSelectedValues(weekList);
-      setSelectedYear(globalStartDate.getFullYear());
-    } else if (viewMode === "month") {
-      setSelectedValues(monthList);
-      setSelectedYear(globalStartDate.getFullYear());
-    }
-    setHasGlobalFilter(true);
-  };
-  
-  useEffect(() => {
-    if (globalStartDate && globalEndDate && globalModifiedAt > 0) {
-      applyGlobalFilter();
-    }
-  }, [globalStartDate, globalEndDate, globalModifiedAt]);
-  
-  // Fonction pour changer de mode (jour, semaine, mois)
-  const handleViewModeChange = (newMode) => {
-    setViewMode(newMode);
-  };
-  
-  // -------------------------
-  // Filtrage des données pour le graphique
-  // -------------------------
-  const availableDays = [...new Set(data.map(t => t[dateUpdateField].split("T")[0]))]
-    .filter(dateStr => {
-      const d = parseLocalDate(dateStr);
-      const dw = d.getDay();
-      return dw !== 0 && dw !== 6;
-    })
-    .sort();
-  
-  const filteredByYear = viewMode === "day" ? data : data.filter(t => new Date(t[dateUpdateField]).getFullYear() === selectedYear);
-  
-  let availablePeriods = [];
-  if (viewMode === "day") {
-    availablePeriods = availableDays;
-  } else if (viewMode === "week") {
-    availablePeriods = [...new Set(filteredByYear.map(t => {
-      const wk = Number(t[weekField]);
-      return !isNaN(wk) ? wk : null;
-    }).filter(w => w !== null))].sort((a, b) => a - b);
-  } else {
-    availablePeriods = [...new Set(filteredByYear.map(t => new Date(t[dateUpdateField]).getMonth() + 1))].sort((a, b) => a - b);
-  }
-  
-  const allPeriodsSelected =
-    availablePeriods.length > 0 &&
-    availablePeriods.every(period => selectedValues.includes(period));
-  
-  const handleSelectAll = () => {
-    if (allPeriodsSelected) {
-      setSelectedValues([]);
-      setAllSelected(false);
-      if (viewMode === "week") {
-        setWeekViewSelection({ values: [] });
-      } else if (viewMode === "month") {
-        setMonthViewSelection({ values: [] });
-      }
     } else {
-      setSelectedValues([...availablePeriods]);
-      setAllSelected(true);
-      if (viewMode === "week") {
-        setWeekViewSelection({ values: [...availablePeriods] });
-      } else if (viewMode === "month") {
-        setMonthViewSelection({ values: [...availablePeriods] });
-      }
+       setSelectedValues([]); // Vider si la plage est incomplète/effacée
+       setDayViewSelection({ dates: [start, end], values: [] }); // Mémoriser l'état incomplet/vide
+       setHasGlobalFilter(false);
     }
+  };
+
+  const handleSelectionChange = (value) => {
+      if (viewMode === 'day') return; // Normalement pas utilisé en mode jour
+      const newSelectedValues = selectedValues.includes(value)
+          ? selectedValues.filter(v => v !== value)
+          : [...selectedValues, value].sort((a, b) => a - b); // Ajouter et trier
+      setSelectedValues(newSelectedValues);
+
+      const currentYear = selectedYear;
+      if (viewMode === "week") setWeekViewSelection({ values: newSelectedValues, year: currentYear });
+      else if (viewMode === "month") setMonthViewSelection({ values: newSelectedValues, year: currentYear });
+      else if (viewMode === "quarter") setQuarterViewSelection({ values: newSelectedValues, year: currentYear });
+      else if (viewMode === "semester") setSemesterViewSelection({ values: newSelectedValues, year: currentYear });
+      setHasGlobalFilter(false);
+  };
+
+  const handleSelectAll = () => {
+    if (viewMode === "day" || !selectedYear) return;
+
+    const availablePeriods = getAvailablePeriodsForYear(selectedYear, viewMode);
+    const allSelectedCurrently = availablePeriods.length > 0 && availablePeriods.every(p => selectedValues.includes(p));
+    const newSelectedValues = allSelectedCurrently ? [] : [...availablePeriods];
+
+    setSelectedValues(newSelectedValues);
+
+    const currentYear = selectedYear;
+    if (viewMode === "week") setWeekViewSelection({ values: newSelectedValues, year: currentYear });
+    else if (viewMode === "month") setMonthViewSelection({ values: newSelectedValues, year: currentYear });
+    else if (viewMode === "quarter") setQuarterViewSelection({ values: newSelectedValues, year: currentYear });
+    else if (viewMode === "semester") setSemesterViewSelection({ values: newSelectedValues, year: currentYear });
+
     setHasGlobalFilter(false);
   };
-  
+
   const handleYearChange = (year) => {
-    setSelectedYear(year);
-    if (viewMode === "week" || viewMode === "month") {
-      const filteredByNewYear = data.filter(t => new Date(t[dateUpdateField]).getFullYear() === year);
-      if (viewMode === "week") {
-        const weeks = [...new Set(filteredByNewYear.map(t => t[weekField]))].sort((a, b) => a - b);
-        const filteredWeeks = weeks.filter(w => !isNaN(Number(w)));
-        if (hasGlobalFilter && globalStartDate && globalEndDate) {
-          const weekList = getAllWeeksBetween(globalStartDate, globalEndDate).filter(w => filteredWeeks.includes(w));
-          setSelectedValues(weekList);
-          setWeekViewSelection({ values: weekList });
+    if (year === selectedYear || viewMode === 'day') return;
+
+    setSelectedYear(year); // Mettre à jour l'année sélectionnée
+
+    // Recalculer les périodes et la sélection pour la nouvelle année
+    const newAvailablePeriods = getAvailablePeriodsForYear(year, viewMode);
+    let newSelectedValues = [];
+
+    // Priorité au filtre global s'il est actif et correspond à la nouvelle année
+    if (hasGlobalFilter && globalStartDate && globalEndDate && globalStartDate.getFullYear() === year) {
+        let globalPeriods = [];
+        if (viewMode === "week") globalPeriods = getAllWeeksBetween(globalStartDate, globalEndDate);
+        else if (viewMode === "month") globalPeriods = getAllMonthsBetween(globalStartDate, globalEndDate);
+        else if (viewMode === "quarter") globalPeriods = getAllQuartersBetween(globalStartDate, globalEndDate);
+        else if (viewMode === "semester") globalPeriods = getAllSemestersBetween(globalStartDate, globalEndDate);
+        newSelectedValues = globalPeriods.filter(p => newAvailablePeriods.includes(p));
+    } else {
+        // Sinon, essayer de restaurer la sélection mémorisée pour cette vue/année
+        let selectionToRestore = { values: [], year: null };
+        if (viewMode === "week") selectionToRestore = weekViewSelection;
+        else if (viewMode === "month") selectionToRestore = monthViewSelection;
+        else if (viewMode === "quarter") selectionToRestore = quarterViewSelection;
+        else if (viewMode === "semester") selectionToRestore = semesterViewSelection;
+
+        if (selectionToRestore.year === year && selectionToRestore.values.length > 0) {
+             const validValues = selectionToRestore.values.filter(v => newAvailablePeriods.includes(v));
+             newSelectedValues = validValues.length > 0 ? validValues : newAvailablePeriods.slice(-defaultNumPeriods);
         } else {
-          const intersection = weekViewSelection.values.filter(w => filteredWeeks.includes(w));
-          if (intersection.length > 0) {
-            setSelectedValues(intersection);
-          } else {
-            const lastWeeks = filteredWeeks.slice(-5);
-            setSelectedValues(lastWeeks);
-            setWeekViewSelection({ values: lastWeeks });
-          }
+            // Sinon, prendre les dernières par défaut pour la nouvelle année
+            newSelectedValues = newAvailablePeriods.slice(-defaultNumPeriods);
         }
-      } else if (viewMode === "month") {
-        const months = [...new Set(filteredByNewYear.map(t => new Date(t[dateUpdateField]).getMonth() + 1))].sort((a, b) => a - b);
-        if (hasGlobalFilter && globalStartDate && globalEndDate) {
-          const monthList = getAllMonthsBetween(globalStartDate, globalEndDate).filter(m => months.includes(m));
-          setSelectedValues(monthList);
-          setMonthViewSelection({ values: monthList });
-        } else {
-          const intersection = monthViewSelection.values.filter(m => months.includes(m));
-          if (intersection.length > 0) {
-            setSelectedValues(intersection);
-          } else {
-            const lastMonths = months.slice(-3);
-            setSelectedValues(lastMonths);
-            setMonthViewSelection({ values: lastMonths });
-          }
+        // Si on change d'année manuellement et qu'on n'est pas sur l'année du filtre global, désactiver le flag
+        if (!(globalStartDate && globalEndDate && globalStartDate.getFullYear() === year)) {
+            setHasGlobalFilter(false);
         }
-      }
     }
+
+    setSelectedValues(newSelectedValues);
+
+    // Mettre à jour l'état mémorisé pour la nouvelle année
+    if (viewMode === "week") setWeekViewSelection({ values: newSelectedValues, year: year });
+    else if (viewMode === "month") setMonthViewSelection({ values: newSelectedValues, year: year });
+    else if (viewMode === "quarter") setQuarterViewSelection({ values: newSelectedValues, year: year });
+    else if (viewMode === "semester") setSemesterViewSelection({ values: newSelectedValues, year: year });
   };
-  
-  // -------------------------
-  // Préparation des labels pour le graphique
-  // -------------------------
-  let labels = [];
-  if (viewMode === "day") {
-    labels = selectedValues
-      .filter(val => typeof val === "string")
-      .slice()
-      .sort()
-      .map(val => formatDayLabel(val));
-  } else if (viewMode === "week") {
-    labels = selectedValues
-      .filter(val => typeof val === "number" || !isNaN(Number(val)))
-      .map(val => typeof val === "string" ? Number(val) : val)
-      .slice()
-      .sort((a, b) => a - b)
-      .map(w => `Semaine ${w}`);
-  } else {
-    labels = selectedValues
-      .filter(val => typeof val === "number" || !isNaN(Number(val)))
-      .map(val => typeof val === "string" ? Number(val) : val)
-      .slice()
-      .sort((a, b) => a - b)
-      .map(m => monthNames[m - 1]);
-  }
-  
-  const sortedSelectedValues = (() => {
-    if (viewMode === "day") {
-      return selectedValues
-        .filter(val => typeof val === "string")
-        .slice()
-        .sort();
-    } else {
-      return selectedValues
-        .filter(val => typeof val === "number" || !isNaN(Number(val)))
-        .map(val => typeof val === "string" ? Number(val) : val)
-        .slice()
-        .sort((a, b) => a - b);
+
+  // =========================================
+  // Préparation des données pour le graphique
+  // =========================================
+
+   // Obtenir les périodes disponibles pour le sélecteur dans le filtre
+  const availablePeriodsForFilter = viewMode === 'day'
+        ? [] // Pas de liste pour le mode jour (utilise DatePicker)
+        : selectedYear ? getAvailablePeriodsForYear(selectedYear, viewMode) : []; // Calculer si année sélectionnée
+
+   // Vérifier si toutes les périodes disponibles (pour la vue/année actuelle) sont sélectionnées
+  const allPeriodsForFilterSelected = viewMode !== 'day' && availablePeriodsForFilter.length > 0 &&
+    availablePeriodsForFilter.every(period => selectedValues.includes(period));
+
+  // Trier les valeurs sélectionnées pour l'ordre des barres/labels
+  const sortedSelectedValues = useMemo(() => { // Utiliser useMemo pour optimiser le tri
+    if (!Array.isArray(selectedValues)) return [];
+    try {
+        if (viewMode === "day") {
+            // Trier les chaînes "YYYY-MM-DD"
+            return selectedValues
+                .filter(val => typeof val === "string" && val.match(/^\d{4}-\d{2}-\d{2}$/)) // Filtrer pour être sûr
+                .slice() // Créer une copie
+                .sort();
+        } else {
+            // Trier les numéros
+            return selectedValues
+                .filter(val => typeof val === "number" || !isNaN(Number(val))) // Filtrer les nombres/chaînes numériques
+                .map(val => Number(val)) // Convertir en nombre
+                .filter(num => !isNaN(num)) // Filtrer les NaN potentiels après conversion
+                .slice() // Créer une copie
+                .sort((a, b) => a - b);
+        }
+    } catch (error) {
+        console.error("Error sorting selected values:", error, selectedValues);
+        return [];
     }
-  })();
-  
-  // -------------------------
-  // Filtrage des tickets pour la vue sélectionnée
-  // -------------------------
-  const filteredEntrants = data.filter(t => {
-    if (viewMode === "day") {
-      const dateStr = t[dateUpdateField].split("T")[0];
-      return selectedValues.includes(dateStr);
-    } else {
-      if (new Date(t[dateUpdateField]).getFullYear() !== selectedYear) return false;
-      if (viewMode === "week") {
-        const wk = Number(t[weekField]);
-        return !isNaN(wk) && selectedValues.includes(wk);
+  }, [selectedValues, viewMode]); // Recalculer seulement si selectedValues ou viewMode change
+
+
+  // Génération des labels pour l'axe X
+  const labels = useMemo(() => sortedSelectedValues.map(val => {
+      try {
+          if (viewMode === "day") return formatDayLabel(val);
+          if (viewMode === "week") return `S${val}`;
+          if (viewMode === "month") return monthNames[val - 1] || `Mois ${val}`;
+          if (viewMode === "quarter") return quarterNames[val - 1] || `Trim. ${val}`;
+          if (viewMode === "semester") return semesterNames[val - 1] || `Sem. ${val}`;
+          return String(val);
+      } catch (e) {
+          console.error("Label generation error", e); return String(val);
       }
-      if (viewMode === "month") {
-        const m = new Date(t[dateUpdateField]).getMonth() + 1;
-        return selectedValues.includes(m);
+  }), [sortedSelectedValues, viewMode]); // Dépend des valeurs triées et du mode
+
+  // Fonction helper pour obtenir la période d'un ticket (pour vues non-journalières)
+  // Utilise useCallback pour éviter redéfinition inutile
+  const getTicketPeriod = useCallback((ticket, mode, dateField, weekFieldProp) => {
+      if (!ticket || !dateField) return null;
+      const dateStr = ticket[dateField]?.split("T")[0];
+      const ticketDate = parseLocalDate(dateStr);
+      if (!ticketDate || isNaN(ticketDate.getTime())) return null;
+
+      try {
+          if (mode === "week") {
+              // Essayer le champ semaine dédié d'abord, sinon calculer
+              const weekVal = ticket[weekFieldProp];
+              return !isNaN(Number(weekVal)) ? Number(weekVal) : getWeekNumber(ticketDate);
+          } else if (mode === "month") {
+              return ticketDate.getMonth() + 1;
+          } else if (mode === "quarter") {
+              return getQuarter(ticketDate);
+          } else if (mode === "semester") {
+              return getSemester(ticketDate);
+          }
+          return null;
+      } catch (e) {
+          console.error("Error in getTicketPeriod:", e);
+          return null;
       }
-    }
-    return false;
-  });
-  
-  const filteredSortants = data.filter(t => {
-    if (!t[dateClosedField]) return false;
-    if (viewMode === "day") {
-      const dateStr = t[dateClosedField].split("T")[0];
-      return selectedValues.includes(dateStr);
-    }
-    if (new Date(t[dateClosedField]).getFullYear() !== selectedYear) return false;
-    if (viewMode === "week") {
-      const wk = Number(t[weekClosedField]);
-      return !isNaN(wk) && selectedValues.includes(wk);
-    }
-    if (viewMode === "month") {
-      const m = new Date(t[dateClosedField]).getMonth() + 1;
-      return selectedValues.includes(m);
-    }
-    return false;
-  });
-  
-  const entrantsData = sortedSelectedValues.map(val => {
-    if (viewMode === "day") {
-      return filteredEntrants.filter(t => t[dateUpdateField].split("T")[0] === val).length;
-    } else if (viewMode === "week") {
-      const numVal = Number(val);
-      return filteredEntrants.filter(t => {
-        const wk = Number(t[weekField]);
-        return !isNaN(wk) && wk === numVal;
-      }).length;
-    } else {
-      const numVal = Number(val);
-      return filteredEntrants.filter(t => new Date(t[dateUpdateField]).getMonth() + 1 === numVal).length;
-    }
-  });
-  
-  const sortantsData = sortedSelectedValues.map(val => {
-    if (viewMode === "day") {
-      return filteredSortants.filter(t => t[dateClosedField].split("T")[0] === val).length;
-    } else if (viewMode === "week") {
-      const numVal = Number(val);
-      return filteredSortants.filter(t => {
-        const wk = Number(t[weekClosedField]);
-        return !isNaN(wk) && wk === numVal;
-      }).length;
-    } else {
-      const numVal = Number(val);
-      return filteredSortants.filter(t => new Date(t[dateClosedField]).getMonth() + 1 === numVal).length;
-    }
-  });
-  
+  }, []); // Pas de dépendances externes variables
+
+  // Calcul des données pour Entrants et Sortants (Utilisation de useMemo pour optimisation)
+  const { entrantsData, sortantsData } = useMemo(() => {
+      const entrantCounts = {};
+      const sortantCounts = {};
+
+      // Initialiser les compteurs pour les périodes sélectionnées
+      sortedSelectedValues.forEach(val => {
+          entrantCounts[val] = 0;
+          sortantCounts[val] = 0;
+      });
+
+      data.forEach(t => {
+          // Calcul pour les entrants
+          const dateUpdateStr = t[dateUpdateField]?.split("T")[0];
+          const dateUpdate = parseLocalDate(dateUpdateStr);
+          if (dateUpdate) {
+              if (viewMode === "day") {
+                  if (sortedSelectedValues.includes(dateUpdateStr)) {
+                      entrantCounts[dateUpdateStr]++;
+                  }
+              } else if (dateUpdate.getFullYear() === selectedYear) {
+                  const period = getTicketPeriod(t, viewMode, dateUpdateField, weekField);
+                  if (period !== null && sortedSelectedValues.includes(period)) {
+                      entrantCounts[period]++;
+                  }
+              }
+          }
+
+          // Calcul pour les sortants
+          const dateClosedStr = t[dateClosedField]?.split("T")[0];
+          const dateClosed = parseLocalDate(dateClosedStr);
+          if (dateClosed) {
+              if (viewMode === "day") {
+                  if (sortedSelectedValues.includes(dateClosedStr)) {
+                      sortantCounts[dateClosedStr]++;
+                  }
+              } else if (dateClosed.getFullYear() === selectedYear) {
+                  const relevantWeekField = viewMode === "week" ? (weekClosedField || weekField) : weekField;
+                  const period = getTicketPeriod(t, viewMode, dateClosedField, relevantWeekField);
+                  if (period !== null && sortedSelectedValues.includes(period)) {
+                      sortantCounts[period]++;
+                  }
+              }
+          }
+      });
+
+      // Convertir les objets de comptage en tableaux dans le bon ordre
+      const finalEntrantsData = sortedSelectedValues.map(val => entrantCounts[val] || 0);
+      const finalSortantsData = sortedSelectedValues.map(val => sortantCounts[val] || 0);
+
+      return { entrantsData: finalEntrantsData, sortantsData: finalSortantsData };
+
+  }, [data, sortedSelectedValues, viewMode, selectedYear, dateUpdateField, dateClosedField, weekField, weekClosedField, getTicketPeriod]); // Dépendances clés
+
+
+  // Structure des données pour ChartJS
   const chartData = {
     labels,
     datasets: [
@@ -620,184 +858,180 @@ export default function GroupedBarChart({
       { label: "Sortants", data: sortantsData, backgroundColor: "#1b2b6b", borderRadius: 6 }
     ]
   };
-  
-  const chartOptions = {
+
+  // Options du graphique
+  const chartOptions = useMemo(() => ({ // useMemo pour les options aussi
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       datalabels: {
         display: true,
         color: "#000",
-        font: { weight: "bold", size: 11 },
+        font: { weight: "bold", size: 10 },
         formatter: val => val > 0 ? val : "",
         anchor: "end",
         align: "top",
-        offset: -2
+        offset: -3
       },
-      legend: { 
+      legend: {
         position: "top",
         align: "center",
-        labels: {
-          padding: 20,
-          boxWidth: 12,
-          font: { size: 12 }
-        }
+        labels: { padding: 15, boxWidth: 12, font: { size: 12 } }
       },
-      tooltip: { 
-        mode: "index", 
-        intersect: false,
-        padding: 10,
-        titleFont: { size: 14 },
-        bodyFont: { size: 13 }
-      }
+      tooltip: {
+        mode: "index", intersect: false, padding: 10,
+        titleFont: { size: 13 }, bodyFont: { size: 12 }
+      },
+       title: { display: false } // Titre externe utilisé
     },
     scales: {
-      x: { 
+      x: {
         grid: { display: false },
         ticks: {
-          maxRotation: 45,
-          minRotation: 45,
-          padding: 10,
-          font: { size: 11 }
+          maxRotation: viewMode === 'day' ? 45 : 0, minRotation: viewMode === 'day' ? 45 : 0,
+          padding: 10, font: { size: 11 }
+        },
+        title: {
+             display: true,
+             text: viewMode === 'day' ? 'Jour' :
+                   viewMode === 'week' ? `Semaines ${selectedYear || ''}` :
+                   viewMode === 'month' ? `Mois ${selectedYear || ''}` :
+                   viewMode === 'quarter' ? `Trimestres ${selectedYear || ''}` :
+                   viewMode === 'semester' ? `Semestres ${selectedYear || ''}` : 'Période',
+             font: { size: 12 }, padding: { top: 10 }
         }
       },
       y: {
         beginAtZero: true,
         grid: { drawBorder: false },
-        ticks: { precision: 0, padding: 10 }
+        ticks: { precision: 0, padding: 10 },
+        title: { display: true, text: 'Nombre de Tickets', font: { size: 12 }, padding: { bottom: 10 },  },grace: '5%'
       }
     },
-    layout: {
-      padding: { top: 20, right: 20, bottom: 30, left: 10 }
-    }
+     layout: { padding: { top: 5, right: 20, bottom: 10, left: 10 } },
+     animation: { duration: 300 },
+  }), [viewMode, selectedYear]); // Recalculer si viewMode ou selectedYear change (pour les titres d'axe)
+
+  // Texte descriptif de la période sélectionnée
+  const getPeriodLabelText = () => {
+        if (viewMode === 'day') {
+            if (selectedDates[0] && selectedDates[1]) {
+                 const startStr = getLocalDateString(selectedDates[0]);
+                 const endStr = getLocalDateString(selectedDates[1]);
+                 return `Du ${startStr} au ${endStr}`;
+            } else { return "Aucun jour sélectionné"; }
+        } else if (sortedSelectedValues.length > 0) {
+             const prefix = viewMode === "week" ? "S" :
+                           viewMode === "month" ? "" : // Pas de préfixe pour mois (nom complet)
+                           viewMode === "quarter" ? "Trim." :
+                           viewMode === "semester" ? "Sem." : "Pér.";
+             const valuesString = sortedSelectedValues.map(val => {
+                  if (viewMode === "month") return monthNames[val - 1] || val;
+                  // Ajouter le préfixe pour les autres vues numériques
+                  return `${prefix} ${val}`;
+             }).join(", ");
+             // Gérer le singulier/pluriel pour le titre global
+             let titlePrefix = "";
+              if (viewMode === "week") titlePrefix = sortedSelectedValues.length > 1 ? "Semaines" : "Semaine";
+              else if (viewMode === "month") titlePrefix = sortedSelectedValues.length > 1 ? "Mois" : "Mois"; // Mois reste Mois
+              else if (viewMode === "quarter") titlePrefix = sortedSelectedValues.length > 1 ? "Trimestres" : "Trimestre";
+              else if (viewMode === "semester") titlePrefix = sortedSelectedValues.length > 1 ? "Semestres" : "Semestre";
+              else titlePrefix = sortedSelectedValues.length > 1 ? "Périodes" : "Période";
+
+             return `${titlePrefix}: ${valuesString}`;
+        } else {
+             return "Aucune période sélectionnée";
+        }
   };
-  
+  const periodeLabelText = getPeriodLabelText();
+  const showData = entrantsData.some(d => d > 0) || sortantsData.some(d => d > 0);
+
+
+  // =========================================
+  // Rendu JSX
+  // =========================================
+  if (loading) {
+     return ( <div className="visualisation relative" data-id={id}><div className="relative bg-white p-5 shadow-md rounded-lg w-full h-[450px] flex justify-center items-center"><p className="text-center text-gray-500">Chargement des données...</p></div></div> );
+  }
+
   return (
     <div className="visualisation relative" data-id={id}>
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
-        {/* Header avec titre et boutons */}
-        <div className="flex justify-between items-center mb-4 relative">
-          <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
+        {/* Header */}
+        <div className="flex justify-between items-start mb-4 relative">
+             <div>
+                 <h3 className="text-lg font-semibold text-gray-800">{chartTitle}</h3>
+                 <p className="text-sm text-gray-500 min-h-[20px]"> {/* Min height to prevent layout shift */}
+                     {viewMode !== 'day' && selectedYear ? `Année ${selectedYear} - ` : ''}
+                     {periodeLabelText}
+                 </p>
+             </div>
           <div className="flex gap-2">
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
-              onClick={() => setIsOpen(!isOpen)}
-              data-filter-toggle="true">
-              <AiOutlineFilter size={20} className="text-gray-600" />
-            </button>
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
-              onClick={() => setModalIsOpen(true)}>
-              <FaExpand size={18} className="text-gray-600" />
-            </button>
+            <button className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800" onClick={() => setIsOpen(!isOpen)} data-filter-toggle="true" title="Filtrer"><AiOutlineFilter size={20} /></button>
+            <CommentButton containerRef={chartContainerRef} comments={annotations} onAddComment={(c) => setAnnotations([...annotations, c])} onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))} onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))} />
+            <button className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800" onClick={() => setModalIsOpen(true)} title="Agrandir"><FaExpand size={18} /></button>
           </div>
           {/* Panneau de filtre */}
           {isOpen && (
-            <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
-              <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-              <div className="flex space-x-2 mt-2 mb-2">
-                {["day", "week", "month"].map(mode => (
-                  <button
-                    key={mode}
-                    className={`px-3 py-1 rounded-md ${viewMode === mode ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                    onClick={() => handleViewModeChange(mode)}
-                  >
-                    {mode === "day" ? "Jour" : mode === "week" ? "Semaine" : "Mois"}
-                  </button>
-                ))}
+            <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50 border border-gray-200">
+              <h4 className="font-semibold text-gray-600 text-sm mb-3">Filtrer par :</h4>
+              <div className="flex space-x-1 mb-3 flex-wrap justify-start">
+                {["day", "week", "month", "quarter", "semester"].map(mode => ( <button key={mode} className={`px-2.5 py-1 rounded text-xs mb-1 ${viewMode === mode ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`} onClick={() => handleViewModeChange(mode)}> {mode === "day" ? "Jour" : mode === "week" ? "Sem." : mode === "month" ? "Mois" : mode === "quarter" ? "Trim." : "Sem."} </button> ))}
               </div>
               {viewMode === "day" ? (
                 <div>
-                  <DatePicker
-                    selected={selectedDates[0]}
-                    onChange={handleDayRangeChange}
-                    startDate={selectedDates[0]}
-                    endDate={selectedDates[1]}
-                    selectsRange
-                    dateFormat="yyyy-MM-dd"
-                    locale={fr}
-                    inline
-                    filterDate={date => {
-                      const day = date.getDay();
-                      return day !== 0 && day !== 6;
-                    }}
-                  />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Plage de dates :</label>
+                  <DatePicker selected={selectedDates[0]} onChange={handleDayRangeChange} startDate={selectedDates[0]} endDate={selectedDates[1]} selectsRange dateFormat="dd/MM/yyyy" locale={fr} inline filterDate={date => { const day = date.getDay(); return day !== 0 && day !== 6; }} calendarClassName="text-sm" dayClassName={() => "text-xs"} wrapperClassName="w-full" popperPlacement="bottom-end" maxDate={new Date()} showMonthDropdown showYearDropdown dropdownMode="select" />
                 </div>
               ) : (
                 <>
                   {multipleYearsExist && (
                     <div className="mb-3">
-                      <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                      <h5 className="text-sm font-medium text-gray-500 mb-1">Année :</h5>
                       <div className="flex flex-wrap gap-1">
-                        {availableYears.map(year => (
-                          <button
-                            key={year}
-                            onClick={() => handleYearChange(year)}
-                            className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-                          >
-                            {year}
-                          </button>
-                        ))}
+                        {availableYears.map(year => ( <button key={year} onClick={() => handleYearChange(year)} className={`px-2 py-0.5 text-xs rounded ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}> {year} </button> ))}
                       </div>
                     </div>
                   )}
-                  <div className="mb-2">
-                    <button
-                      onClick={handleSelectAll}
-                      className={`text-xs px-2 py-1 rounded-md w-full ${allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
-                    >
-                      {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
-                    </button>
+                   <div className="mb-2">
+                    <button onClick={handleSelectAll} disabled={availablePeriodsForFilter.length === 0} className={`text-xs px-2 py-1 rounded w-full ${allPeriodsForFilterSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"} disabled:opacity-50 disabled:cursor-not-allowed`}> {allPeriodsForFilterSelected ? "Tout désélectionner" : "Tout sélectionner"} </button>
                   </div>
-                  <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-                    {availablePeriods.map(value => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedValues.includes(value)}
-                          onChange={() => handleSelectionChange(value)}
-                        />
-                        <span className="text-gray-500">
-                          {viewMode === "week" ? `Semaine ${value}` : monthNames[value - 1]}
-                        </span>
+                   <div className="max-h-32 overflow-y-auto border border-gray-200 p-2 rounded text-sm">
+                     {availablePeriodsForFilter.length > 0 ? availablePeriodsForFilter.map((value) => (
+                      <div key={value} className="flex items-center space-x-2 my-0.5">
+                        <input type="checkbox" id={`period-${value}-${viewMode}`} checked={selectedValues.includes(value)} onChange={() => handleSelectionChange(value)} className="cursor-pointer h-3.5 w-3.5" />
+                        <label htmlFor={`period-${value}-${viewMode}`} className="text-gray-600 cursor-pointer select-none text-xs">
+                          {viewMode === "week" ? `S${value}` : viewMode === "month" ? monthNames[value - 1] || `Mois ${value}` : viewMode === "quarter" ? quarterNames[value - 1] || `Trim. ${value}` : viewMode === "semester" ? semesterNames[value - 1] || `Sem. ${value}` : value}
+                        </label>
                       </div>
-                    ))}
+                    )) : ( <p className="text-xs text-gray-400 text-center italic py-2">Aucune période disponible pour {selectedYear}</p> )}
                   </div>
                 </>
               )}
             </div>
           )}
         </div>
-  
-        <div className="flex-grow flex justify-center items-center w-full">
-          <Bar
-            style={{ width: "100%", height: "100%" }}
-            data={chartData}
-            options={chartOptions}
-            plugins={[ChartDataLabels]}
-          />
+
+        {/* Conteneur Graphique Principal */}
+        <div className="flex-grow flex justify-center items-center h-[350px] w-full" ref={chartContainerRef}>
+           {showData ? ( <Bar data={chartData} options={chartOptions} plugins={[ChartDataLabels]} /> ) : ( <p className="text-gray-500 italic">Aucune donnée à afficher pour la sélection actuelle.</p> )}
         </div>
       </div>
-  
-      {/* Modal d'agrandissement */}
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={() => setModalIsOpen(false)}
-        className="flex items-center justify-center fixed inset-0 z-50"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-      >
-        <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-semibold text-gray-800">{chartTitle}</h3>
-            <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
-          </div>
-          <div className="relative h-[400px] flex items-center justify-center">
-            <Bar
-              data={chartData}
-              options={chartOptions}
-              plugins={[ChartDataLabels]}
-            />
-          </div>
+
+      {/* Modal */}
+      <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)} className="flex items-center justify-center fixed inset-0 z-50" overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm" contentLabel={`Modal ${chartTitle}`}>
+        <div className="bg-white rounded-lg p-6 w-11/12 md:w-4/5 lg:w-3/4 shadow-xl max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                 <div>
+                      <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
+                       <p className="text-sm text-gray-500 mt-1 min-h-[20px]"> {viewMode !== 'day' && selectedYear ? `Année ${selectedYear} - ` : ''} {periodeLabelText} </p>
+                 </div>
+                 <button onClick={() => setModalIsOpen(false)} className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-100 transition-colors" title="Fermer"> <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> </button>
+            </div>
+            <div className="relative flex-grow min-h-[400px] md:min-h-[500px] flex items-center justify-center" ref={modalChartContainerRef}>
+                 {showData ? ( <Bar data={chartData} options={{...chartOptions, plugins: {...chartOptions.plugins, datalabels: {...chartOptions.plugins.datalabels, font: { size: 11 }}}}} plugins={[ChartDataLabels]} /> ) : ( <p className="text-gray-500 italic">Aucune donnée à afficher.</p> )}
+                 <CommentButton containerRef={modalChartContainerRef} hideButton={true} comments={annotations} onAddComment={(c) => setAnnotations([...annotations, c])} onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))} onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))} />
+            </div>
         </div>
       </Modal>
     </div>
