@@ -4,21 +4,21 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
-
 export default function KPIBacklogJ1({ onComponentReady }) {
-  const [currentValue, setCurrentValue] = useState(null);
-  const [previousValue, setPreviousValue] = useState(null);
-  const [difference, setDifference] = useState(null);
-  const [percentage, setPercentage] = useState(null);
-  const [hasNotifiedReady, setHasNotifiedReady] = useState(false);
+  const [currentValue, setCurrentValue] = useState(0);
+  const [previousValue, setPreviousValue] = useState(0);
+  const [difference, setDifference] = useState(0);
+  const [percentage, setPercentage] = useState(0);
+  const [isPositive, setIsPositive] = useState(true); // ici, POSITIF = baisse (bon)
+  const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
         const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/");
         const json = await res.json();
+
         if (Array.isArray(json) && json.length > 1) {
           const sorted = json.sort((a, b) => new Date(b.date) - new Date(a.date));
           const latest = sorted[0];
@@ -27,16 +27,17 @@ export default function KPIBacklogJ1({ onComponentReady }) {
           const latestVal = latest?.non_traite ?? 0;
           const previousVal = previous?.non_traite ?? 0;
           const diff = latestVal - previousVal;
-          const pct = previousVal !== 0 ? (diff / previousVal) * 100 : 0;
+          const pct = previousVal !== 0 ? Math.round((diff / previousVal) * 100) : 100;
 
           setCurrentValue(latestVal);
           setPreviousValue(previousVal);
-          setDifference(diff);
-          setPercentage(pct);
+          setDifference(Math.abs(diff));
+          setPercentage(Math.abs(pct));
+          setIsPositive(diff < 0); // baisse = bon = vert
 
-          if (!hasNotifiedReady && typeof onComponentReady === "function") {
+          if (!isReady && typeof onComponentReady === "function") {
             onComponentReady();
-            setHasNotifiedReady(true);
+            setIsReady(true);
           }
         }
       } catch (err) {
@@ -45,11 +46,9 @@ export default function KPIBacklogJ1({ onComponentReady }) {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [hasNotifiedReady, onComponentReady]);
 
-  const isUp = difference !== null && difference > 0;
-  const isDown = difference !== null && difference < 0;
+    fetchData();
+  }, [isReady, onComponentReady]);
 
   return (
     <motion.div
@@ -57,34 +56,33 @@ export default function KPIBacklogJ1({ onComponentReady }) {
       className="relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
       whileHover={{ scale: 1.05 }}
     >
-      {/* Spinner de chargement */}
       {loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg">
-          <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm mt-2 text-blue-600 font-semibold">Chargement <span className="text-blue-400">MyIT</span>...</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 backdrop-blur-sm z-50 rounded-lg">
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            <p className="mt-2 text-sm text-blue-700 font-semibold">
+              Chargement <span className="text-blue-500">MyIT</span>...
+            </p>
+          </div>
         </div>
       )}
 
-      <div className={loading ? "opacity-30 pointer-events-none select-none" : ""}>
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="text-gray-700 text-sm font-semibold">Backlog FTTH J-1</h3>
-          {isUp ? (
-            <TrendingUp className="text-green-500 w-5 h-5" />
-          ) : isDown ? (
-            <TrendingDown className="text-red-500 w-5 h-5" />
-          ) : (
-            <TrendingUp className="text-gray-400 w-5 h-5" />
-          )}
-        </div>
-        <p className="text-3xl font-bold">{currentValue !== null ? currentValue : "--"}</p>
-        {difference !== null && (
-          <p className={`text-sm font-medium ${isUp ? "text-green-500" : isDown ? "text-red-500" : "text-gray-500"}`}>
-            {isUp ? "+" : isDown ? "" : "±"}
-            {Math.abs(percentage).toFixed(1)}% ({isUp ? "+" : isDown ? "-" : "±"}
-            {Math.abs(difference)} commandes)
-          </p>
+      <div className="flex justify-between items-center">
+        <h3 className="text-gray-700 text-sm font-semibold">Backlog FTTH J-1</h3>
+        {isPositive ? (
+          <TrendingDown className="text-green-500 w-5 h-5" />
+        ) : (
+          <TrendingUp className="text-red-500 w-5 h-5" />
         )}
       </div>
+
+      <p className="text-3xl font-bold">{currentValue}</p>
+
+      <p className={`text-sm ${isPositive ? "text-green-500" : "text-red-500"}`}>
+        {isPositive ? "-" : "+"}
+        {percentage}% ({isPositive ? "-" : "+"}
+        {difference} commandes)
+      </p>
     </motion.div>
   );
 }

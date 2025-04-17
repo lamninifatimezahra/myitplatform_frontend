@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import useAuth from "@/hooks/useAuth"; // ✅ Hook d'authentification
+import useAuth from "@/hooks/useAuth";
 import KPIBacklogJ1 from "./components/KPIBacklogJ1";
 import KPIBacklogJ from "./components/KPIBacklogJ";
 import KPIObjectif from "./components/KPIObjectif";
@@ -20,15 +20,13 @@ export default function DashboardFTTH() {
   const [globalStartDate, setGlobalStartDate] = useState(null);
   const [globalEndDate, setGlobalEndDate] = useState(null);
 
-  
-    if (!hydrated || loading || !authorized) {
-      return (
-        <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
-          Chargement...
-        </div>
-      );
-    }
-
+  if (!hydrated || loading || !authorized) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
+        Chargement...
+      </div>
+    );
+  }
 
   const handleGlobalFilter = (start, end) => {
     setGlobalStartDate(new Date(start));
@@ -37,7 +35,6 @@ export default function DashboardFTTH() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden relative">
-      {/* Bouton burger mobile */}
       <button
         onClick={() => setIsSidebarOpen(true)}
         className="sm:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white shadow p-2 rounded-md"
@@ -48,11 +45,15 @@ export default function DashboardFTTH() {
       <Sidebar isMobileOpen={isSidebarOpen} toggleMobileOpen={() => setIsSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col relative">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20 z-0" style={{ backgroundImage: "url('/background-office.jpg')" }}></div>
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
+          style={{ backgroundImage: "url('/background-office.jpg')" }}
+        ></div>
 
         <Header onGlobalFilter={handleGlobalFilter} />
 
         <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
+          {/* 🔢 KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <KPIBacklogJ1 />
             <KPIBacklogJ />
@@ -60,15 +61,21 @@ export default function DashboardFTTH() {
             <KPIDossiersTraites />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 📊 Graphiques – ligne 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphObjectif globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphVueEnsemble globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
-            <GraphTopRegles globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <GraphRepartitionManuelle globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+          {/* 📊 Graphiques – ligne 2 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <GraphTopRegles globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphTopReglesParJour globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+          </div>
+
+          {/* 📊 Graphiques – ligne 3 (⛔ Changement ici) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <GraphRepartitionManuelle globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphEntrantsSortants globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
           </div>
         </div>

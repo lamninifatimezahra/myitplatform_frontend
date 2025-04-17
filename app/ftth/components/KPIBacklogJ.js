@@ -5,8 +5,6 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
-
-
 export default function KPIBacklogJ({ onComponentReady }) {
   const [todayValue, setTodayValue] = useState(0);
   const [yesterdayValue, setYesterdayValue] = useState(0);
@@ -57,25 +55,31 @@ export default function KPIBacklogJ({ onComponentReady }) {
       className="relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
       whileHover={{ scale: 1.05 }}
     >
+      {/* Chargement */}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 backdrop-blur-sm z-50 rounded-lg">
           <div className="flex flex-col items-center">
             <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-            <p className="mt-2 text-sm text-blue-700 font-semibold">Chargement <span className="text-blue-500">MyIT</span>...</p>
+            <p className="mt-2 text-sm text-blue-700 font-semibold">
+              Chargement <span className="text-blue-500">MyIT</span>...
+            </p>
           </div>
         </div>
       )}
 
+      {/* Contenu */}
       <div className="flex justify-between items-center">
         <h3 className="text-gray-700 text-sm font-semibold">Backlog FTTH J</h3>
         {isPositive ? (
-          <TrendingUp className="text-green-500 w-5 h-5" />
+          <TrendingUp className="text-gray-400 w-5 h-5" />
         ) : (
-          <TrendingDown className="text-red-500 w-5 h-5" />
+          <TrendingDown className="text-gray-400 w-5 h-5" />
         )}
       </div>
+
       <p className="text-3xl font-bold">{todayValue}</p>
-      <p className={`text-sm ${isPositive ? "text-green-500" : "text-red-500"}`}>
+
+      <p className="text-sm text-gray-400">
         {isPositive ? "+" : "-"}
         {percent}% ({isPositive ? "+" : "-"}
         {diff} commandes)

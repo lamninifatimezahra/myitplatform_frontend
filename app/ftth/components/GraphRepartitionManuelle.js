@@ -4,16 +4,16 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { FaExpand, FaPencilAlt } from "react-icons/fa";
+import { FaExpand, FaPencilAlt, FaSyncAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
-
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 const COLORS = ["#4a90e2", "#7b61ff", "#50e3c2", "#ff9f40", "#9966ff"];
+const iconBtnClass = "w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition";
 
 const CustomLabelOutside = ({ name, value, cx, cy, midAngle, outerRadius, fill }) => {
   const RADIAN = Math.PI / 180;
@@ -79,60 +79,69 @@ export default function GraphRepartitionManuelle({
     return [start, end];
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        let start, end;
-        if (selectedPeriod === "custom" && startDate && endDate) {
-          start = startDate;
-          end = endDate;
-        } else if (globalStartDate && globalEndDate) {
-          start = globalStartDate;
-          end = globalEndDate;
-        } else {
-          [start, end] = getPeriodRange();
-        }
-
-        const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/regle/")        ;
-        const all = await res.json();
-        const filtered = all.filter((item) => {
-          const d = normalizeDate(item.date);
-          const day = d.getDay(); // 0 = dimanche, 6 = samedi
-          const isWeekday = day !== 0 && day !== 6;
-          return d >= normalizeDate(start) && d <= normalizeDate(end) && isWeekday;
-        });
-        
-
-        const count = {};
-        filtered.forEach((item) => {
-          const acteur = (item.acteur || "Autre").trim();
-          count[acteur] = (count[acteur] || 0) + 1;
-        });
-
-        const total = Object.values(count).reduce((a, b) => a + b, 0);
-        const formatted = Object.entries(count).map(([name, val], i) => ({
-          name,
-          value: parseFloat(((val / total) * 100).toFixed(2)),
-          color: COLORS[i % COLORS.length],
-        }));
-
-        setData(formatted);
-      } catch (err) {
-        console.error("Erreur chargement données:", err);
-      } finally {
-        setTimeout(() => setLoading(false), 300);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      let start, end;
+      if (selectedPeriod === "custom" && startDate && endDate) {
+        start = startDate;
+        end = endDate;
+      } else if (globalStartDate && globalEndDate) {
+        start = globalStartDate;
+        end = globalEndDate;
+      } else {
+        [start, end] = getPeriodRange();
       }
-    };
+
+      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/regle/");
+      const all = await res.json();
+      const filtered = all.filter((item) => {
+        const d = normalizeDate(item.date);
+        const day = d.getDay();
+        return d >= normalizeDate(start) && d <= normalizeDate(end) && day !== 0 && day !== 6;
+      });
+
+      const count = {};
+      filtered.forEach((item) => {
+        const acteur = (item.acteur || "Autre").trim();
+        count[acteur] = (count[acteur] || 0) + 1;
+      });
+
+      const total = Object.values(count).reduce((a, b) => a + b, 0);
+      const formatted = Object.entries(count).map(([name, val], i) => ({
+        name,
+        value: parseFloat(((val / total) * 100).toFixed(2)),
+        color: COLORS[i % COLORS.length],
+      }));
+
+      setData(formatted);
+    } catch (err) {
+      console.error("Erreur chargement données:", err);
+    } finally {
+      setTimeout(() => setLoading(false), 150);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [selectedPeriod, startDate, endDate, globalStartDate, globalEndDate]);
 
-  const handleAddComment = () => {
-    if (!commentText || !commentColor) return;
-    setAnnotations(prev => [...prev, { id: Date.now(), text: commentText, color: commentColor, x: 100, y: 50 }]);
-    setCommentText(""); setCommentColor(""); setShowCommentPopup(false);
+  const handleReset = () => {
+    setSelectedPeriod("week");
+    setStartDate(null);
+    setEndDate(null);
+    fetchData();
   };
 
+  const handleAddComment = () => {
+    if (!commentText || !commentColor) return;
+    setAnnotations(prev => [...prev, {
+      id: Date.now(), text: commentText, color: commentColor, x: 100, y: 50
+    }]);
+    setCommentText("");
+    setCommentColor("");
+    setShowCommentPopup(false);
+  };
   const renderAnnotations = (ref) =>
     annotations.map((ann) => {
       const isEditing = editingComment === ann.id;
@@ -158,9 +167,7 @@ export default function GraphRepartitionManuelle({
       };
 
       return (
-        <div key={ann.id}
-          onMouseDown={handleMouseDown}
-          onClick={(e) => e.stopPropagation()}
+        <div key={ann.id} onMouseDown={handleMouseDown} onClick={(e) => e.stopPropagation()}
           onDoubleClick={() => {
             setEditingComment(ann.id);
             setCommentText(ann.text);
@@ -195,30 +202,49 @@ export default function GraphRepartitionManuelle({
     });
 
   return (
-    <div data-graph-id="graph-repartition-manuelle" data-graph-label="Répartition Manuelle (Acteur)" className="bg-white shadow-xl rounded-2xl p-6 relative" onClick={() => { setShowCommentPopup(false); setEditingComment(null); }}>
+    <div data-graph-id="graph-repartition-manuelle" data-graph-label="Répartition Manuelle (Acteur)"
+      className="bg-white shadow-xl rounded-2xl p-6 relative"
+      onClick={() => {
+        setShowCommentPopup(false);
+        setEditingComment(null);
+      }}
+    >
       {loading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-60 backdrop-blur-sm rounded-2xl">
           <div className="flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-            <p className="mt-3 text-blue-800 font-semibold">Chargement <span className="text-blue-500">MyIT</span>...</p>
+            <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            <p className="mt-2 text-blue-800 font-semibold text-sm">
+              Chargement <span className="text-blue-500">MyIT</span>…
+            </p>
           </div>
         </div>
       )}
 
+      {/* Header + boutons */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-2xl font-semibold text-slate-800">Répartition Manuelle (Acteur)</h3>
+        <h3 className="text-2xl font-semibold text-gray-800">Répartition Manuelle (Acteur)</h3>
         <div className="flex gap-2">
           {exportMode && (
-            <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={selectedGraphs?.includes("graph-repartition-manuelle")} onChange={(e) => onGraphSelect?.("graph-repartition-manuelle", e.target.checked)} />
+            <input type="checkbox" className="w-5 h-5 accent-blue-600"
+              checked={selectedGraphs?.includes("graph-repartition-manuelle")}
+              onChange={(e) => onGraphSelect?.("graph-repartition-manuelle", e.target.checked)} />
           )}
-          <button onClick={(e) => { e.stopPropagation(); setShowCommentPopup(true); }} className="text-gray-500 hover:text-green-500"><FaPencilAlt className="w-5 h-5" /></button>
-          <button onClick={(e) => { e.stopPropagation(); setModalIsOpen(true); }} className="text-gray-500 hover:text-blue-500"><FaExpand className="w-5 h-5" /></button>
+          <button onClick={(e) => { e.stopPropagation(); setShowCommentPopup(true); }} className={iconBtnClass}>
+            <FaPencilAlt className="text-gray-700" />
+          </button>
+          <button onClick={handleReset} className={iconBtnClass}>
+            <FaSyncAlt className="text-gray-700" />
+          </button>
+          <button onClick={() => setModalIsOpen(true)} className={iconBtnClass}>
+            <FaExpand className="text-gray-700" />
+          </button>
         </div>
       </div>
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-4 mb-4">
-        <select className="p-2 rounded-xl border border-gray-300 bg-white shadow text-sm" value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
+        <select className="p-2 rounded-xl border border-gray-300 bg-white shadow text-sm"
+          value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
           <option value="day">Aujourd'hui</option>
           <option value="week">Cette semaine</option>
           <option value="month">Ce mois</option>
@@ -228,23 +254,28 @@ export default function GraphRepartitionManuelle({
         </select>
         {selectedPeriod === "custom" && (
           <>
-            <DatePicker selected={startDate} onChange={(d) => { setStartDate(d); setTimeout(() => endDateRef.current?.setFocus(), 200); }} selectsStart startDate={startDate} endDate={endDate} placeholderText="Date de début" className="p-2 rounded-xl border border-gray-300 text-sm bg-white shadow" />
-            <DatePicker ref={endDateRef} selected={endDate} onChange={(d) => setEndDate(d)} selectsEnd startDate={startDate} endDate={endDate} placeholderText="Date de fin" className="p-2 rounded-xl border border-gray-300 text-sm bg-white shadow" />
+            <DatePicker selected={startDate} onChange={(d) => { setStartDate(d); setTimeout(() => endDateRef.current?.setFocus(), 200); }}
+              selectsStart startDate={startDate} endDate={endDate}
+              placeholderText="Date de début" className="p-2 rounded-xl border border-gray-300 text-sm bg-white shadow" />
+            <DatePicker ref={endDateRef} selected={endDate} onChange={(d) => setEndDate(d)}
+              selectsEnd startDate={startDate} endDate={endDate}
+              placeholderText="Date de fin" className="p-2 rounded-xl border border-gray-300 text-sm bg-white shadow" />
           </>
         )}
       </div>
 
-      <div ref={chartRef} id="canvas-graph-repartition-manuelle" className="rounded-xl bg-white shadow-inner p-4 relative" style={{ height: 320 }}>
-        <ResponsiveContainer width="100%" height="100%">
+      {/* Graph */}
+      <div ref={chartRef} id="canvas-graph-repartition-manuelle" className="rounded-xl bg-white shadow-inner p-4 relative pt-10" style={{ height: 450 }}>
+      <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={100}
+              innerRadius={120}
+              outerRadius={170}
               dataKey="value"
-              labelLine={true}
+              labelLine
               label={CustomLabelOutside}
             >
               {data.map((entry, index) => (
@@ -257,6 +288,7 @@ export default function GraphRepartitionManuelle({
         {renderAnnotations(chartRef)}
       </div>
 
+      {/* Commentaire popup */}
       {showCommentPopup && (
         <div className="absolute top-10 right-10 bg-white p-4 rounded-xl shadow-2xl z-50 w-72" onClick={(e) => e.stopPropagation()}>
           <h4 className="text-lg font-semibold mb-2 text-gray-800">Ajouter un commentaire</h4>
@@ -270,6 +302,7 @@ export default function GraphRepartitionManuelle({
         </div>
       )}
 
+      {/* Modal plein écran */}
       <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)} className="flex items-center justify-center fixed inset-0 z-50" overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm">
         <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
@@ -286,7 +319,7 @@ export default function GraphRepartitionManuelle({
                   innerRadius={80}
                   outerRadius={140}
                   dataKey="value"
-                  labelLine={true}
+                  labelLine
                   label={CustomLabelOutside}
                 >
                   {data.map((entry, index) => (
