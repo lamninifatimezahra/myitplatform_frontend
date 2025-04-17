@@ -79,10 +79,11 @@ export default function GraphEntrantsSortants({
     }
   };
   useEffect(() => {
-    if (globalStartDate && globalEndDate) {
+    if (globalStartDate && globalEndDate && lastFilterSource !== "local") {
       setLastFilterSource("global");
     }
   }, [globalStartDate, globalEndDate]);
+  
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
