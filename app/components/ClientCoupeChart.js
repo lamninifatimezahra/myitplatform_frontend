@@ -17,7 +17,6 @@ import { FaExpand } from "react-icons/fa";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import Modal from "react-modal";
 import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
-// ---- NOUVEAU ----
 import CommentButton from "./CommentButton"; // Assurez-vous que le chemin est correct
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
