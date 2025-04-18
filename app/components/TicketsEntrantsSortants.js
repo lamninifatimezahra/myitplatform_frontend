@@ -228,8 +228,8 @@ ChartJS.register(
 // =========================================
 export default function GroupedBarChart({
   apiUrl,
-  id = "Rapport : Sortants/Entrants",
-  chartTitle = "Tickets Entrants vs. Sortants",
+  id = "Tickets Entrants/Sortants",
+  chartTitle = "Tickets Entrants/Sortants",
   dateUpdateField = "date_derniere_maj",
   weekField = "semaine", // Champ semaine pour entrants
   dateClosedField = "date_sortie",

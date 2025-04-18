@@ -7,7 +7,7 @@ import Modal from "react-modal";
 import { useGlobalFilter } from "./GlobalFilterContext";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
-// Pour l’accessibilité du Modal
+// Pour l'accessibilité du Modal
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 /**
@@ -47,8 +47,22 @@ const getAllWeeksBetween = (startDate, endDate) => {
   return weeksArray;
 };
 
-export default function TicketsReentrantsTable() {
-  const id = "Détail des Réitérations des Tickets";
+export default function TicketsReentrantsTable({
+  apiUrl,
+  id = "Détail des Réitérations des Tickets",
+  chartTitle = "Détail des Réitérations des Tickets"
+}) {
+  // Vérification si l'URL de l'API est fournie
+  if (!apiUrl) {
+    return (
+      <div className="visualisation relative" data-id={id}>
+        <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+          <h3 className="text-lg font-semibold text-black">{chartTitle}</h3>
+          <p className="text-red-500 text-sm mt-2">Erreur : L'URL de l'API est requise.</p>
+        </div>
+      </div>
+    );
+  }
 
   // On inclut globalModifiedAt pour détecter les nouveaux déclenchements du filtre global.
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
@@ -67,7 +81,7 @@ export default function TicketsReentrantsTable() {
   const [searchTicketId, setSearchTicketId] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  // États pour la pagination de l’affichage
+  // États pour la pagination de l'affichage
   const [visibleTickets, setVisibleTickets] = useState(5);
 
   // États de gestion des années
@@ -123,356 +137,354 @@ export default function TicketsReentrantsTable() {
       .sort((a, b) => b.totalIterations - a.totalIterations);
   };
 
-  // Récupération initiale des données et extraction des années disponibles.
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetchWithAuth(
-          "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/data/"
-        );
-        const result = await response.json();
-        setRawData(result);
+// Récupération initiale des données et extraction des années disponibles.
+useEffect(() => {
+  async function fetchData() {
+    try {
+      const response = await fetchWithAuth(apiUrl);
+      const result = await response.json();
+      setRawData(result);
 
-        // Extraction des années à partir de la date de dernière mise à jour.
-        const years = [
-          ...new Set(
-            result.map(ticket => new Date(ticket.date_derniere_maj).getFullYear())
-          )
-        ].sort();
-        setAvailableYears(years);
-        setMultipleYearsExist(years.length > 1);
-        const latestYear = years[years.length - 1];
-        setSelectedYear(latestYear);
+      // Extraction des années à partir de la date de dernière mise à jour.
+      const years = [
+        ...new Set(
+          result.map(ticket => new Date(ticket.date_derniere_maj).getFullYear())
+        )
+      ].sort();
+      setAvailableYears(years);
+      setMultipleYearsExist(years.length > 1);
+      const latestYear = years[years.length - 1];
+      setSelectedYear(latestYear);
 
-        setLoading(false);
-      } catch (error) {
-        console.error("Erreur lors du fetch des données :", error);
-        setLoading(false);
-      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Erreur lors du fetch des données :", error);
+      setLoading(false);
     }
-    fetchData();
-  }, []);
+  }
+  fetchData();
+}, [apiUrl]); // Dépendance à apiUrl pour recharger les données si l'URL change
 
-  /**
-   * Si le filtre global est appliqué (indiqué par globalModifiedAt),
-   * on vide la sélection locale pour que le dernier filtre (global) prenne effet.
-   */
-  useEffect(() => {
-    if (globalModifiedAt > 0) {
-      setSelectedWeeks([]);
-    }
-  }, [globalModifiedAt]);
+/**
+ * Si le filtre global est appliqué (indiqué par globalModifiedAt),
+ * on vide la sélection locale pour que le dernier filtre (global) prenne effet.
+ */
+useEffect(() => {
+  if (globalModifiedAt > 0) {
+    setSelectedWeeks([]);
+  }
+}, [globalModifiedAt]);
 
-  /**
-   * Calcul et traitement des données.
-   *
-   * Si aucune sélection locale n’est effectuée (selectedWeeks vide) et qu’un filtre global est défini,
-   * le filtrage global est appliqué (filtrage par date). Dès qu’une sélection locale est définie,
-   * le filtrage se fait sur l’ensemble des données pour l’année sélectionnée, sans tenir compte du filtre global.
-   */
-  useEffect(() => {
-    if (rawData.length > 0 && selectedYear) {
-      // Filtrage par année (toutes les données de l'année)
-      let ticketsForYear = rawData.filter(
-        ticket =>
-          new Date(ticket.date_derniere_maj).getFullYear() === selectedYear
-      );
-      // Si aucune sélection locale n'est faite et qu'un filtre global est défini, on l'applique.
-      if (selectedWeeks.length === 0 && globalStartDate && globalEndDate) {
-        ticketsForYear = ticketsForYear.filter(ticket => {
-          const ticketDate = new Date(ticket.date_derniere_maj);
-          return ticketDate >= globalStartDate && ticketDate <= globalEndDate;
-        });
-      }
-      const processed = processIterationData(ticketsForYear);
-      setData(processed);
-    }
-  }, [rawData, selectedYear, globalStartDate, globalEndDate, selectedWeeks]);
-
-  /**
-   * Calcul des semaines disponibles depuis toutes les données de l'année sélectionnée
-   * (sans tenir compte du filtre global).
-   */
-  const allWeeks = (() => {
-    if (!rawData.length || !selectedYear) return [];
-    const weeks = rawData
-      .filter(ticket => {
+/**
+ * Calcul et traitement des données.
+ *
+ * Si aucune sélection locale n'est effectuée (selectedWeeks vide) et qu'un filtre global est défini,
+ * le filtrage global est appliqué (filtrage par date). Dès qu'une sélection locale est définie,
+ * le filtrage se fait sur l'ensemble des données pour l'année sélectionnée, sans tenir compte du filtre global.
+ */
+useEffect(() => {
+  if (rawData.length > 0 && selectedYear) {
+    // Filtrage par année (toutes les données de l'année)
+    let ticketsForYear = rawData.filter(
+      ticket =>
+        new Date(ticket.date_derniere_maj).getFullYear() === selectedYear
+    );
+    // Si aucune sélection locale n'est faite et qu'un filtre global est défini, on l'applique.
+    if (selectedWeeks.length === 0 && globalStartDate && globalEndDate) {
+      ticketsForYear = ticketsForYear.filter(ticket => {
         const ticketDate = new Date(ticket.date_derniere_maj);
-        return ticketDate.getFullYear() === selectedYear;
-      })
-      .map(ticket => ticket.semaine);
-    return [...new Set(weeks)].sort((a, b) => a - b);
-  })();
+        return ticketDate >= globalStartDate && ticketDate <= globalEndDate;
+      });
+    }
+    const processed = processIterationData(ticketsForYear);
+    setData(processed);
+  }
+}, [rawData, selectedYear, globalStartDate, globalEndDate, selectedWeeks]);
 
-  // Filtrage des données affichées en fonction de la sélection des semaines et de la recherche sur l'ID.
-  const filteredData = data.filter(ticket => {
-    // Si aucune semaine n'est sélectionnée, pas de filtrage sur les semaines.
-    if (selectedWeeks.length === 0) return true;
+/**
+ * Calcul des semaines disponibles depuis toutes les données de l'année sélectionnée
+ * (sans tenir compte du filtre global).
+ */
+const allWeeks = (() => {
+  if (!rawData.length || !selectedYear) return [];
+  const weeks = rawData
+    .filter(ticket => {
+      const ticketDate = new Date(ticket.date_derniere_maj);
+      return ticketDate.getFullYear() === selectedYear;
+    })
+    .map(ticket => ticket.semaine);
+  return [...new Set(weeks)].sort((a, b) => a - b);
+})();
 
-    // Récupère pour chaque ticket les itérations correspondant aux semaines sélectionnées.
-    const validCounts = selectedWeeks
-      .map(week => ticket.iterations[week])
-      .filter(count => count !== undefined);
+// Filtrage des données affichées en fonction de la sélection des semaines et de la recherche sur l'ID.
+const filteredData = data.filter(ticket => {
+  // Si aucune semaine n'est sélectionnée, pas de filtrage sur les semaines.
+  if (selectedWeeks.length === 0) return true;
 
-    if (validCounts.length === 0) return false;
-    // Exclure le ticket s'il apparaît pour une semaine avec une itération unique.
-    if (validCounts.some(count => count === 1)) return false;
-    return true;
-  }).filter(ticket =>
-    searchTicketId === "" || ticket.id_ticket.includes(searchTicketId)
+  // Récupère pour chaque ticket les itérations correspondant aux semaines sélectionnées.
+  const validCounts = selectedWeeks
+    .map(week => ticket.iterations[week])
+    .filter(count => count !== undefined);
+
+  if (validCounts.length === 0) return false;
+  // Exclure le ticket s'il apparaît pour une semaine avec une itération unique.
+  if (validCounts.some(count => count === 1)) return false;
+  return true;
+}).filter(ticket =>
+  searchTicketId === "" || ticket.id_ticket.includes(searchTicketId)
+);
+
+// Bouton "Tout sélectionner / Tout désélectionner" pour les semaines disponibles.
+const allWeeksSelected =
+  allWeeks.length > 0 && allWeeks.every(week => selectedWeeks.includes(week));
+const toggleSelectAll = () => {
+  if (allWeeksSelected) {
+    setSelectedWeeks([]);
+  } else {
+    setSelectedWeeks([...allWeeks]);
+  }
+};
+
+// Gestion du changement individuel d'une semaine.
+const handleWeekSelectionChange = (week) => {
+  setSelectedWeeks(prev =>
+    prev.includes(week) ? prev.filter(w => w !== week) : [...prev, week]
+  );
+};
+
+// Changement d'année.
+const handleYearChange = (year) => {
+  setSelectedYear(year);
+  // Réinitialisation de la sélection locale à chaque changement d'année.
+  setSelectedWeeks([]);
+};
+
+// Fermeture automatique du panneau de filtre si clic en dehors du panneau ou du bouton.
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (
+      isOpen &&
+      filterPanelRef.current &&
+      !filterPanelRef.current.contains(event.target) &&
+      filterButtonRef.current &&
+      !filterButtonRef.current.contains(event.target)
+    ) {
+      setIsOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, [isOpen]);
+
+if (loading)
+  return (
+    <p className="text-center text-gray-500">Chargement des données...</p>
   );
 
-  // Bouton "Tout sélectionner / Tout désélectionner" pour les semaines disponibles.
-  const allWeeksSelected =
-    allWeeks.length > 0 && allWeeks.every(week => selectedWeeks.includes(week));
-  const toggleSelectAll = () => {
-    if (allWeeksSelected) {
-      setSelectedWeeks([]);
-    } else {
-      setSelectedWeeks([...allWeeks]);
-    }
-  };
+return (
+  <div className="visualisation relative" data-id={id}>
+    <div className="relative bg-white p-5 shadow-md rounded-lg w-full">
+      {/* Boutons en haut à droite pour le panneau de filtres et l'agrandissement */}
+      <div className="absolute top-2 right-2 flex items-center space-x-2 z-50">
+        <button
+          ref={filterButtonRef}
+          className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          <AiOutlineFilter size={20} className="text-gray-600" />
+        </button>
+        <button
+          className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+          onClick={() => setModalIsOpen(true)}
+        >
+          <FaExpand size={18} className="text-gray-600" />
+        </button>
+      </div>
 
-  // Gestion du changement individuel d'une semaine.
-  const handleWeekSelectionChange = (week) => {
-    setSelectedWeeks(prev =>
-      prev.includes(week) ? prev.filter(w => w !== week) : [...prev, week]
-    );
-  };
+      <h3 className="text-lg font-semibold mb-3 text-black">
+        {chartTitle}
+      </h3>
 
-  // Changement d'année.
-  const handleYearChange = (year) => {
-    setSelectedYear(year);
-    // Réinitialisation de la sélection locale à chaque changement d'année.
-    setSelectedWeeks([]);
-  };
-
-  // Fermeture automatique du panneau de filtre si clic en dehors du panneau ou du bouton.
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        isOpen &&
-        filterPanelRef.current &&
-        !filterPanelRef.current.contains(event.target) &&
-        filterButtonRef.current &&
-        !filterButtonRef.current.contains(event.target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
-
-  if (loading)
-    return (
-      <p className="text-center text-gray-500">Chargement des données...</p>
-    );
-
-  return (
-    <div className="visualisation relative" data-id={id}>
-      <div className="relative bg-white p-5 shadow-md rounded-lg w-full">
-        {/* Boutons en haut à droite pour le panneau de filtres et l'agrandissement */}
-        <div className="absolute top-2 right-2 flex items-center space-x-2 z-50">
-          <button
-            ref={filterButtonRef}
-            className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
-            onClick={() => setIsOpen((prev) => !prev)}
-          >
-            <AiOutlineFilter size={20} className="text-gray-600" />
-          </button>
-          <button
-            className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
-            onClick={() => setModalIsOpen(true)}
-          >
-            <FaExpand size={18} className="text-gray-600" />
-          </button>
-        </div>
-
-        <h3 className="text-lg font-semibold mb-3 text-black">
-          Détail des Réitérations des Tickets
-        </h3>
-
-        {/* Panneau des filtres */}
-        {isOpen && (
-          <div
-            ref={filterPanelRef}
-            className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50"
-          >
-            <h4 className="font-semibold text-black">Filtrer par :</h4>
-            <input
-              type="text"
-              placeholder="Rechercher ID Ticket..."
-              className="border p-2 w-full rounded-md mt-2"
-              value={searchTicketId}
-              onChange={(e) => setSearchTicketId(e.target.value)}
-            />
-            {/* Sélection d'années si plusieurs existent */}
-            {multipleYearsExist && (
-              <div className="mt-2">
-                <h4 className="font-semibold text-black">Années :</h4>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {availableYears.map((year) => (
-                    <button
-                      key={year}
-                      onClick={() => handleYearChange(year)}
-                      className={`px-2 py-1 text-xs rounded-md ${
-                        selectedYear === year
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      {year}
-                    </button>
-                  ))}
-                </div>
+      {/* Panneau des filtres */}
+      {isOpen && (
+        <div
+          ref={filterPanelRef}
+          className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50"
+        >
+          <h4 className="font-semibold text-black">Filtrer par :</h4>
+          <input
+            type="text"
+            placeholder="Rechercher ID Ticket..."
+            className="border p-2 w-full rounded-md mt-2"
+            value={searchTicketId}
+            onChange={(e) => setSearchTicketId(e.target.value)}
+          />
+          {/* Sélection d'années si plusieurs existent */}
+          {multipleYearsExist && (
+            <div className="mt-2">
+              <h4 className="font-semibold text-black">Années :</h4>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {availableYears.map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => handleYearChange(year)}
+                    className={`px-2 py-1 text-xs rounded-md ${
+                      selectedYear === year
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {year}
+                  </button>
+                ))}
               </div>
-            )}
-            <h4 className="font-semibold mt-2 text-black">Semaines :</h4>
-            {/* Bouton Tout sélectionner / Tout désélectionner */}
-            <div className="mb-2">
-              <button
-                onClick={toggleSelectAll}
-                className={`text-xs px-2 py-1 rounded-md w-full ${
-                  allWeeksSelected
-                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                }`}
-              >
-                {allWeeksSelected ? "Tout désélectionner" : "Tout sélectionner"}
-              </button>
             </div>
-            <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-              {allWeeks.map((week) => (
-                <div key={week} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedWeeks.includes(week)}
-                    onChange={() => handleWeekSelectionChange(week)}
-                  />
-                  <span className="text-black">Semaine {week}</span>
-                </div>
-              ))}
-            </div>
+          )}
+          <h4 className="font-semibold mt-2 text-black">Semaines :</h4>
+          {/* Bouton Tout sélectionner / Tout désélectionner */}
+          <div className="mb-2">
+            <button
+              onClick={toggleSelectAll}
+              className={`text-xs px-2 py-1 rounded-md w-full ${
+                allWeeksSelected
+                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+              }`}
+            >
+              {allWeeksSelected ? "Tout désélectionner" : "Tout sélectionner"}
+            </button>
           </div>
-        )}
+          <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
+            {allWeeks.map((week) => (
+              <div key={week} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedWeeks.includes(week)}
+                  onChange={() => handleWeekSelectionChange(week)}
+                />
+                <span className="text-black">Semaine {week}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-        {/* Tableau principal */}
-        <table className="w-full border-collapse border border-gray-300 mt-4 text-sm">
-          <thead>
-            <tr className="bg-gray-200 text-black">
-              <th className="border p-2">ID Ticket</th>
-              <th className="border p-2">Titre du Ticket</th>
+      {/* Tableau principal */}
+      <table className="w-full border-collapse border border-gray-300 mt-4 text-sm">
+        <thead>
+          <tr className="bg-gray-200 text-black">
+            <th className="border p-2">ID Ticket</th>
+            <th className="border p-2">Titre du Ticket</th>
+            {allWeeks.map(
+              (week) =>
+                selectedWeeks.includes(week) && (
+                  <th key={week} className="border p-2">
+                    Semaine {week}
+                  </th>
+                )
+            )}
+            <th className="border p-2">Semaines d'Apparition</th>
+            <th className="border p-2">Total Réitérations</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredData.slice(0, visibleTickets).map((ticket) => (
+            <tr key={ticket.id_ticket} className="hover:bg-gray-100 text-black">
+              <td className="border p-2">{ticket.id_ticket}</td>
+              <td className="border p-2">{ticket.titre_ticket}</td>
               {allWeeks.map(
                 (week) =>
                   selectedWeeks.includes(week) && (
-                    <th key={week} className="border p-2">
-                      Semaine {week}
-                    </th>
+                    <td key={week} className="border p-2">
+                      {ticket.iterations[week] ? ticket.iterations[week] : ""}
+                    </td>
                   )
               )}
-              <th className="border p-2">Semaines d'Apparition</th>
-              <th className="border p-2">Total Réitérations</th>
+              <td className="border p-2">{ticket.semainesApparition}</td>
+              <td className="border p-2">{ticket.totalIterations}</td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredData.slice(0, visibleTickets).map((ticket) => (
-              <tr key={ticket.id_ticket} className="hover:bg-gray-100 text-black">
-                <td className="border p-2">{ticket.id_ticket}</td>
-                <td className="border p-2">{ticket.titre_ticket}</td>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="flex justify-center space-x-3 mt-4">
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+          onClick={() => setVisibleTickets((prev) => prev + 5)}
+          disabled={visibleTickets >= filteredData.length}
+        >
+          Voir Plus
+        </button>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-gray-300"
+          onClick={() => setVisibleTickets((prev) => Math.max(5, prev - 5))}
+          disabled={visibleTickets <= 5}
+        >
+          Voir Moins
+        </button>
+      </div>
+    </div>
+
+    {/* Modal d'agrandissement */}
+    <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={() => setModalIsOpen(false)}
+      className="flex items-center justify-center fixed inset-0 z-50"
+      overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
+    >
+      <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-semibold text-gray-800">
+            {chartTitle}
+          </h3>
+          <button
+            onClick={() => setModalIsOpen(false)}
+            className="text-gray-500 hover:text-red-500"
+          >
+            ❌
+          </button>
+        </div>
+        {/* Tableau en mode agrandi */}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300 mt-4 text-sm">
+            <thead>
+              <tr className="bg-gray-200 text-black">
+                <th className="border p-2">ID Ticket</th>
+                <th className="border p-2">Titre du Ticket</th>
                 {allWeeks.map(
                   (week) =>
                     selectedWeeks.includes(week) && (
-                      <td key={week} className="border p-2">
-                        {ticket.iterations[week] ? ticket.iterations[week] : ""}
-                      </td>
+                      <th key={week} className="border p-2">
+                        Semaine {week}
+                      </th>
                     )
                 )}
-                <td className="border p-2">{ticket.semainesApparition}</td>
-                <td className="border p-2">{ticket.totalIterations}</td>
+                <th className="border p-2">Semaines d'Apparition</th>
+                <th className="border p-2">Total Réitérations</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="flex justify-center space-x-3 mt-4">
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
-            onClick={() => setVisibleTickets((prev) => prev + 5)}
-            disabled={visibleTickets >= filteredData.length}
-          >
-            Voir Plus
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-gray-300"
-            onClick={() => setVisibleTickets((prev) => Math.max(5, prev - 5))}
-            disabled={visibleTickets <= 5}
-          >
-            Voir Moins
-          </button>
-        </div>
-      </div>
-
-      {/* Modal d'agrandissement */}
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={() => setModalIsOpen(false)}
-        className="flex items-center justify-center fixed inset-0 z-50"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-      >
-        <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-semibold text-gray-800">
-              Détail des Réitérations des Tickets
-            </h3>
-            <button
-              onClick={() => setModalIsOpen(false)}
-              className="text-gray-500 hover:text-red-500"
-            >
-              ❌
-            </button>
-          </div>
-          {/* Tableau en mode agrandi */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300 mt-4 text-sm">
-              <thead>
-                <tr className="bg-gray-200 text-black">
-                  <th className="border p-2">ID Ticket</th>
-                  <th className="border p-2">Titre du Ticket</th>
+            </thead>
+            <tbody>
+              {filteredData.map((ticket) => (
+                <tr key={ticket.id_ticket} className="hover:bg-gray-100 text-black">
+                  <td className="border p-2">{ticket.id_ticket}</td>
+                  <td className="border p-2">{ticket.titre_ticket}</td>
                   {allWeeks.map(
                     (week) =>
                       selectedWeeks.includes(week) && (
-                        <th key={week} className="border p-2">
-                          Semaine {week}
-                        </th>
+                        <td key={week} className="border p-2">
+                          {ticket.iterations[week] ? ticket.iterations[week] : ""}
+                        </td>
                       )
                   )}
-                  <th className="border p-2">Semaines d'Apparition</th>
-                  <th className="border p-2">Total Réitérations</th>
+                  <td className="border p-2">{ticket.semainesApparition}</td>
+                  <td className="border p-2">{ticket.totalIterations}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((ticket) => (
-                  <tr key={ticket.id_ticket} className="hover:bg-gray-100 text-black">
-                    <td className="border p-2">{ticket.id_ticket}</td>
-                    <td className="border p-2">{ticket.titre_ticket}</td>
-                    {allWeeks.map(
-                      (week) =>
-                        selectedWeeks.includes(week) && (
-                          <td key={week} className="border p-2">
-                            {ticket.iterations[week] ? ticket.iterations[week] : ""}
-                          </td>
-                        )
-                    )}
-                    <td className="border p-2">{ticket.semainesApparition}</td>
-                    <td className="border p-2">{ticket.totalIterations}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </Modal>
-    </div>
-  );
+      </div>
+    </Modal>
+  </div>
+);
 }

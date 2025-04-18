@@ -734,7 +734,7 @@ export default function VolumeTicketsDivision({
           align: 'center',
           labels: {
             color: "black",
-            font: { size: 10 },
+            font: { size: 8 },
             boxWidth: 10,
             padding: 10,
             generateLabels: (chart) => {
@@ -748,7 +748,21 @@ export default function VolumeTicketsDivision({
           },
           onClick: (_, legendItem) => {
             toggleDivision(legendItem.text);
-          }
+          },
+        // Ajoutez ces propriétés pour éloigner la légende
+      rtl: true,
+      title: {
+        display: true
+      },
+      // Augmentez la marge entre la légende et le graphique
+      padding: 10,
+      // Ou utilisez margins pour un contrôle plus précis
+      margin: {
+        left: 20,
+        right: 20,
+        top: 0,
+        bottom: 0
+      }
         },
         tooltip: {
           callbacks: {
