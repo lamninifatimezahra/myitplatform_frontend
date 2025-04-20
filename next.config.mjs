@@ -2,20 +2,17 @@
 import withPWA from "next-pwa";
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true, // doit être à ce niveau, avant le wrap
-
+const config = {
+  reactStrictMode: true,
   eslint: {
-    ignoreDuringBuilds: true, // évite de bloquer le build sur Vercel
+    ignoreDuringBuilds: true, // désactive les erreurs ESLint sur Vercel
   },
-
-  // ✅ PWA config correcte
   pwa: {
     dest: "public",
     register: true,
     skipWaiting: true,
-    disable: process.env.NODE_ENV === "development", // seulement en prod
+    disable: process.env.NODE_ENV === "development",
   },
 };
 
-export default withPWA(nextConfig);
+export default withPWA(config);
