@@ -1,17 +1,12 @@
-// next.config.js
 import withPWA from "next-pwa";
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  eslint: {
-    // ⛔ Ignore les erreurs ESLint pendant le build (utile pour Vercel)
-    ignoreDuringBuilds: true,
-  },
+const baseConfig = {
   reactStrictMode: true,
 };
 
-export default withPWA({
-  ...nextConfig,
+const pwaConfig = withPWA({
+  ...baseConfig,
   pwa: {
     dest: "public",
     register: true,
@@ -19,3 +14,12 @@ export default withPWA({
     disable: process.env.NODE_ENV === "development", // désactive PWA en dev
   },
 });
+
+const nextConfig = {
+  ...pwaConfig,
+  eslint: {
+    ignoreDuringBuilds: true, // ✅ maintenant ici ça ne casse rien
+  },
+};
+
+export default nextConfig;
