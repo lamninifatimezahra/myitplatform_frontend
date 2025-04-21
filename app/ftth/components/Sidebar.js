@@ -25,7 +25,7 @@ export default function SidebarFTTHStyled({ sidebarOpen, setSidebarOpen }) {
   const router = useRouter();
   const { user } = useAuth();
 
-  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb'];
+  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb', 'earf', 'arthius'];
   const accessibleDashboards = user?.role === 'admin'
     ? dashboards
     : dashboards.filter(d => user?.dashboards?.includes(d.toUpperCase()));
@@ -113,7 +113,7 @@ function SidebarContent({
 
         {/* Navigation */}
         <nav className="flex flex-col space-y-3">
-          {/* Dashboards */}
+          {/* Dashboards list */}
           <button
             onClick={() => setShowDashboards(!showDashboards)}
             className={`flex items-center px-3 py-2 rounded-lg w-full transition-all duration-200 ${
@@ -145,13 +145,13 @@ function SidebarContent({
             </ul>
           )}
 
-          {/* Autres liens */}
+          {/* Liens directs */}
           <SidebarItem icon={<AiOutlineMessage size={22} />} text="MyForum" href="/myforum" pathname={pathname} onClick={closeSidebar} />
           <SidebarItem icon={<AiOutlineRobot size={22} />} text="MyAI" href="/ai" pathname={pathname} onClick={closeSidebar} />
           <SidebarItem icon={<AiOutlineFile size={22} />} text="MyFile" href="/file" pathname={pathname} onClick={closeSidebar} />
           <SidebarItem icon={<AiOutlineSetting size={22} />} text="Guide" href="/guide" pathname={pathname} onClick={closeSidebar} />
 
-          {/* Zone Espace Admin */}
+          {/* Admin uniquement */}
           {user?.role === 'admin' && (
             <div className="mt-6 pt-4 border-t border-gray-300">
               <h4 className="text-xs font-bold text-gray-500 uppercase mb-2 px-3">Espace Admin</h4>
@@ -177,6 +177,7 @@ function SidebarContent({
             </button>
           </div>
 
+          {/* Fermer menu mobile */}
           {closeSidebar && (
             <button onClick={closeSidebar} className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline">
               Fermer le menu

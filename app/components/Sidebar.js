@@ -15,11 +15,11 @@ import {
   AiOutlineArrowLeft,
 } from 'react-icons/ai';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import fetchWithAuth from '@/utils/fetchWithAuth';
+import { motion, AnimatePresence } from 'framer-motion';
 import useAuth from '@/hooks/useAuth';
+import fetchWithAuth from '@/utils/fetchWithAuth';
 
-export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function Sidebar({ isMobileOpen, toggleMobileOpen }) {
   const [showDashboards, setShowDashboards] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -29,83 +29,111 @@ export default function Sidebar() {
   const accessibleDashboards = user?.role === 'admin'
     ? dashboards
     : dashboards.filter(d => user?.dashboards?.includes(d.toUpperCase()));
-
   const isDashboardPage = dashboards.some(d => pathname.includes(d));
 
   const handleLogout = async () => {
     try {
-      // Tentative de déconnexion côté serveur
-      const response = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
+      await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
         method: 'POST',
         credentials: 'include',
       });
-      
-      console.log("Déconnexion - Statut:", response.status);
-      
     } catch (error) {
-      console.log("Erreur pendant la déconnexion:", error);
+      console.error('Erreur de déconnexion :', error);
     } finally {
-      // Dans tous les cas, on force un rechargement complet pour effacer l'état
-      localStorage.removeItem('userInfo');
-      sessionStorage.clear();
-      window.location.href = '/login';
+      router.push('/login');
     }
   };
-  
-  
-  return (
-    <div
-      className={`h-screen bg-white shadow-md flex flex-col justify-between py-6 transition-all duration-300
-        ${isOpen ? 'w-56' : 'w-16'}`}
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
-    >
-      {/* Logo + retour admin */}
-      <div className="flex flex-col items-center mb-4 space-y-2">
-        <Image src="/logo-myit.png" alt="MyIT Logo" width={isOpen ? 200 : 40} height={40} />
-        {user?.role === 'admin' && (
-          <Link
-            href="/admin"
-            className={`flex items-center text-blue-600 hover:text-blue-800 transition-all duration-200 ${
-              isOpen ? 'space-x-2' : 'justify-center'
-            }`}
-          >
-            <AiOutlineArrowLeft size={18} />
-            {isOpen && <span className="text-sm font-semibold">Admin</span>}
-          </Link>
-        )}
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex flex-col flex-1 space-y-2 px-2">
-        {/* Dashboard avec sous-menu */}
-        <div>
+  return (
+    <>
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-30"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={toggleMobileOpen}
+            />
+            <motion.div
+              key="sidebar"
+              className="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-40 flex flex-col justify-between p-6 overflow-y-auto"
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ duration: 0.3 }}
+            >
+              <SidebarContent
+                pathname={pathname}
+                handleLogout={handleLogout}
+                closeSidebar={toggleMobileOpen}
+                showDashboards={showDashboards}
+                setShowDashboards={setShowDashboards}
+                isDashboardPage={isDashboardPage}
+                accessibleDashboards={accessibleDashboards}
+                user={user}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex w-64 h-screen bg-white shadow flex-col justify-between p-6">
+        <SidebarContent
+          pathname={pathname}
+          handleLogout={handleLogout}
+          showDashboards={showDashboards}
+          setShowDashboards={setShowDashboards}
+          isDashboardPage={isDashboardPage}
+          accessibleDashboards={accessibleDashboards}
+          user={user}
+        />
+      </div>
+    </>
+  );
+}
+
+function SidebarContent({
+  pathname, handleLogout, closeSidebar,
+  showDashboards, setShowDashboards,
+  isDashboardPage, accessibleDashboards, user,
+}) {
+  return (
+    <>
+      <div>
+        <div className="mb-6 flex justify-center">
+          <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
+        </div>
+
+        <nav className="flex flex-col space-y-3">
+          {/* Dashboards */}
           <button
             onClick={() => setShowDashboards(!showDashboards)}
             className={`flex items-center px-3 py-2 rounded-lg w-full transition-all duration-200 ${
-              isDashboardPage ? 'bg-[#4f72c3] text-white font-semibold' : 'text-gray-700 hover:text-[#4f72c3] hover:bg-gray-100'
-            } ${isOpen ? 'justify-start' : 'justify-center'}`}
+              isDashboardPage ? 'bg-[#31327e] text-white font-semibold' : 'text-gray-700 hover:text-[#31327e] hover:bg-gray-100'
+            }`}
           >
-            <AiOutlineDashboard size={28} className={isDashboardPage ? 'text-white' : 'text-gray-700'} />
-            {isOpen && (
-              <>
-                <span className="ml-3 text-base">Dashboard</span>
-                <span className="ml-auto pr-2">
-                  {showDashboards ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
-                </span>
-              </>
-            )}
+            <AiOutlineDashboard size={22} />
+            <span className="ml-3">Dashboard</span>
+            <span className="ml-auto pr-2">
+              {showDashboards ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
+            </span>
           </button>
 
-          {showDashboards && isOpen && (
-            <ul className="ml-8 mt-2 space-y-1 text-sm text-gray-100">
+          {showDashboards && (
+            <ul className="ml-6 mt-1 space-y-1 text-sm">
               {accessibleDashboards.map((dash) => (
                 <li key={dash}>
                   <Link
                     href={`/${dash}`}
-                    className={`block px-2 py-1 rounded hover:text-[#4f72c3] ${
-                      pathname === `/${dash}` ? 'font-bold text-[#4f72c3] bg-gray-100' : 'text-gray-700'
+                    className={`block px-3 py-1.5 rounded transition ${
+                      pathname === `/${dash}` ? 'bg-[#e0e7ff] text-[#31327e] font-bold' : 'text-gray-700 hover:bg-gray-100'
                     }`}
+                    onClick={closeSidebar}
                   >
                     {dash.toUpperCase()}
                   </Link>
@@ -113,65 +141,67 @@ export default function Sidebar() {
               ))}
             </ul>
           )}
-        </div>
 
-        {/* Autres liens */}
-        <SidebarItem icon={<AiOutlineMessage size={24} />} text="MyForum" href="/forum" pathname={pathname} isOpen={isOpen} />
-        <SidebarItem icon={<AiOutlineRobot size={24} />} text="MyAI" href="/ai" pathname={pathname} isOpen={isOpen} />
-        <SidebarItem icon={<AiOutlineFile size={24} />} text="MyFile" href="/file" pathname={pathname} isOpen={isOpen} />
+          {/* Other Links */}
+          <SidebarItem icon={<AiOutlineMessage size={22} />} text="MyForum" href="/myforum" pathname={pathname} onClick={closeSidebar} />
+          <SidebarItem icon={<AiOutlineRobot size={22} />} text="MyAI" href="/ai" pathname={pathname} onClick={closeSidebar} />
+          <SidebarItem icon={<AiOutlineFile size={22} />} text="MyFile" href="/file" pathname={pathname} onClick={closeSidebar} />
+          <SidebarItem icon={<AiOutlineSetting size={22} />} text="Guide" href="/guide" pathname={pathname} onClick={closeSidebar} />
 
-        <div className="border-t border-gray-300 pt-4 space-y-2 mt-2">
-          <SidebarItem icon={<AiOutlineUser size={24} />} text="Mon Profil" href="/profile" pathname={pathname} isOpen={isOpen} />
-          <SidebarItem icon={<AiOutlineSetting size={24} />} text="Paramètres" href="/settings" pathname={pathname} isOpen={isOpen} />
+          {/* Admin Section */}
+          {user?.role === 'admin' && (
+            <div className="mt-6 pt-4 border-t border-gray-300">
+              <h4 className="text-xs font-bold text-gray-500 uppercase mb-2 px-3">Espace Admin</h4>
+              <SidebarItem
+                icon={<AiOutlineUser size={22} />}
+                text="Tableau de bord Admin"
+                href="/admin"
+                pathname={pathname}
+                onClick={closeSidebar}
+              />
+            </div>
+          )}
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-red-500 hover:text-red-600 hover:bg-gray-100 w-full"
-            style={{ justifyContent: isOpen ? 'flex-start' : 'center' }}
-          >
-            <AiOutlineLogout size={24} />
-            {isOpen && <span className="ml-3">Se Déconnecter</span>}
-          </button>
-        </div>
-      </nav>
+          {/* Logout */}
+          <div className="pt-4 border-t border-gray-300 mt-4">
+            <SidebarItem icon={<AiOutlineArrowLeft size={22} />} text="Retour MyIT" href="/" pathname={pathname} onClick={closeSidebar} />
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-3 py-2 mt-2 text-red-500 hover:text-red-600 hover:bg-gray-100 rounded transition w-full"
+            >
+              <AiOutlineLogout size={22} />
+              <span className="ml-3">Se Déconnecter</span>
+            </button>
+          </div>
 
-      {/* Logos SFR et Intelcia */}
-      {isOpen && (
-        <div className="flex justify-center items-center space-x-2 px-4">
-          <Image src="/logo-sfr.png" alt="SFR" width={40} height={40} />
-          <Image src="/logo-intelcia.png" alt="Intelcia IT Solutions" width={100} height={40} />
-        </div>
-      )}
-    </div>
+          {closeSidebar && (
+            <button onClick={closeSidebar} className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline">
+              Fermer le menu
+            </button>
+          )}
+        </nav>
+      </div>
+
+      <div className="mt-8 flex justify-center items-center space-x-2">
+        <Image src="/logo-sfr.png" alt="SFR" width={40} height={40} />
+        <Image src="/intelcia_it_solutions_logo.jpg" alt="Intelcia IT Solutions" width={100} height={40} />
+      </div>
+    </>
   );
 }
 
-// Item générique
-function SidebarItem({ icon, text, href, pathname, isOpen, isLogout = false, onClick }) {
+function SidebarItem({ icon, text, href, pathname, onClick }) {
   const isActive = pathname === href;
-
-  if (isLogout) {
-    return (
-      <button
-        onClick={onClick}
-        className="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-red-500 hover:text-red-600 hover:bg-gray-100 w-full"
-        style={{ justifyContent: isOpen ? 'flex-start' : 'center' }}
-      >
-        {icon}
-        {isOpen && <span className="ml-3">{text}</span>}
-      </button>
-    );
-  }
-
   return (
     <Link
       href={href}
-      className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 w-full
-        ${isActive ? 'bg-[#4f72c3] text-white font-semibold' : 'text-gray-700 hover:text-[#4f72c3] hover:bg-gray-100'}`}
-      style={{ justifyContent: isOpen ? 'flex-start' : 'center' }}
+      onClick={onClick}
+      className={`flex items-center px-3 py-2 rounded transition w-full ${
+        isActive ? 'bg-[#31327e] text-white font-semibold' : 'text-gray-700 hover:text-[#31327e] hover:bg-gray-100'
+      }`}
     >
       {icon}
-      {isOpen && <span className="ml-3">{text}</span>}
+      <span className="ml-3">{text}</span>
     </Link>
   );
 }

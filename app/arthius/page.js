@@ -1,30 +1,32 @@
 "use client";
 
-import useAuth from "@/hooks/useAuth";
-import Sidebar from "../components/Sidebar";
-import Header from "./components/Header";
 import { useState } from "react";
+import useAuth from "@/hooks/useAuth";
+import SidebarFTTHStyled from "../components/Sidebar";
+import Header from "./components/Header";
+
 import KpiTotalDocuments from "../components/KpiTotalDocuments";
-import KpiTotalMigration from "../components/KpiTotalMigration";
 import GroupedBarChartEARF from "../components/GroupedBarChartEARF";
 import VolumeDocumentsMigres from "../components/VolumeDocumentsMigres1";
+import VolumeMigration from "../components/VolumeMigration";
+
 import { ExportProvider } from "../components/ExportContext";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
-import VolumeMigration from "../components/VolumeMigration";
-import LineChartRates from "../components/LineChartRates";
 
-// Configuration des URLs d'API pour ce dashboard spécifique
+// ✅ API pour le dashboard Arthius
 const API_BASE_URL = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api";
-const API_EARF_DATA = `${API_BASE_URL}/arthius/data/`;
-const TAUX_DIVISORS = {
-    "XDSL": 450,
-    "FTTB": 196,
-    "EARF-T": 27,
-    "default": 50
-  };
-export default function EARFDashboard() {
-  const { user, loading, authorized, hydrated } = useAuth(null, "EARF");
+const API_ARTHIUS_DATA = `${API_BASE_URL}/arthius/data/`;
+
+export default function ArthiusDashboard() {
+  const { user, loading, authorized, hydrated } = useAuth(null, "ARTHIUS");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [globalStartDate, setGlobalStartDate] = useState(null);
+  const [globalEndDate, setGlobalEndDate] = useState(null);
+
+  const handleGlobalFilter = (start, end) => {
+    setGlobalStartDate(start);
+    setGlobalEndDate(end);
+  };
 
   if (!hydrated || loading || !authorized) {
     return (
@@ -37,61 +39,68 @@ export default function EARFDashboard() {
   return (
     <ExportProvider>
       <GlobalFilterProvider>
-        <div className="flex h-screen w-full">
-          {/* Sidebar dynamique avec animation */}
-          <div
-            className={`bg-white shadow-md transition-all duration-300 ${
-              isSidebarOpen ? "w-56" : "w-16"
-            }`}
-            onMouseEnter={() => setIsSidebarOpen(true)}
-            onMouseLeave={() => setIsSidebarOpen(false)}
+        <div className="flex h-screen w-full overflow-hidden relative">
+          {/* ☰ bouton mobile */}
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="sm:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white shadow p-2 rounded-md"
           >
-            <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-          </div>
+            ☰
+          </button>
 
-          {/* Contenu principal */}
-          <div className="flex-1 flex flex-col bg-gray-100">
-            <Header />
+          {/* ✅ Sidebar style FTTH */}
+          <SidebarFTTHStyled
+            sidebarOpen={isSidebarOpen}
+            setSidebarOpen={setIsSidebarOpen}
+          />
 
-            <main className="p-6 flex-1 space-y-6 overflow-y-auto">
-              {/* Ligne 1 : KPI Cards */}
-              <div className="flex justify-center space-x-6">
-                <KpiTotalDocuments 
-                  apiUrl={API_EARF_DATA}
+          {/* ✅ Contenu principal Arthius */}
+          <div className="flex-1 flex flex-col relative">
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
+              style={{ backgroundImage: "url('/background-office.jpg')" }}
+            ></div>
+
+            <Header onGlobalFilter={handleGlobalFilter} />
+
+            <main className="p-6 flex-1 space-y-6 overflow-y-auto relative z-10 bg-gray-50">
+              {/* 🔢 KPI ligne 1 */}
+              <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-6">
+                <KpiTotalDocuments
+                  apiUrl={API_ARTHIUS_DATA}
                   title="Total Documents"
                   dateField="date"
                 />
               </div>
 
-              {/* Ligne 2 : Graphiques */}
-              <div className="grid grid-cols-2 gap-6">
-                  <GroupedBarChartEARF 
-                    apiUrl={API_EARF_DATA}
-                    title="Documents par Propriétaire et Type"
-                    dateField="date"
-                    ownerField="initiateur"
-                    typeField="type_modop"
-                  />
-                  <VolumeDocumentsMigres
-                    apiUrl={API_EARF_DATA}
-                    title="Volume de Documents Migrés par Période"
-                    dateField="date"
-                    ownerField="initiateur"
-                    typeField="type_modop"
-                    />
-
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <VolumeMigration 
-                    apiUrl={API_EARF_DATA}
-                    title="Documents Migrés par Propriétaire"
-                    ownerField="initiateur"
-                    typeField="type_modop"
-                    dateField="date"
-                    />
-
+              {/* 📊 Graphiques ligne 2 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <GroupedBarChartEARF
+                  apiUrl={API_ARTHIUS_DATA}
+                  title="Documents par Propriétaire et Type"
+                  dateField="date"
+                  ownerField="initiateur"
+                  typeField="type_modop"
+                />
+                <VolumeDocumentsMigres
+                  apiUrl={API_ARTHIUS_DATA}
+                  title="Volume de Documents Migrés par Période"
+                  dateField="date"
+                  ownerField="initiateur"
+                  typeField="type_modop"
+                />
               </div>
 
+              {/* 📊 Graphiques ligne 3 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <VolumeMigration
+                  apiUrl={API_ARTHIUS_DATA}
+                  title="Documents Migrés par Propriétaire"
+                  ownerField="initiateur"
+                  typeField="type_modop"
+                  dateField="date"
+                />
+              </div>
             </main>
           </div>
         </div>

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import useAuth from "@/hooks/useAuth";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/Sidebar"; // ✅ ton nouveau sidebar FTTH-like
 import Header from "./components/Header";
+
 import ClientCoupeChart from "../components/ClientCoupeChart";
 import KpiTicketTraite from "../components/KPITicketTraite";
 import KpiReentrant from "../components/KpiReentrant";
@@ -18,18 +20,22 @@ import RapportSortantsEntrants from "../components/RapportSortantsEntrants";
 import TicketsReentrantsTable from "../components/TicketsReentrantsTable";
 import TicketsEnCoursTable from "../components/TicketsEncoursTable";
 import TranticiteCriticite from "../components/TranticiteCriticite";
-import { useState } from "react";
 import NewsTickerRetard from "../components/NewsTickerRetard14";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 
-
-// Configuration des URLs d'API pour ce dashboard spécifique
 const API_BASE_URL = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api";
 const API_HISPEED_DATA = `${API_BASE_URL}/hispeed/data/`;
 
 export default function HispeedDashboard() {
   const { user, loading, authorized, hydrated } = useAuth(null, "HISPEED");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [globalStartDate, setGlobalStartDate] = useState(null);
+  const [globalEndDate, setGlobalEndDate] = useState(null);
+
+  const handleGlobalFilter = (start, end) => {
+    setGlobalStartDate(start);
+    setGlobalEndDate(end);
+  };
 
   if (!hydrated || loading || !authorized) {
     return (
@@ -41,23 +47,30 @@ export default function HispeedDashboard() {
 
   return (
     <GlobalFilterProvider>
-      <div className="flex h-screen w-full">
-        {/* Sidebar dynamique avec animation */}
-        <div
-          className={`bg-white shadow-md transition-all duration-300 ${isSidebarOpen ? "w-56" : "w-16"
-            }`}
-          onMouseEnter={() => setIsSidebarOpen(true)}
-          onMouseLeave={() => setIsSidebarOpen(false)}
+      <div className="flex h-screen w-full overflow-hidden relative">
+        {/* Mobile toggle */}
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="sm:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white shadow p-2 rounded-md"
         >
-          <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        </div>
+          ☰
+        </button>
+
+        {/* Sidebar FTTH-style */}
+        <Sidebar isMobileOpen={isSidebarOpen} toggleMobileOpen={() => setIsSidebarOpen(false)} />
 
         {/* Contenu principal */}
-        <div className="flex-1 flex flex-col bg-gray-100">
-          <Header />
+        <div className="flex-1 flex flex-col relative">
+          {/* Header background */}
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
+            style={{ backgroundImage: "url('/background-office.jpg')" }}
+          ></div>
 
-          <main className="p-6 flex-1 space-y-6 overflow-y-auto">
-            {/* Le News Ticker en haut avec ses paramètres */}
+          {/* Header */}
+          <Header onGlobalFilter={handleGlobalFilter} />
+
+          <main className="flex-1 p-6 space-y-6 overflow-y-auto relative z-10 bg-gray-50">
             <NewsTickerRetard
               apiUrl={API_HISPEED_DATA}
               title="Tickets en retard (+14j)"
@@ -69,73 +82,42 @@ export default function HispeedDashboard() {
               animationDuration={40}
             />
 
-            {/* Ligne 1 : KPI Cards */}
-            <div className="flex justify-center space-x-6">
-              <KpiTicketsEntrants
-                apiUrl={API_HISPEED_DATA}
-                title="Tickets Entrants"
-                dateFilterField="date_sortie"
-                filterType="range"
-              />
-              <KpiTicketTraite
-                apiUrl={API_HISPEED_DATA}
-                title="Tickets Traités"
-                dateSortieField="date_sortie"
-              />
-              <KpiReentrant
-                apiUrl={API_HISPEED_DATA}
-                title="Tickets Réentrants"
-                tagField="tag_reentrant"
-                dateField="date_sortie"
-              />
-              <KpiTicketsEnCours
-                apiUrl={API_HISPEED_DATA}
-                title="Tickets en Cours"
-                dateSortieField="date_sortie"
-                dateDerniereMajField="date_derniere_maj"
-              />
-              <KpiTicketsEnCoursPlus2S
-                apiUrl={API_HISPEED_DATA}
-                title="Tickets +14j"
-                dateSortieField="date_sortie"
-                dateDerniereMajField="date_derniere_maj"
-                retardDays={14}
-                blinkWhenPositive={true}
-                dataIdSuffix="Tickets en retard de plus de 14 jours"
-              />
+            {/* Ligne 1 : KPI */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+              <KpiTicketsEntrants apiUrl={API_HISPEED_DATA} dateFilterField="date_sortie" />
+              <KpiTicketTraite apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" />
+              <KpiReentrant apiUrl={API_HISPEED_DATA} tagField="tag_reentrant" dateField="date_sortie" />
+              <KpiTicketsEnCours apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
+              <KpiTicketsEnCoursPlus2S apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
             </div>
 
             {/* Ligne 2 */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <GroupedBarChart apiUrl={API_HISPEED_DATA} />
               <TranticiteCriticite apiUrl={API_HISPEED_DATA} />
             </div>
 
             {/* Ligne 3 */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <SlaAnciennete apiUrl={API_HISPEED_DATA} />
               <VolumeTicketsDivision apiUrl={API_HISPEED_DATA} />
             </div>
 
             {/* Ligne 4 */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <RapportSortantsEntrants apiUrl={API_HISPEED_DATA} />
               <TauxReentrants apiUrl={API_HISPEED_DATA} />
             </div>
 
             {/* Ligne 5 */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ClientCoupeChart apiUrl={API_HISPEED_DATA} />
               <VolumeReentrant apiUrl={API_HISPEED_DATA} />
             </div>
 
-            {/* Ligne 6 */}
-            <div>
-              <TicketsReentrantsTable apiUrl={API_HISPEED_DATA} />
-            </div>
-            <div>
-              <TicketsEnCoursTable apiUrl={API_HISPEED_DATA} />
-            </div>
+            {/* Tableaux */}
+            <TicketsReentrantsTable apiUrl={API_HISPEED_DATA} />
+            <TicketsEnCoursTable apiUrl={API_HISPEED_DATA} />
           </main>
         </div>
       </div>
