@@ -99,7 +99,7 @@ export default function HomePage() {
         {/* Right Side - Catalogue Dashboards */}
         <div className="w-[40%] flex justify-start">
           <div className="bg-white/50 p-16 rounded-3xl shadow-2xl max-w-xl w-full text-center space-y-6">
-            {["HISPEED", "FTTH", "DSL", "FTTB", "EARFTicketing", "About Us"].map((dept) => {
+            {["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHIUS", "About Us"].map((dept) => {
               const hasAccess = user.role === "admin" || user.dashboards?.includes(dept);
               return (
                 <motion.div

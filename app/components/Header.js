@@ -5,13 +5,14 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale, setDefaultLocale } from "react-datepicker";
 import fr from 'date-fns/locale/fr';
-import { FaFilter } from "react-icons/fa";
-import { AiOutlineBell, AiOutlineUser, AiOutlineDownload } from "react-icons/ai";
+import { FaFilter, FaInfoCircle } from "react-icons/fa";
+import { AiOutlineBell, AiOutlineUser, AiOutlineDownload, AiOutlineClockCircle } from "react-icons/ai";
 import { generateWordFromImages } from "../dsl/utils/exportWord";
 import { generatePPTFromImages } from "../dsl/utils/exportPPTX";
 import html2canvas from "html2canvas-pro";
+import fetchWithAuth from "@/utils/fetchWithAuth";
 // Import du contexte global de filtre
-import { useGlobalFilter } from "./GlobalFilterContext";
+import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
 
 // Enregistrement de la localisation française
 registerLocale('fr', fr);
@@ -37,12 +38,14 @@ const getWeekNumber = (date) => {
   return weekNum;
 };
 
-export default function Header() {
+export default function Header({ type = "DSL" }) {
   const [showMenu, setShowMenu] = useState(false);
   const [downloadStep, setDownloadStep] = useState("chooseFormat"); // "chooseFormat" ou "selectGraphs"
   const [selectedFormat, setSelectedFormat] = useState(null);
   const [graphList, setGraphList] = useState([]);
   const [selectedGraphs, setSelectedGraphs] = useState([]);
+  const [lastUploadDate, setLastUploadDate] = useState(null);
+  const [isLoadingUploadDate, setIsLoadingUploadDate] = useState(true);
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const [portalContainer, setPortalContainer] = useState(null);
@@ -67,6 +70,66 @@ export default function Header() {
     localStartDate && localEndDate
       ? `${localStartDate.toLocaleDateString("fr-FR")} (S${getWeekNumber(localStartDate)}) → ${localEndDate.toLocaleDateString("fr-FR")} (S${getWeekNumber(localEndDate)})`
       : "Aucune période sélectionnée";
+
+  // Fonction pour récupérer la date du dernier upload
+  const fetchLastUploadDate = async () => {
+    setIsLoadingUploadDate(true);
+    try {
+      // Déterminer l'URL en fonction du type de dashboard
+      const apiUrl = `https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/${type.toLowerCase()}/files/`;
+      
+      const response = await fetchWithAuth(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération des données");
+      }
+      
+      const data = await response.json();
+      
+      // Si des fichiers existent, prendre la date du plus récent
+      if (data && data.length > 0) {
+        // Trier les fichiers par date d'upload (descendant)
+        const sortedFiles = [...data].sort((a, b) => {
+          // Convertir les dates au format français (DD/MM/YYYY HH:MM) en objets Date
+          const dateA = parseCustomDate(a.uploaded_at);
+          const dateB = parseCustomDate(b.uploaded_at);
+          return dateB - dateA;
+        });
+        
+        setLastUploadDate(sortedFiles[0].uploaded_at);
+      } else {
+        setLastUploadDate(null);
+      }
+    } catch (error) {
+      console.error("Erreur de récupération des données d'upload:", error);
+      setLastUploadDate(null);
+    } finally {
+      setIsLoadingUploadDate(false);
+    }
+  };
+
+  // Fonction pour parser une date au format "DD/MM/YYYY HH:MM"
+  const parseCustomDate = (dateStr) => {
+    if (!dateStr) return new Date(0);
+    
+    const [datePart, timePart] = dateStr.split(' ');
+    const [day, month, year] = datePart.split('/');
+    const [hours, minutes] = timePart ? timePart.split(':') : ['0', '0'];
+    
+    return new Date(year, month - 1, day, hours, minutes);
+  };
+
+  useEffect(() => {
+    // Récupérer la date du dernier upload au chargement du composant
+    fetchLastUploadDate();
+    
+    // Actualiser la date toutes les 5 minutes
+    const interval = setInterval(() => {
+      fetchLastUploadDate();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [type]);
 
   useEffect(() => {
     const container = document.createElement("div");
@@ -256,9 +319,24 @@ export default function Header() {
       <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-            <span className="text-blue-600">Dashboard DSL</span>
+            <span className="text-blue-600">Dashboard {type}</span>
           </h1>
-          <p className="text-gray-500 text-sm">Bienvenue !</p>
+          <div className="flex items-center text-gray-500 text-sm">
+            <span>Bienvenue !</span>
+            {lastUploadDate && (
+              <div className="ml-4 flex items-center text-gray-600">
+                <AiOutlineClockCircle className="mr-1" />
+                <span>
+                  Dernière mise à jour : <span className="font-medium text-blue-600">{lastUploadDate}</span>
+                </span>
+              </div>
+            )}
+            {isLoadingUploadDate && (
+              <div className="ml-4 text-gray-400 flex items-center">
+                <span className="animate-pulse">Chargement des données...</span>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap justify-end flex-1">
           <AiOutlineBell className="text-gray-600" size={20} />

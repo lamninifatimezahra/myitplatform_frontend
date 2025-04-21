@@ -36,11 +36,9 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
 
   // Tableau fixe des KPI à inclure dans tous les compte-rendus
   const fixedKpiLabels = [
-    "KPI Tickets Entrants",
-    "KPI Tickets Traités",
-    "KPI Tickets Réentrants",
-    "KPI Tickets en Cours",
-    "KPI Tickets en Cours +14j"
+    "KPI Total Documents",
+    "KPI Total Migration",
+    "KPI Total Création"
   ];
 
   // Création d'une version normalisée des labels (trim + lowercase)
@@ -128,7 +126,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
             📊 KPI – Key Performance Indicators
           </h2>
           <p style="color:#6b7280; font-size:8pt;">
-            Suivi des indicateurs essentiels de performance FTTB.
+            Suivi des indicateurs essentiels de performance EARF.
           </p>
         </td>
       </tr>
@@ -207,7 +205,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         <!-- Titre principal -->
         <div style="background:#31327e; padding:20px; text-align:center; color:white;">
           <h1 style="font-size:16pt; margin:0;">
-            Compte rendu détaillé de l'activité FTTB
+            Compte rendu détaillé de l'activité EARF
           </h1>
         </div>
 
@@ -248,7 +246,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Compte-rendu_FTTB_${today.replace(/\//g, "-")}.docx`;
+  a.download = `Compte-rendu_EARF_${today.replace(/\//g, "-")}.docx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

@@ -38,7 +38,7 @@ const getWeekNumber = (date) => {
   return weekNum;
 };
 
-export default function Header({ type = "HISPEED" }) {
+export default function Header({ type = "EARF" }) {
   const [showMenu, setShowMenu] = useState(false);
   const [downloadStep, setDownloadStep] = useState("chooseFormat"); // "chooseFormat" ou "selectGraphs"
   const [selectedFormat, setSelectedFormat] = useState(null);

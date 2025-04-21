@@ -36,12 +36,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
 
   // Tableau fixe des KPI à inclure dans tous les compte-rendus
   const fixedKpiLabels = [
-    "KPI Tickets Entrants",
-    "KPI Tickets Traités",
-    "KPI Tickets Réentrants",
-    "KPI Tickets en Cours",
-    "KPI Tickets en Cours +14j"
-  ];
+    "KPI Total Documents"  ];
 
   // Création d'une version normalisée des labels (trim + lowercase)
   const normalizedFixedLabels = fixedKpiLabels.map(label => label.trim().toLowerCase());
@@ -128,7 +123,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
             📊 KPI – Key Performance Indicators
           </h2>
           <p style="color:#6b7280; font-size:8pt;">
-            Suivi des indicateurs essentiels de performance FTTB.
+            Suivi des indicateurs essentiels de performance Arthius.
           </p>
         </td>
       </tr>
@@ -193,8 +188,8 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         <!-- Entête -->
         <table style="width:100%; margin-bottom:10px; border-collapse:collapse;">
           <tr>
-            <td><img src="https://myit-its.vercel.app/logo-intelcia-small_1.png" style="height:26px;" /></td>
-            <td style="text-align:right;"><img src="https://myit-its.vercel.app/logo_sfr_small.png" style="height:26px;" /></td>
+            <td><img src="https://myit-backend-ed72239b4b8e.herokuapp.com/logo-intelcia-small_1.png" style="height:26px;" /></td>
+            <td style="text-align:right;"><img src="https://myit-backend-ed72239b4b8e.herokuapp.com/logo_sfr_small.png" style="height:26px;" /></td>
           </tr>
           <tr>
             <td></td>
@@ -207,7 +202,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         <!-- Titre principal -->
         <div style="background:#31327e; padding:20px; text-align:center; color:white;">
           <h1 style="font-size:16pt; margin:0;">
-            Compte rendu détaillé de l'activité FTTB
+            Compte rendu détaillé de l'activité Arthius
           </h1>
         </div>
 
@@ -248,7 +243,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Compte-rendu_FTTB_${today.replace(/\//g, "-")}.docx`;
+  a.download = `Compte-rendu_ARTHIUS_${today.replace(/\//g, "-")}.docx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
