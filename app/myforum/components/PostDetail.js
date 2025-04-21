@@ -2,17 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import {
-  FaArrowLeft,
-  FaRegStar,
-  FaStar,
-  FaRegHeart,
-  FaHeart,
-  FaRegEdit,
-  FaCommentDots,
+  FaArrowLeft, FaRegStar, FaStar, FaRegHeart,
+  FaHeart, FaRegEdit, FaCommentDots
 } from 'react-icons/fa';
 import { format } from 'date-fns';
+import MarkdownPreview from '@uiw/react-markdown-preview';
+
+const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export default function PostDetail({ post }) {
   const router = useRouter();
@@ -32,7 +31,7 @@ export default function PostDetail({ post }) {
   };
 
   const handleCommentSubmit = () => {
-    if (comment.trim() === '') return;
+    if (!comment.trim()) return;
 
     const newComment = {
       id: Date.now(),
@@ -47,7 +46,6 @@ export default function PostDetail({ post }) {
 
   return (
     <div className="bg-white shadow-lg rounded-2xl p-6 max-w-3xl mx-auto mt-6 space-y-6">
-      {/* 🔙 Retour */}
       <button
         onClick={() => router.push('/myforum')}
         className="text-sm text-[#31327e] hover:underline flex items-center gap-1"
@@ -55,7 +53,6 @@ export default function PostDetail({ post }) {
         <FaArrowLeft /> Retour aux posts
       </button>
 
-      {/* 🖼️ Image */}
       {post.image && (
         <div className="w-full h-60 rounded-xl overflow-hidden relative">
           <Image
@@ -68,11 +65,9 @@ export default function PostDetail({ post }) {
         </div>
       )}
 
-      {/* 📝 Titre + date */}
       <h1 className="text-2xl font-bold text-[#31327e]">{post.title}</h1>
       <p className="text-sm text-gray-500">{post.createdAt}</p>
 
-      {/* 👤 Auteur */}
       <div className="flex items-center gap-3 mt-2">
         <img
           src={post.author?.avatar || '/avatar.png'}
@@ -85,19 +80,15 @@ export default function PostDetail({ post }) {
         </div>
       </div>
 
-      {/* 🧾 Description */}
       <p className="text-gray-700 mt-4">{post.description}</p>
 
-      {/* 🔗 Lien */}
       {post.link && (
         <p className="text-sm text-blue-500 underline cursor-pointer hover:text-blue-700">
           🔗 <a href={post.link} target="_blank" rel="noopener noreferrer">{post.link}</a>
         </p>
       )}
 
-      {/* ❤️ ⭐ ✏️ Actions */}
       <div className="flex items-center gap-6 mt-6 text-sm">
-        {/* Like */}
         <button
           onClick={handleLike}
           className="flex items-center gap-1 text-gray-600 hover:text-[#31327e] transition"
@@ -106,7 +97,6 @@ export default function PostDetail({ post }) {
           <span>{likes}</span>
         </button>
 
-        {/* Stars */}
         <div className="flex items-center gap-1 text-yellow-500">
           {Array.from({ length: 5 }).map((_, index) => (
             <button key={index} onClick={() => handleStar(index)}>
@@ -115,7 +105,6 @@ export default function PostDetail({ post }) {
           ))}
         </div>
 
-        {/* 🖊️ Modifier */}
         <button
           onClick={() => router.push(`/myforum/${post.id}/edit`)}
           className="ml-auto px-4 py-2 rounded-full bg-gradient-to-r from-[#68bddd] to-[#6f80ac] text-white flex items-center gap-2 font-medium shadow hover:shadow-lg transition-all duration-200 hover:scale-105"
@@ -131,22 +120,23 @@ export default function PostDetail({ post }) {
           <FaCommentDots /> Commentaires
         </h3>
 
-        {/* Champ commentaire */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Ajouter un commentaire..."
-            className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#68bddd]"
+        {/* ✅ Champ commentaire markdown */}
+        <div data-color-mode="light" className="mb-4 border border-gray-300 rounded-xl overflow-hidden bg-white">
+          <MDEditor
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={setComment}
+            preview="edit"
+            height={200}
+            className="!bg-white !shadow-none !rounded-xl"
           />
-          <button
-            onClick={handleCommentSubmit}
-            className="px-4 py-2 bg-[#68bddd] text-white rounded-xl font-semibold hover:bg-[#6f80ac] transition"
-          >
-            Publier
-          </button>
         </div>
+
+        <button
+          onClick={handleCommentSubmit}
+          className="px-4 py-2 bg-gradient-to-r from-[#68bddd] to-[#6f80ac] text-white rounded-full font-semibold hover:shadow-md transition-all"
+        >
+          Publier
+        </button>
 
         {/* Liste des commentaires */}
         <div className="mt-6 space-y-4">
@@ -154,11 +144,34 @@ export default function PostDetail({ post }) {
             <div key={c.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-800 shadow-sm">
               <p className="font-medium text-[#31327e]">{c.author}</p>
               <p className="text-xs text-gray-500">{c.date}</p>
-              <p className="mt-1">{c.content}</p>
+              <MarkdownPreview
+                source={c.content}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: 'inherit',
+                  padding: 0,
+                  fontSize: '0.9rem',
+                }}
+                className="mt-2"
+              />
             </div>
           ))}
         </div>
       </div>
+
+      {/* ✅ Corrige le fond noir par défaut */}
+      <style jsx global>{`
+        .wmde-markdown {
+          background-color: transparent !important;
+          color: inherit !important;
+        }
+        .wmde-markdown pre,
+        .wmde-markdown code {
+          background-color: transparent !important;
+          color: inherit !important;
+          box-shadow: none !important;
+        }
+      `}</style>
     </div>
   );
 }
