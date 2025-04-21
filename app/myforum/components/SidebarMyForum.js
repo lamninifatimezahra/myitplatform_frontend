@@ -86,7 +86,7 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
       <div>
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <Image src="/logo-myit.png" alt="MyIT Logo" width={150} height={40} />
+          <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
         </div>
 
         {/* Navigation */}
