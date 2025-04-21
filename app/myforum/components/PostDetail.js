@@ -1,18 +1,164 @@
-import CommentSection from "./CommentSection";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import {
+  FaArrowLeft,
+  FaRegStar,
+  FaStar,
+  FaRegHeart,
+  FaHeart,
+  FaRegEdit,
+  FaCommentDots,
+} from 'react-icons/fa';
+import { format } from 'date-fns';
 
 export default function PostDetail({ post }) {
+  const router = useRouter();
+  const [likes, setLikes] = useState(post.likes || 0);
+  const [stars, setStars] = useState(post.stars || 0);
+  const [userLiked, setUserLiked] = useState(false);
+  const [comment, setComment] = useState('');
+  const [comments, setComments] = useState(post.comments || []);
+
+  const handleLike = () => {
+    setUserLiked(!userLiked);
+    setLikes((prev) => (userLiked ? prev - 1 : prev + 1));
+  };
+
+  const handleStar = (index) => {
+    setStars(index + 1);
+  };
+
+  const handleCommentSubmit = () => {
+    if (comment.trim() === '') return;
+
+    const newComment = {
+      id: Date.now(),
+      author: 'Ayoub Lahdoud',
+      date: format(new Date(), 'dd/MM/yyyy HH:mm:ss'),
+      content: comment,
+    };
+
+    setComments([newComment, ...comments]);
+    setComment('');
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h1 className="text-2xl font-bold">{post.title}</h1>
-      <p className="text-sm text-gray-600 mb-2">{post.createdAt} – #{post.category}</p>
-      <p>{post.description}</p>
-      {post.link && (
-        <a href={post.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline block mt-2">
-          {post.link}
-        </a>
+    <div className="bg-white shadow-lg rounded-2xl p-6 max-w-3xl mx-auto mt-6 space-y-6">
+      {/* 🔙 Retour */}
+      <button
+        onClick={() => router.push('/myforum')}
+        className="text-sm text-[#31327e] hover:underline flex items-center gap-1"
+      >
+        <FaArrowLeft /> Retour aux posts
+      </button>
+
+      {/* 🖼️ Image */}
+      {post.image && (
+        <div className="w-full h-60 rounded-xl overflow-hidden relative">
+          <Image
+            src={post.image}
+            alt={post.title}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-xl"
+          />
+        </div>
       )}
-      {post.image && <img src={post.image} className="mt-4 rounded-md" />}
-      <CommentSection comments={post.comments} />
+
+      {/* 📝 Titre + date */}
+      <h1 className="text-2xl font-bold text-[#31327e]">{post.title}</h1>
+      <p className="text-sm text-gray-500">{post.createdAt}</p>
+
+      {/* 👤 Auteur */}
+      <div className="flex items-center gap-3 mt-2">
+        <img
+          src={post.author?.avatar || '/avatar.png'}
+          alt={post.author?.name || 'Auteur'}
+          className="w-10 h-10 rounded-full object-cover"
+        />
+        <div className="text-sm">
+          <p className="font-semibold">{post.author?.name}</p>
+          <p className="text-gray-500">{post.author?.role}</p>
+        </div>
+      </div>
+
+      {/* 🧾 Description */}
+      <p className="text-gray-700 mt-4">{post.description}</p>
+
+      {/* 🔗 Lien */}
+      {post.link && (
+        <p className="text-sm text-blue-500 underline cursor-pointer hover:text-blue-700">
+          🔗 <a href={post.link} target="_blank" rel="noopener noreferrer">{post.link}</a>
+        </p>
+      )}
+
+      {/* ❤️ ⭐ ✏️ Actions */}
+      <div className="flex items-center gap-6 mt-6 text-sm">
+        {/* Like */}
+        <button
+          onClick={handleLike}
+          className="flex items-center gap-1 text-gray-600 hover:text-[#31327e] transition"
+        >
+          {userLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+          <span>{likes}</span>
+        </button>
+
+        {/* Stars */}
+        <div className="flex items-center gap-1 text-yellow-500">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <button key={index} onClick={() => handleStar(index)}>
+              {index < stars ? <FaStar /> : <FaRegStar />}
+            </button>
+          ))}
+        </div>
+
+        {/* 🖊️ Modifier */}
+        <button
+          onClick={() => router.push(`/myforum/${post.id}/edit`)}
+          className="ml-auto px-4 py-2 rounded-full bg-gradient-to-r from-[#68bddd] to-[#6f80ac] text-white flex items-center gap-2 font-medium shadow hover:shadow-lg transition-all duration-200 hover:scale-105"
+        >
+          <FaRegEdit className="text-white" />
+          Modifier
+        </button>
+      </div>
+
+      {/* 💬 Commentaires */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold flex items-center gap-2 text-[#31327e] mb-4">
+          <FaCommentDots /> Commentaires
+        </h3>
+
+        {/* Champ commentaire */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Ajouter un commentaire..."
+            className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#68bddd]"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+          <button
+            onClick={handleCommentSubmit}
+            className="px-4 py-2 bg-[#68bddd] text-white rounded-xl font-semibold hover:bg-[#6f80ac] transition"
+          >
+            Publier
+          </button>
+        </div>
+
+        {/* Liste des commentaires */}
+        <div className="mt-6 space-y-4">
+          {comments.map((c) => (
+            <div key={c.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-800 shadow-sm">
+              <p className="font-medium text-[#31327e]">{c.author}</p>
+              <p className="text-xs text-gray-500">{c.date}</p>
+              <p className="mt-1">{c.content}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
