@@ -71,20 +71,55 @@ export default function GraphObjectif({
     try {
       const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/stock/");
       const json = await res.json();
-      const [start, end] = selectedPeriod === "custom" && startDate && endDate
-        ? [startDate, endDate]
-        : globalStartDate && globalEndDate
-        ? [globalStartDate, globalEndDate]
-        : getPeriodRange();
-
-      const filtered = json.filter(entry => {
-        const date = normalizeDate(entry.date);
-        return date >= normalizeDate(start) && date <= normalizeDate(end);
-      });
-
-      const total = filtered.reduce((acc, el) => acc + (el.non_traite || 0), 0);
-      const avg = filtered.length ? total / filtered.length : 0;
-
+  
+      const normalizeDate = (d) => {
+        const date = new Date(d);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      };
+  
+      const isWorkingDay = (dateStr) => {
+        const day = new Date(dateStr).getDay();
+        return day !== 0 && day !== 6;
+      };
+  
+      const sortedData = [...json].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const lastDateStr = sortedData[0]?.date;
+      const lastDate = normalizeDate(lastDateStr);
+  
+      let filtered = [];
+      let total = 0;
+      let workingDaysCount = 0;
+  
+      if (selectedPeriod === "day") {
+        filtered = sortedData.filter(e => e.date === lastDateStr);
+      } else {
+        // Générer les X derniers jours ouvrés selon le mode
+        const maxDays = selectedPeriod === "week" ? 7
+                       : selectedPeriod === "month" ? 22
+                       : selectedPeriod === "year" ? 260
+                       : 7;
+  
+        const workingDates = [];
+        for (let i = 0; i < sortedData.length && workingDates.length < maxDays; i++) {
+          const date = normalizeDate(sortedData[i].date);
+          if (date <= lastDate && isWorkingDay(sortedData[i].date)) {
+            workingDates.push(sortedData[i]);
+          }
+        }
+  
+        filtered = workingDates;
+      }
+  
+      total = filtered.reduce((acc, el) => acc + (el.non_traite || 0), 0);
+      workingDaysCount = filtered.length;
+  
+      const avg = workingDaysCount ? total / workingDaysCount : 0;
+  
+      console.log("✅ DÉTAILS CALCUL MOYENNE :");
+      console.log("Jours inclus :", filtered.map(f => f.date));
+      console.log("Total =", total, "| Jours ouvrés =", workingDaysCount, "| Moyenne =", avg);
+  
       setValue(Math.round(avg));
     } catch (error) {
       console.error("Erreur API objectif:", error);
@@ -92,6 +127,7 @@ export default function GraphObjectif({
     }
     setTimeout(() => setLoading(false), 500);
   };
+  
 
   useEffect(() => {
     fetchAverageNonTraite();
