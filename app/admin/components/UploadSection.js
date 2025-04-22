@@ -384,13 +384,13 @@ export default function UploadSection() {
       </ActivitySection>
       
       <ActivitySection 
-        title="Arthius" 
+        title="Arthuis" 
         icon={<FaFileContract className="text-red-600" size={24} />}
         message={arthiusMessage}
         status={arthiusStatus}
       >
         <UploadCard
-          title="Uploader Arthius"
+          title="Uploader Arthuis"
           icon={<FaFileContract className="text-red-600" />}
           onUpload={uploadArthius}
           inputs={

@@ -25,7 +25,7 @@ export default function Sidebar({ isMobileOpen, toggleMobileOpen }) {
   const router = useRouter();
   const { user } = useAuth();
 
-  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb', 'earf', 'arthius'];
+  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb', 'earf', 'arthuis'];
   const accessibleDashboards = user?.role === 'admin'
     ? dashboards
     : dashboards.filter(d => user?.dashboards?.includes(d.toUpperCase()));

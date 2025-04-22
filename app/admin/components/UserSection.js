@@ -15,7 +15,7 @@ export default function UserSection() {
     DSL: false,
     FTTB: false,
     EARF: false,
-    ARTHIUS: false
+    ARTHUIS: false
   });
   const [showCredentials, setShowCredentials] = useState(false);
   const [copyMessage, setCopyMessage] = useState("");

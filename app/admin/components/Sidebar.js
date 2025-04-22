@@ -36,7 +36,7 @@ export default function Sidebar() {
     }
   };
 
-  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb', 'earf','arthius'];
+  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb', 'earf','arthuis'];
   const isDashboardPage = dashboards.some(d => pathname.includes(d));
 
   return (
