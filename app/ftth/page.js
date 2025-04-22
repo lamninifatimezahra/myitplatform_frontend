@@ -17,7 +17,7 @@ import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
 import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 
-import NewsTickerRetard from "./components/NewsTickerRetard14";
+import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
 
 // 🧪 TEMPORAIRE pour test (tu remettras ftth après test)
 const API_FTTH_DATA = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/data/";
@@ -63,16 +63,8 @@ export default function DashboardFTTH() {
         <Header onGlobalFilter={handleGlobalFilter} />
 
         {/* 📰 Bandeau des retards */}
-        <NewsTickerRetard
-          apiUrl={API_FTTH_DATA}
-          title="Tickets FTTH en retard (+14j)"
-          dateSortieField="date_sortie"
-          dateDerniereMajField="date_derniere_maj"
-          idField="id_ticket"
-          titreField="compl_title"
-          retardDays={14}
-          animationDuration={40}
-        />
+
+        <NewsTickerReglesFTTH />
 
         <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
           {/* 🔢 KPIs */}
