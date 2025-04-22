@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { FaSearch, FaDownload, FaFilter } from "react-icons/fa";
+import { AiOutlineClockCircle } from "react-icons/ai";
 import ProfileMenu from "./ProfileMenu";
 import NotificationMenu from "./NotificationMenu";
 import { generateWordFromGraphs } from "../utils/exportWord";
@@ -11,13 +12,25 @@ import "react-datepicker/dist/react-datepicker.css";
 import { toPng } from "html-to-image";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
-
 function getWeekNumber(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function parseCustomDate(dateStr) {
+  if (!dateStr) return null;
+  if (dateStr.includes("T")) return new Date(dateStr);
+  try {
+    const [datePart, timePart] = dateStr.split(" ");
+    const [day, month, year] = datePart.split("/").map(Number);
+    const [hours, minutes] = timePart ? timePart.split(":").map(Number) : [0, 0];
+    return new Date(year, month - 1, day, hours, minutes);
+  } catch {
+    return null;
+  }
 }
 
 export default function Header({ onGlobalFilter }) {
@@ -28,6 +41,9 @@ export default function Header({ onGlobalFilter }) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [periodText, setPeriodText] = useState("");
+
+  const [lastUploadDate, setLastUploadDate] = useState(null);
+  const [isLoadingUploadDate, setIsLoadingUploadDate] = useState(true);
 
   const dropdownRef = useRef();
   const endDateRef = useRef();
@@ -49,6 +65,36 @@ export default function Header({ onGlobalFilter }) {
       label: el.getAttribute("data-graph-label") || el.getAttribute("data-graph-id"),
     }));
     setGraphList(graphs);
+  }, []);
+
+  useEffect(() => {
+    const fetchLastUploadDate = async () => {
+      setIsLoadingUploadDate(true);
+      try {
+        const res = await fetchWithAuth(
+          "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/files/"
+        );
+        const data = await res.json();
+        const sorted = data.sort((a, b) => parseCustomDate(b.uploaded_at) - parseCustomDate(a.uploaded_at));
+        const latestDate = parseCustomDate(sorted[0]?.uploaded_at);
+        if (latestDate) {
+          const formatted =
+            latestDate.toLocaleDateString("fr-FR") +
+            " à " +
+            latestDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+          setLastUploadDate(formatted);
+        }
+      } catch (err) {
+        console.error("Erreur récupération upload date :", err);
+        setLastUploadDate(null);
+      } finally {
+        setIsLoadingUploadDate(false);
+      }
+    };
+
+    fetchLastUploadDate();
+    const interval = setInterval(fetchLastUploadDate, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const toggleGraph = (id) => {
@@ -80,7 +126,6 @@ export default function Header({ onGlobalFilter }) {
     setPeriodText(text);
     onGlobalFilter(startDate, endDate);
   };
-
   return (
     <header className="bg-white shadow-md px-4 sm:px-6 py-4 flex flex-col gap-y-4 sticky top-0 z-50">
       <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
@@ -88,7 +133,18 @@ export default function Header({ onGlobalFilter }) {
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
             <span className="text-blue-600">Dashboard FTTH</span>
           </h1>
-          <p className="text-gray-500 text-sm">Bienvenue</p>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>Bienvenue</span>
+            {lastUploadDate && (
+              <span className="flex items-center gap-1 text-blue-700 ml-3">
+                <AiOutlineClockCircle /> Dernière mise à jour :{" "}
+                <span className="font-medium">{lastUploadDate}</span>
+              </span>
+            )}
+            {isLoadingUploadDate && (
+              <span className="ml-3 text-gray-400 animate-pulse">Chargement…</span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-4 flex-wrap justify-end flex-1">
@@ -105,6 +161,8 @@ export default function Header({ onGlobalFilter }) {
         </div>
       </div>
 
+      {/* 🔁 Garde exactement ce que tu avais pour les filtres + export dropdown */}
+      {/* ✅ Ton ancien bloc de filtres + export continue ici… */}
       <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <label className="text-gray-700 font-medium">Période sélectionnée :</label>
@@ -149,7 +207,6 @@ export default function Header({ onGlobalFilter }) {
           )}
         </div>
 
-        {/* Export Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -210,13 +267,6 @@ export default function Header({ onGlobalFilter }) {
                         `Vous avez sélectionné ${selectedGraphs.length} graphique(s).\nLe téléchargement du document ${format.toUpperCase()} va commencer.`
                       );
                       if (!confirmed) return;
-
-                      const kpis = ["Backlog J-1", "Backlog J", "Objectif", "Dossiers traités"];
-                      const fileDate = new Date().toLocaleDateString("fr-FR").replace(/\//g, "-");
-                      const weekPart =
-                        startDate && endDate
-                          ? `S${getWeekNumber(startDate)}-S${getWeekNumber(endDate)}`
-                          : "Date";
 
                       const graphs = await Promise.all(
                         selectedGraphs.map(async (id) => {
