@@ -319,7 +319,7 @@ export default function Header({ type = "EARF" }) {
       <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-            <span className="text-blue-600">Dashboard de la documentation Confluence ARTHUIS</span>
+            <span className="text-blue-600">Dashboard Suivi de migration Confluence EARF</span>
           </h1>
           <div className="flex items-center text-gray-500 text-sm">
             <span>Bienvenue !</span>
