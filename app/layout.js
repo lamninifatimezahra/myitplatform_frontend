@@ -14,11 +14,16 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "MyIT – Plateforme Intranet",
   description:
-    "Portail collaboratif, connecté et intelligent pour les équipes d’Intelcia IT Solutions",
-  themeColor: "#004aad", // 💡 Pour Android PWA
+    "Portail collaboratif, connecté et intelligent pour les équipes d'Intelcia IT Solutions",
+  // themeColor removed from here
   icons: {
     icon: "/logo-myit.png",
   },
+};
+
+// Add this new export for viewport metadata
+export const viewport = {
+  themeColor: "#004aad", // Moved here from metadata
 };
 
 export default function RootLayout({ children }) {
@@ -29,7 +34,6 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/logo-myit.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#004aad" />
-
         {/* ✅ Spécifique iOS (header intégré, status bar transparente) */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
