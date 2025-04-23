@@ -1,5 +1,12 @@
-@import "tailwindcss";
+/* ✅ Mettre l'import de Google Fonts tout en haut */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
+/* ✅ Utiliser la bonne syntaxe Tailwind v3+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- TON CSS EXISTANT NE CHANGE PAS ICI --- */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -38,11 +45,7 @@ body {
   background-color: rgb(255, 255, 255) !important;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Personnalisation */
+/* ✅ Style Tailwind appliqués */
 body {
   @apply bg-gray-100 text-gray-800;
 }
@@ -58,6 +61,9 @@ body {
 .kpi-card {
   @apply bg-white shadow-lg rounded-xl p-4 flex flex-col justify-between hover:shadow-xl transition-all;
 }
+
+/* ... LE RESTE INCHANGÉ ... */
+
 @import "tailwindcss";
 
 :root {
@@ -257,3 +263,6 @@ button {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+
