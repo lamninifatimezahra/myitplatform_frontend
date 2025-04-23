@@ -50,37 +50,11 @@ export default function NewsTickerReglesFTTH() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const handleMove = (e) => {
-      if (isDragging && tickerRef.current) {
-        const deltaX = e.clientX - dragStartX;
-        setDragStartX(e.clientX);
-        const newPosition = animationState.position + deltaX;
-        tickerRef.current.style.transform = `translateX(${newPosition}px)`;
-        setAnimationState((prev) => ({ ...prev, position: newPosition }));
-      }
-    };
-    const handleUp = () => {
-      if (isDragging) {
-        setIsDragging(false);
-        if (containerRef.current) containerRef.current.style.cursor = "grab";
-      }
-    };
-    document.addEventListener("mousemove", handleMove);
-    document.addEventListener("mouseup", handleUp);
-    return () => {
-      document.removeEventListener("mousemove", handleMove);
-      document.removeEventListener("mouseup", handleUp);
-    };
-  }, [isDragging, dragStartX, animationState]);
-
   const handleMouseDown = (e) => {
     if (isPaused) {
       setIsDragging(true);
       setDragStartX(e.clientX);
       if (tickerRef.current) {
-        tickerRef.current.style.animation = "none";
-        void tickerRef.current.offsetWidth;
         const matrix = new DOMMatrix(window.getComputedStyle(tickerRef.current).getPropertyValue("transform"));
         tickerRef.current.style.transform = `translateX(${matrix.m41}px)`;
         setAnimationState({ play: false, position: matrix.m41 || 0 });
@@ -93,46 +67,55 @@ export default function NewsTickerReglesFTTH() {
     setIsPaused(true);
     if (tickerRef.current) {
       const matrix = new DOMMatrix(window.getComputedStyle(tickerRef.current).getPropertyValue("transform"));
-      tickerRef.current.style.animationPlayState = "paused";
       setAnimationState((prev) => ({ ...prev, position: matrix.m41 || 0 }));
     }
-    if (containerRef.current) containerRef.current.style.cursor = "grab";
+    containerRef.current.style.cursor = "grab";
   };
 
   const handleMouseLeave = () => {
     if (!isDragging) {
       setIsPaused(false);
-      if (tickerRef.current) {
-        tickerRef.current.style.animation = `ticker ${Math.max(180, rules.length * 9)}s linear infinite`;
-        tickerRef.current.style.transform = "";
-        tickerRef.current.style.animationPlayState = "running";
-        setAnimationState((prev) => ({ ...prev, play: true }));
-      }
-      if (containerRef.current) containerRef.current.style.cursor = "default";
+      containerRef.current.style.cursor = "default";
     }
     if (isDragging) setIsDragging(false);
   };
 
+  const handleMove = (e) => {
+    if (isDragging && tickerRef.current) {
+      const deltaX = e.clientX - dragStartX;
+      setDragStartX(e.clientX);
+      const newPosition = animationState.position + deltaX;
+      tickerRef.current.style.transform = `translateX(${newPosition}px)`;
+      setAnimationState((prev) => ({ ...prev, position: newPosition }));
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", () => {
+      if (isDragging) {
+        setIsDragging(false);
+        containerRef.current.style.cursor = "grab";
+      }
+    });
+    return () => {
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", () => {});
+    };
+  }, [isDragging, dragStartX, animationState]);
+
   const createContinuousTicker = () => (
     <>
-      {rules.map((item, index) => (
-        <div key={`r1-${index}`} className="inline-block mx-12 text-sm">
-          <span className="font-bold text-red-600">{item.rule}</span>
+      {rules.concat(rules).map((item, index) => (
+        <div
+          key={index}
+          className="inline-block mx-6 text-xs sm:text-sm md:text-base whitespace-nowrap"
+        >
+          <span className="font-semibold text-red-600">{item.rule}</span>
           {item.consigne && (
             <>
               {" – "}
-              <span className="text-black">{item.consigne}</span>
-            </>
-          )}
-        </div>
-      ))}
-      {rules.map((item, index) => (
-        <div key={`r2-${index}`} className="inline-block mx-12 text-sm">
-          <span className="font-bold text-red-600">{item.rule}</span>
-          {item.consigne && (
-            <>
-              {" – "}
-              <span className="text-black">{item.consigne}</span>
+              <span className="text-gray-700">{item.consigne}</span>
             </>
           )}
         </div>
@@ -142,7 +125,16 @@ export default function NewsTickerReglesFTTH() {
 
   if (loading) {
     return (
-      <div className="text-center py-4 text-gray-500">
+      <div
+        className="w-full shadow text-center text-gray-500 text-sm"
+        style={{
+          height: "44px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
+        }}
+      >
         Chargement des règles FTTH...
       </div>
     );
@@ -150,35 +142,51 @@ export default function NewsTickerReglesFTTH() {
 
   if (rules.length === 0) {
     return (
-      <div className="text-center py-4 text-gray-400">
+      <div
+        className="w-full shadow text-center text-gray-400 text-sm"
+        style={{
+          height: "44px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(255, 255, 255, 0.8)",
+        }}
+      >
         Aucune règle FTTH enregistrée
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-gray-100 py-4 shadow">
+    <div
+  className="w-full h-[44px] border-y border-gray-200 shadow-sm relative overflow-hidden flex items-center bg-white/10 backdrop-blur-sm"
+>
+
       <div
         ref={containerRef}
-        className="max-w-7xl mx-auto overflow-hidden relative"
+        className="absolute w-full h-full left-0 top-0 px-4 sm:px-6 overflow-hidden flex items-center"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
       >
         <div
           ref={tickerRef}
-          className="ticker-content inline-block whitespace-nowrap"
+          className={`ticker-content inline-block whitespace-nowrap transition-transform duration-200 ${
+            isPaused ? "animate-none" : "animate-ticker"
+          }`}
           style={{
-            animation: `ticker ${Math.max(180, rules.length * 9)}s linear infinite`,
-            animationPlayState: isPaused ? "paused" : "running",
+            transform: isPaused ? `translateX(${animationState.position}px)` : undefined,
             touchAction: "none",
           }}
         >
-          {createContinuousTicker()}
+          <div className="inline-flex items-center gap-3 text-sm font-medium text-gray-800">
+            <span className="text-red-600 font-bold">📢 Alertes :</span>
+            {createContinuousTicker()}
+          </div>
         </div>
 
         {isPaused && (
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold shadow">
             Glissez pour naviguer
           </div>
         )}
@@ -192,6 +200,12 @@ export default function NewsTickerReglesFTTH() {
           100% {
             transform: translateX(-50%);
           }
+        }
+        .animate-ticker {
+          animation: ticker 2500s linear infinite;
+        }
+        .animate-none {
+          animation: none !important;
         }
         .ticker-content {
           will-change: transform;

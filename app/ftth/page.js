@@ -19,12 +19,9 @@ import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
 
-// 🧪 TEMPORAIRE pour test (tu remettras ftth après test)
-const API_FTTH_DATA = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/hispeed/data/";
-
 export default function DashboardFTTH() {
   const { user, loading, authorized, hydrated } = useAuth(null, "FTTH");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [globalStartDate, setGlobalStartDate] = useState(null);
   const [globalEndDate, setGlobalEndDate] = useState(null);
 
@@ -60,14 +57,15 @@ export default function DashboardFTTH() {
           style={{ backgroundImage: "url('/background-office.jpg')" }}
         ></div>
 
-        <Header onGlobalFilter={handleGlobalFilter} />
-
-        {/* 📰 Bandeau des retards */}
+        {/* ✅ Header reçoit setSidebarOpen */}
+        <Header
+          onGlobalFilter={handleGlobalFilter}
+          setSidebarOpen={setIsSidebarOpen}
+        />
 
         <NewsTickerReglesFTTH />
 
         <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
-          {/* 🔢 KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <KPIBacklogJ1 />
             <KPIBacklogJ />
@@ -75,19 +73,16 @@ export default function DashboardFTTH() {
             <KPIDossiersTraites />
           </div>
 
-          {/* 📊 Graphiques – ligne 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphObjectif globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphVueEnsemble globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
           </div>
 
-          {/* 📊 Graphiques – ligne 2 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphTopRegles globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphTopReglesParJour globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
           </div>
 
-          {/* 📊 Graphiques – ligne 3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphRepartitionManuelle globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphEntrantsSortants globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
