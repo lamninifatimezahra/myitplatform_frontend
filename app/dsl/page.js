@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import useAuth from "@/hooks/useAuth";
-import SidebarFTTHStyled from "../components/Sidebar"; // ✅ Nouveau sidebar unifié
+import SidebarFTTHStyled from "../components/Sidebar";
 import Header from "../components/Header";
 
 import KpiTicketTraite from "../components/KPITicketTraite";
