@@ -20,7 +20,7 @@ const team = [
   },
   {
     name: "Ali TOUMZITE",
-    role: "Ingénieur Big Data",
+    role: "Ingénieur Logiciel Full Stack",
     img: "/avatar.png",
   },
 ];
