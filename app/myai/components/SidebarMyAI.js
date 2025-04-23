@@ -44,7 +44,7 @@ export default function SidebarMyAI({ sidebarOpen, setSidebarOpen }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-30"
+              className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-[90]"
               onClick={() => setSidebarOpen(false)}
             />
             <motion.div
@@ -53,7 +53,7 @@ export default function SidebarMyAI({ sidebarOpen, setSidebarOpen }) {
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ duration: 0.3 }}
-              className="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-40 flex flex-col justify-between p-6 overflow-y-auto"
+              className="fixed top-0 left-0 w-64 h-screen bg-white shadow-lg z-[100] flex flex-col justify-between p-6 overflow-y-auto"
             >
               <SidebarContent pathname={pathname} handleLogout={handleLogout} closeSidebar={() => setSidebarOpen(false)} />
             </motion.div>
@@ -88,9 +88,11 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
 
   return (
     <>
-      {/* Logo MyIT */}
+      {/* Logo MyIT cliquable → /acceuil */}
       <div className="flex justify-center shrink-0 mb-4">
-        <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
+        <a href="/acceuil" className="hover:opacity-90 transition">
+          <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
+        </a>
       </div>
 
       {/* Menu principal */}
@@ -106,11 +108,12 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
           />
         ))}
 
+        {/* Retour MyIT */}
         <div className="pt-4 border-t border-gray-300 mt-4">
           <SidebarItem
             icon={<AiOutlineArrowLeft size={22} />}
             text="Retour MyIT"
-            href="/"
+            href="/acceuil"
             pathname={pathname}
             onClick={closeSidebar}
           />

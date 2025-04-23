@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useAuth from '@/hooks/useAuth';
 import fetchWithAuth from '@/utils/fetchWithAuth';
 
-export default function SidebarFTTHStyled({ sidebarOpen, setSidebarOpen }) {
+export default function SidebarGeneral({ sidebarOpen, setSidebarOpen }) {
   const [showDashboards, setShowDashboards] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -82,7 +82,7 @@ export default function SidebarFTTHStyled({ sidebarOpen, setSidebarOpen }) {
         )}
       </AnimatePresence>
 
-      {/* Desktop sidebar (scrollable sans scrollbar visible) */}
+      {/* Desktop sidebar */}
       <div className="hidden md:flex w-64 h-screen bg-white shadow flex-col">
         <div className="flex flex-col p-6 gap-4 overflow-y-auto scrollbar-hide flex-grow max-h-[calc(100vh-100px)]">
           <SidebarContent
@@ -96,7 +96,7 @@ export default function SidebarFTTHStyled({ sidebarOpen, setSidebarOpen }) {
           />
         </div>
 
-        {/* Logos bas fixes */}
+        {/* Logos en bas */}
         <div className="flex justify-center items-center space-x-2 p-4 border-t border-gray-200">
           <Image src="/logo-sfr.png" alt="SFR" width={40} height={40} />
           <Image src="/intelcia_it_solutions_logo.jpg" alt="Intelcia IT Solutions" width={100} height={40} />
@@ -114,7 +114,9 @@ function SidebarContent({
   return (
     <>
       <div className="flex justify-center shrink-0 mb-4">
-        <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
+        <Link href="/acceuil" onClick={closeSidebar}>
+          <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} className="cursor-pointer" />
+        </Link>
       </div>
 
       <nav className="flex flex-col space-y-3">
@@ -168,7 +170,13 @@ function SidebarContent({
         )}
 
         <div className="pt-4 border-t border-gray-300 mt-4">
-          <SidebarItem icon={<AiOutlineArrowLeft size={22} />} text="Retour MyIT" href="/" pathname={pathname} onClick={closeSidebar} />
+          <SidebarItem
+            icon={<AiOutlineArrowLeft size={22} />}
+            text="Retour en IT"
+            href="/acceuil"
+            pathname={pathname}
+            onClick={closeSidebar}
+          />
           <button
             onClick={handleLogout}
             className="flex items-center px-3 py-2 mt-2 text-red-500 hover:text-red-600 hover:bg-gray-100 rounded transition w-full"
