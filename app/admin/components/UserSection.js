@@ -8,6 +8,11 @@ export default function UserSection() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [name, setName] = useState("");
+  const [surname, setSurname] = useState("");
+  const [position, setPosition] = useState("");
+  const [department, setDepartment] = useState("");
+  const [activity, setActivity] = useState("");
   const [deleteEmail, setDeleteEmail] = useState("");
   const [access, setAccess] = useState({
     HISPEED: false,
@@ -15,7 +20,17 @@ export default function UserSection() {
     DSL: false,
     FTTB: false,
     EARF: false,
-    ARTHUIS: false
+    ARTHIUS: false
+  });
+  const [createdUser, setCreatedUser] = useState({
+    email: "",
+    password: "",
+    name: "",
+    surname: "",
+    position: "",
+    department: "",
+    role: "",
+    access: []
   });
   const [showCredentials, setShowCredentials] = useState(false);
   const [copyMessage, setCopyMessage] = useState("");
@@ -40,6 +55,22 @@ export default function UserSection() {
     setTimeout(() => setMessage({ text: "", type: "" }), 5000);
   };
 
+  const extractNameFromEmail = () => {
+    if (!email) return;
+    
+    try {
+      const emailParts = email.split('@')[0].split('.');
+      if (emailParts.length >= 1 && !name) {
+        setName(emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1));
+      }
+      if (emailParts.length >= 2 && !surname) {
+        setSurname(emailParts[1].charAt(0).toUpperCase() + emailParts[1].slice(1));
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'extraction du nom depuis l'email:", error);
+    }
+  };
+
   const handleAddUser = async () => {
     // Validation de base
     if (!email || !email.trim()) {
@@ -50,6 +81,10 @@ export default function UserSection() {
       return showMessage("Le mot de passe doit contenir au moins 8 caractères", "error");
     }
 
+    if (!name || !surname || !position || !department) {
+      return showMessage("Veuillez remplir tous les champs obligatoires", "error");
+    }
+
     // Validation de domaine email
     const validDomains = ["intelcia.com", "sfr.com"];
     const emailDomain = email.split('@')[1];
@@ -58,28 +93,111 @@ export default function UserSection() {
     }
 
     try {
+      // Création du payload avec tous les champs requis
+      const dashboardAccess = Object.entries(access)
+        .filter(([_, val]) => val)
+        .map(([key]) => key);
+        
+      const payload = {
+        email,
+        password,
+        role,
+        name,
+        surname,
+        position,
+        department,
+        activity: "",
+        competence: [], // Pas de champ pour competence dans l'UI pour le moment
+        dashboards: dashboardAccess,
+      };
+      
+      console.log("Sending payload:", JSON.stringify(payload));
+      
       const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/admin/create-user/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          email,
-          password,
-          role,
-          dashboards: Object.entries(access)
-            .filter(([_, val]) => val)
-            .map(([key]) => key),
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Erreur serveur");
+        let errorMessage = "Erreur serveur";
+        
+        // Check if status is 409 (Conflict) - typically used for "already exists" errors
+        if (res.status === 409) {
+          return showMessage(`Un utilisateur avec l'email ${email} existe déjà`, "error");
+        }
+        
+        try {
+          // Try to parse the error response as JSON
+          const errorData = await res.json();
+          
+          // Check for specific user exists error message patterns
+          if (errorData.detail && 
+              (errorData.detail.includes("already exists") || 
+               errorData.detail.includes("déjà existant") ||
+               errorData.detail.includes("existe déjà"))) {
+            return showMessage(`Un utilisateur avec l'email ${email} existe déjà`, "error");
+          }
+          
+          errorMessage = errorData.detail || "Erreur serveur";
+        } catch (jsonError) {
+          // If not JSON, get text content or use status text
+          try {
+            const textContent = await res.text();
+            
+            // Check if the error text contains any indication of duplicate user
+            if (textContent.includes("already exists") || 
+                textContent.includes("déjà existant") ||
+                textContent.includes("existe déjà") ||
+                textContent.includes("duplicate key") ||
+                textContent.includes("Duplicate entry")) {
+              return showMessage(`Un utilisateur avec l'email ${email} existe déjà`, "error");
+            }
+            
+            // Extract a meaningful error if possible
+            const htmlErrorMatch = textContent.match(/<title>(.*?)<\/title>/);
+            errorMessage = htmlErrorMatch ? htmlErrorMatch[1] : `Erreur serveur (${res.status})`;
+          } catch (textError) {
+            // If we can't even get text
+            errorMessage = `Erreur serveur (${res.status}): ${res.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
+
+      // Now parse the successful response
+      const data = await res.json();
+
+      // Sauvegarder les informations de l'utilisateur créé
+      setCreatedUser({
+        email,
+        password,
+        name,
+        surname,
+        position,
+        department,
+        role,
+        access: dashboardAccess
+      });
 
       setShowCredentials(true);
       setCopyMessage("");
       showMessage("Utilisateur ajouté avec succès !");
+      
+      // Réinitialiser le formulaire
+      setEmail("");
+      setPassword("");
+      setName("");
+      setSurname("");
+      setPosition("");
+      setDepartment("");
+      setActivity("");
+      const resetAccess = {};
+      Object.keys(access).forEach(key => {
+        resetAccess[key] = false;
+      });
+      setAccess(resetAccess);
     } catch (err) {
       showMessage("Erreur lors de l'ajout : " + err.message, "error");
     }
@@ -99,10 +217,25 @@ export default function UserSection() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Erreur de suppression");
+        let errorMessage = "Erreur de suppression";
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.detail || "Erreur de suppression";
+        } catch (jsonError) {
+          try {
+            const textContent = await res.text();
+            const htmlErrorMatch = textContent.match(/<title>(.*?)<\/title>/);
+            errorMessage = htmlErrorMatch ? htmlErrorMatch[1] : `Erreur de suppression (${res.status})`;
+          } catch (textError) {
+            errorMessage = `Erreur de suppression (${res.status}): ${res.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
+      // Parse successful response
+      const data = await res.json();
+      
       showMessage("Utilisateur supprimé avec succès !");
       setDeleteEmail("");
     } catch (err) {
@@ -110,17 +243,33 @@ export default function UserSection() {
     }
   };
 
-  const copyToClipboard = () => {
-    const text = `Identifiants utilisateur :
-Email : ${email}
-Mot de passe : ${password}
-Rôle : ${role}
-Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}`;
-    navigator.clipboard.writeText(text);
-    setCopyMessage("✅ Identifiants copiés !");
-    setTimeout(() => setCopyMessage(""), 2000);
-  };
 
+  const copyToClipboard = () => {
+    try {
+      // Utiliser les informations de l'utilisateur créé 
+      const selectedAccess = createdUser.access.join(", ");
+      
+      // Créer le texte complet avec uniquement email, mot de passe et accès
+      const textToCopy = `Identifiants utilisateur :
+        Email : ${createdUser.email}
+        Mot de passe : ${createdUser.password}
+        Accès : ${selectedAccess || "Aucun"}`;
+    
+      // Copier dans le presse-papiers
+      navigator.clipboard.writeText(textToCopy);
+      
+      // Message de confirmation
+      setCopyMessage("✅ Identifiants copiés !");
+      setTimeout(() => setCopyMessage(""), 2000);
+      
+      // Pour le débogage (optionnel, peut être retiré en production)
+      console.log("Texte copié :", textToCopy);
+    } catch (error) {
+      console.error("Erreur lors de la copie :", error);
+      setCopyMessage("❌ Erreur lors de la copie");
+    }
+  };
+  
   const selectAllAccess = () => {
     const newAccess = {};
     Object.keys(access).forEach(key => {
@@ -155,18 +304,19 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
 
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <label className="w-32 text-gray-700 font-medium">E-mail</label>
+            <label className="w-32 text-gray-700 font-medium">E-mail <span className="text-red-500">*</span></label>
             <input
               type="email"
               placeholder="Adresse E-mail (intelcia.com ou sfr.com)"
               className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black placeholder:text-black"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={extractNameFromEmail}
             />
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <label className="w-32 text-gray-700 font-medium">Mot de passe</label>
+            <label className="w-32 text-gray-700 font-medium">Mot de passe <span className="text-red-500">*</span></label>
             <div className="flex-1 flex items-center space-x-3">
               <input
                 type="text"
@@ -184,8 +334,63 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
             </div>
           </div>
 
+          {/* Informations personnelles */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <label className="w-32 text-gray-700 font-medium">Rôle</label>
+            <label className="w-32 text-gray-700 font-medium">Prénom <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              placeholder="Prénom"
+              className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className="w-32 text-gray-700 font-medium">Nom <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              placeholder="Nom"
+              className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black"
+              value={surname}
+              onChange={(e) => setSurname(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className="w-32 text-gray-700 font-medium">Poste <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              placeholder="Poste occupé"
+              className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className="w-32 text-gray-700 font-medium">Département <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              placeholder="Département"
+              className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+            <label className="w-32 text-gray-700 font-medium pt-2">Activité</label>
+            <textarea
+              placeholder="Description de l'activité (optionnel)"
+              className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black h-24"
+              value={activity}
+              onChange={(e) => setActivity(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className="w-32 text-gray-700 font-medium">Rôle <span className="text-red-500">*</span></label>
             <select
               className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-200 text-black"
               value={role}
@@ -249,11 +454,10 @@ Accès : ${Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", 
             Identifiants à transmettre :
           </h3>
           <div className="bg-white p-3 rounded border border-gray-200">
-            <div className="mb-1"><span className="font-medium">Email :</span> {email}</div>
-            <div className="mb-1"><span className="font-medium">Mot de passe :</span> {password}</div>
-            <div className="mb-1"><span className="font-medium">Rôle :</span> {role === 'admin' ? 'Administrateur' : 'Utilisateur'}</div>
+            <div className="mb-1"><span className="font-medium">Email :</span> {createdUser.email}</div>
+            <div className="mb-1"><span className="font-medium">Mot de passe :</span> {createdUser.password}</div>
             <div>
-              <span className="font-medium">Accès :</span> {Object.entries(access).filter(([_, v]) => v).map(([k]) => k).join(", ") || "Aucun"}
+              <span className="font-medium">Accès :</span> {createdUser.access.join(", ") || "Aucun"}
             </div>
           </div>
           <div className="flex items-center justify-between">
