@@ -48,7 +48,7 @@ export default function DashboardFTTH() {
         ☰
       </button>
 
-      <Sidebar isMobileOpen={isSidebarOpen} toggleMobileOpen={() => setIsSidebarOpen(false)} />
+      <Sidebar sidebarOpen={isSidebarOpen} setSidebarOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col relative">
         {/* Background header */}

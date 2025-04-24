@@ -65,8 +65,8 @@ export default function SidebarGeneral({ sidebarOpen, setSidebarOpen }) {
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ duration: 0.3 }}
-              className="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-40 flex flex-col justify-between p-6 overflow-y-auto"
-            >
+              className="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-[100] flex flex-col justify-between p-6 overflow-y-auto"
+              >
               <SidebarContent
                 pathname={pathname}
                 handleLogout={handleLogout}
