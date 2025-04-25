@@ -15,7 +15,7 @@ import {
 } from "react-icons/ai";
 import { BsChevronDown } from "react-icons/bs";
 
-export default function AccueilPage() {
+export default function DashboardsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const popupRef = useRef(null);
@@ -49,20 +49,10 @@ export default function AccueilPage() {
 
   if (loading || !user) return <div className="p-8">Chargement sécurisé...</div>;
 
-  const modules = [
-    { name: "Dashboard KPIs", path: "/dashboards", roles: ["admin", "user"] },
-    { name: "MyForum", path: "/myforum", roles: ["admin", "user"] },
-    { name: "MyAI", path: "/myai", roles: ["admin", "user"] },
-    { name: "MyFiles", path: "/myfiles", roles: ["admin"] },
-    { name: "Guide MyIT", path: "/guide", roles: ["admin", "user"] },
-    { name: "Paramètres", path: "/settings", roles: ["admin", "user"] },
-    { name: "MyPropos", path: "/mypropos", roles: ["admin", "user"] },
-    { name: "Espace Admin", path: "/admin", roles: ["admin"] },
-  ];
-
-  const accessibleModules = modules.filter((mod) =>
-    mod.roles.includes(user.role)
-  );
+  const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHIUS"];
+  const accessibleDashboards = user.role === "admin"
+    ? dashboards
+    : dashboards.filter((d) => user?.dashboards?.includes(d));
 
   const handleLogout = async () => {
     try {
@@ -110,20 +100,18 @@ export default function AccueilPage() {
           <button
             onClick={() => router.back()}
             className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition"
-            title="Page précédente"
           >
             <AiOutlineArrowLeft size={20} />
           </button>
           <button
             onClick={() => router.forward()}
             className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition"
-            title="Page suivante"
           >
             <AiOutlineArrowRight size={20} />
           </button>
         </div>
 
-        {/* User Info */}
+        {/* USER & POPUP */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
@@ -141,7 +129,6 @@ export default function AccueilPage() {
             <AiOutlineLogout size={22} />
           </button>
 
-          {/* Popup */}
           {showUserPopup && (
             <div className="absolute right-0 top-14 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 animate-fade-in">
               <div className="px-5 py-4 space-y-1">
@@ -201,29 +188,38 @@ export default function AccueilPage() {
             transition={{ duration: 0.6 }}
             className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#31327e] mb-4"
           >
-            Bienvenue sur la plateforme MyIT
+            Dashboards Métiers
           </motion.h1>
 
           <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Explorez les outils et modules de la plateforme MyIT, conçus pour simplifier votre quotidien.
+            Accédez aux dashboards des différents départements en un seul clic.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
-            {accessibleModules.map((mod, index) => (
-              <motion.div
-                key={mod.name}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.08 }}
-                className="w-full max-w-sm"
-              >
-                <Link href={mod.path}>
-                  <div className="w-full py-6 px-6 border border-[#31327e] rounded-2xl font-semibold text-lg text-[#31327e] bg-white transition-all duration-300 cursor-pointer shadow-md hover:bg-[#31327e] hover:text-white hover:shadow-xl">
-                    {mod.name}
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+            {dashboards.map((dept, index) => {
+              const hasAccess = user.role === "admin" || user.dashboards?.includes(dept);
+              return (
+                <motion.div
+                  key={dept}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                  className="w-full max-w-sm"
+                >
+                  {hasAccess ? (
+                    <Link href={`/${dept.toLowerCase()}`}>
+                      <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl">
+                        {dept}
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="w-full py-6 px-6 border border-gray-300 text-gray-400 text-lg font-semibold rounded-2xl bg-gray-100 cursor-not-allowed shadow-inner">
+                      {dept}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
