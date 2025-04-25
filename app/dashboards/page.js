@@ -225,7 +225,7 @@ export default function DashboardsPage() {
           </motion.h1>
 
           <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Accédez aux dashboards des différents Activités en un seul clic.
+            Accédez aux dashboards des différents activités en un seul clic.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
