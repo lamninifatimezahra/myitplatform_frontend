@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import fetchWithAuth from "@/utils/fetchWithAuth";
@@ -21,8 +21,49 @@ export default function LoginPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const router = useRouter();
+
+  // ✅ Spinner affiché pendant 1.5s au montage
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white relative">
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent rounded-full animate-spin-custom" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image
+              src="/logo-myit.png"
+              alt="Logo MyIT"
+              width={48}
+              height={48}
+              className="object-contain"
+            />
+          </div>
+        </div>
+        <style jsx>{`
+          @keyframes spin-custom {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+          .animate-spin-custom {
+            animation: spin-custom 1.1s ease-in-out infinite;
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,7 +117,6 @@ export default function LoginPage() {
         password: "",
         general: "Erreur de connexion. Vérifiez vos identifiants.",
       });
-      // Pas de redirection après erreur : l'utilisateur reste sur place
     }
   };
 

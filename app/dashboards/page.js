@@ -47,12 +47,45 @@ export default function DashboardsPage() {
     };
   }, []);
 
-  if (loading || !user) return <div className="p-8">Chargement sécurisé...</div>;
+  // ✅ Spinner si chargement
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white relative">
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image
+              src="/logo-myit.png"
+              alt="Logo MyIT"
+              width={48}
+              height={48}
+              className="object-contain"
+            />
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes spin-custom {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+          .animate-spin-custom {
+            animation: spin-custom 1.1s ease-in-out infinite;
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHIUS"];
-  const accessibleDashboards = user.role === "admin"
-    ? dashboards
-    : dashboards.filter((d) => user?.dashboards?.includes(d));
+  const accessibleDashboards =
+    user.role === "admin"
+      ? dashboards
+      : dashboards.filter((d) => user?.dashboards?.includes(d));
 
   const handleLogout = async () => {
     try {
@@ -111,7 +144,7 @@ export default function DashboardsPage() {
           </button>
         </div>
 
-        {/* USER & POPUP */}
+        {/* USER INFO */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
@@ -192,7 +225,7 @@ export default function DashboardsPage() {
           </motion.h1>
 
           <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Accédez aux dashboards des différents départements en un seul clic.
+            Accédez aux dashboards des différents Activités en un seul clic.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
