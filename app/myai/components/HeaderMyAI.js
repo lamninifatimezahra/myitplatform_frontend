@@ -2,13 +2,11 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AiOutlineBell, AiOutlineSearch, AiOutlineMenu } from 'react-icons/ai';
+import { AiOutlineBell, AiOutlineSearch, AiOutlineMenu, AiOutlineUser, AiOutlineLogout } from 'react-icons/ai';
+import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
-
-const user = {
-  name: "Ayoub LAHDOUD",
-  avatar: "/avatar.png",
-};
+import fetchWithAuth from '@/utils/fetchWithAuth';
+import { useRouter } from 'next/navigation';
 
 const notifications = [
   { id: 1, message: "Le chatbot pourra bientôt répondre aux questions des utilisateurs.", time: "À venir" },
@@ -17,17 +15,75 @@ const notifications = [
 
 export default function HeaderMyAI({ setSidebarOpen }) {
   const [notifOpen, setNotifOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showUserPopup, setShowUserPopup] = useState(false);
+
   const notifRef = useRef(null);
+  const userRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
+    async function fetchUser() {
+      try {
+        const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/", {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error('Erreur lors de la récupération de l’utilisateur');
+
+        const data = await res.json();
+        setUser(data);
+      } catch (err) {
+        console.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
         setNotifOpen(false);
       }
-    };
+      if (userRef.current && !userRef.current.contains(event.target)) {
+        setShowUserPopup(false);
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Erreur de déconnexion :", err.message);
+    } finally {
+      router.push("/login");
+    }
+  };
+
+  const getFormattedName = () => {
+    const first = user?.name || '';
+    const last = user?.surname || '';
+    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+  };
+
+  const getDepartment = () => {
+    return user?.role === "admin" ? "Administrateur" : user?.department || "N/A";
+  };
+
+  const getActivities = () => {
+    if (user?.role === "admin") return ["Accès libre"];
+    if (user?.dashboards?.length) return user.dashboards;
+    return [];
+  };
 
   return (
     <motion.header
@@ -92,15 +148,67 @@ export default function HeaderMyAI({ setSidebarOpen }) {
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition whitespace-nowrap">
-          <Image
-            src={user.avatar}
-            alt={user.name}
-            width={32}
-            height={32}
-            className="rounded-full object-cover"
-          />
-          <span className="text-sm font-medium text-gray-700 hidden sm:inline">{user.name}</span>
+        {/* USER Profile */}
+        <div ref={userRef} className="relative">
+          <button
+            onClick={() => setShowUserPopup(!showUserPopup)}
+            className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition whitespace-nowrap"
+          >
+            {user?.avatar ? (
+              <Image
+                src={user.avatar}
+                alt="Avatar"
+                width={32}
+                height={32}
+                className="rounded-full object-cover"
+              />
+            ) : (
+              <AiOutlineUser className="w-7 h-7 text-gray-600" />
+            )}
+            <span className="text-sm font-medium text-gray-700 hidden sm:inline">{loading ? "..." : getFormattedName()}</span>
+            <ChevronDown className="w-4 h-4 text-gray-600" />
+          </button>
+
+          {showUserPopup && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+            >
+              <div className="px-5 py-4 text-sm space-y-1">
+                <p className="text-xs text-gray-500">Connecté en tant que</p>
+                <p className="font-bold text-[#31327e] text-base">{getFormattedName()}</p>
+                <p><span className="font-semibold text-gray-600">Email :</span> {user?.email}</p>
+                <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
+                <p className="font-semibold text-gray-600">Activités :</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {getActivities().length > 0 ? (
+                    getActivities().map((item, index) => (
+                      <span
+                        key={index}
+                        className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full"
+                      >
+                        {item}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-xs italic">Aucune activité</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
+                <button
+                  onClick={handleLogout}
+                  className="text-red-600 font-semibold text-sm hover:underline"
+                >
+                  <AiOutlineLogout className="w-4 h-4 inline mr-2" />
+                  Se déconnecter
+                </button>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </motion.header>

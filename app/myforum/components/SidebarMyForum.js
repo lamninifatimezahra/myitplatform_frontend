@@ -4,12 +4,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
   AiOutlineHome, AiOutlinePlus, AiOutlineStar, AiOutlineCheckCircle,
-  AiOutlineArrowLeft, AiOutlineLogout
+  AiOutlineArrowLeft, AiOutlineLogout, AiOutlineUser
 } from 'react-icons/ai';
 import { MdForum } from 'react-icons/md';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuth from '@/hooks/useAuth';
 import fetchWithAuth from '@/utils/fetchWithAuth';
+import Link from 'next/link';
 
 export default function SidebarMyForum({ sidebarOpen, setSidebarOpen }) {
   const pathname = usePathname();
@@ -31,7 +32,7 @@ export default function SidebarMyForum({ sidebarOpen, setSidebarOpen }) {
 
   return (
     <>
-      {/* Mobile menu */}
+      {/* Mobile sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
@@ -54,6 +55,7 @@ export default function SidebarMyForum({ sidebarOpen, setSidebarOpen }) {
               <SidebarContent
                 pathname={pathname}
                 handleLogout={handleLogout}
+                user={user}
                 closeSidebar={() => setSidebarOpen(false)}
               />
             </motion.div>
@@ -64,7 +66,11 @@ export default function SidebarMyForum({ sidebarOpen, setSidebarOpen }) {
       {/* Desktop sidebar */}
       <div className="hidden md:flex w-64 h-screen bg-white shadow flex-col">
         <div className="flex flex-col p-6 gap-4 overflow-y-auto scrollbar-hide flex-grow max-h-[calc(100vh-100px)]">
-          <SidebarContent pathname={pathname} handleLogout={handleLogout} />
+          <SidebarContent
+            pathname={pathname}
+            handleLogout={handleLogout}
+            user={user}
+          />
         </div>
 
         {/* Logos bas */}
@@ -77,7 +83,7 @@ export default function SidebarMyForum({ sidebarOpen, setSidebarOpen }) {
   );
 }
 
-function SidebarContent({ pathname, handleLogout, closeSidebar }) {
+function SidebarContent({ pathname, handleLogout, user, closeSidebar }) {
   const items = [
     { icon: <AiOutlineHome size={22} />, text: "Accueil", href: "/myforum" },
     { icon: <AiOutlinePlus size={22} />, text: "Créer un post", href: "/myforum/new" },
@@ -88,11 +94,11 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
 
   return (
     <>
-      {/* Logo cliquable vers /acceuil */}
+      {/* Logo cliquable */}
       <div className="mb-6 flex justify-center">
-        <a href="/acceuil" className="hover:opacity-90 transition">
+        <Link href="/acceuil" onClick={closeSidebar} className="hover:opacity-90 transition">
           <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
-        </a>
+        </Link>
       </div>
 
       <nav className="flex flex-col space-y-3">
@@ -107,8 +113,22 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
           />
         ))}
 
-        {/* Retour et logout */}
-        <div className="pt-4 border-t border-gray-300">
+        {/* 🔥 Ajouter Espace Admin si Admin */}
+        {user?.role === 'admin' && (
+          <div className="pt-4 mt-4 border-t border-gray-300">
+            <h4 className="text-xs font-bold text-gray-500 uppercase mb-2 px-3">Espace Admin</h4>
+            <SidebarItem
+              icon={<AiOutlineUser size={22} />}
+              text="Tableau de bord Admin"
+              href="/admin"
+              pathname={pathname}
+              onClick={closeSidebar}
+            />
+          </div>
+        )}
+
+        {/* Retour + Déconnexion */}
+        <div className="pt-4 mt-4 border-t border-gray-300">
           <SidebarItem
             icon={<AiOutlineArrowLeft size={22} />}
             text="Retour MyIT"
@@ -116,15 +136,15 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
             pathname={pathname}
             onClick={closeSidebar}
           />
-        </div>
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center px-3 py-2 text-red-500 hover:text-red-600 hover:bg-gray-100 rounded transition w-full"
-        >
-          <AiOutlineLogout size={22} />
-          <span className="ml-3">Se Déconnecter</span>
-        </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center px-3 py-2 text-red-500 hover:text-red-600 hover:bg-gray-100 rounded transition w-full mt-2"
+          >
+            <AiOutlineLogout size={22} />
+            <span className="ml-3">Se Déconnecter</span>
+          </button>
+        </div>
 
         {closeSidebar && (
           <button onClick={closeSidebar} className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline">
@@ -139,7 +159,7 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
 function SidebarItem({ icon, text, href, pathname, onClick }) {
   const isActive = pathname === href;
   return (
-    <a
+    <Link
       href={href}
       onClick={onClick}
       className={`flex items-center px-3 py-2 rounded transition w-full ${
@@ -148,6 +168,6 @@ function SidebarItem({ icon, text, href, pathname, onClick }) {
     >
       {icon}
       <span className="ml-3">{text}</span>
-    </a>
+    </Link>
   );
 }

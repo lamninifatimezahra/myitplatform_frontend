@@ -8,6 +8,7 @@ import {
   AiOutlineRobot,
   AiOutlineArrowLeft,
   AiOutlineLogout,
+  AiOutlineUser,
 } from 'react-icons/ai';
 import { HiOutlineLightBulb } from 'react-icons/hi';
 import { MdOutlineSupportAgent } from 'react-icons/md';
@@ -55,7 +56,7 @@ export default function SidebarMyAI({ sidebarOpen, setSidebarOpen }) {
               transition={{ duration: 0.3 }}
               className="fixed top-0 left-0 w-64 h-screen bg-white shadow-lg z-[100] flex flex-col justify-between p-6 overflow-y-auto"
             >
-              <SidebarContent pathname={pathname} handleLogout={handleLogout} closeSidebar={() => setSidebarOpen(false)} />
+              <SidebarContent pathname={pathname} handleLogout={handleLogout} closeSidebar={() => setSidebarOpen(false)} user={user} />
             </motion.div>
           </>
         )}
@@ -64,7 +65,7 @@ export default function SidebarMyAI({ sidebarOpen, setSidebarOpen }) {
       {/* Desktop sidebar */}
       <div className="hidden md:flex w-64 h-screen bg-white shadow flex-col">
         <div className="flex flex-col p-6 gap-4 overflow-y-auto scrollbar-hide flex-grow max-h-[calc(100vh-100px)]">
-          <SidebarContent pathname={pathname} handleLogout={handleLogout} />
+          <SidebarContent pathname={pathname} handleLogout={handleLogout} user={user} />
         </div>
 
         {/* Logos bas fixes */}
@@ -77,7 +78,7 @@ export default function SidebarMyAI({ sidebarOpen, setSidebarOpen }) {
   );
 }
 
-function SidebarContent({ pathname, handleLogout, closeSidebar }) {
+function SidebarContent({ pathname, handleLogout, closeSidebar, user }) {
   const items = [
     { icon: <AiOutlineHome size={22} />, text: "Accueil", href: "/myai" },
     { icon: <HiOutlineLightBulb size={22} />, text: "Suggestions IA", href: "#" },
@@ -88,7 +89,7 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
 
   return (
     <>
-      {/* Logo MyIT cliquable → /acceuil */}
+      {/* Logo cliquable vers l'acceuil */}
       <div className="flex justify-center shrink-0 mb-4">
         <a href="/acceuil" className="hover:opacity-90 transition">
           <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
@@ -108,7 +109,21 @@ function SidebarContent({ pathname, handleLogout, closeSidebar }) {
           />
         ))}
 
-        {/* Retour MyIT */}
+        {/* Espace Admin visible uniquement pour admin */}
+        {user?.role === 'admin' && (
+          <div className="mt-6 pt-4 border-t border-gray-300">
+            <h4 className="text-xs font-bold text-gray-500 uppercase mb-2 px-3">Espace Admin</h4>
+            <SidebarItem
+              icon={<AiOutlineUser size={22} />}
+              text="Tableau de bord Admin"
+              href="/admin"
+              pathname={pathname}
+              onClick={closeSidebar}
+            />
+          </div>
+        )}
+
+        {/* Retour et déconnexion */}
         <div className="pt-4 border-t border-gray-300 mt-4">
           <SidebarItem
             icon={<AiOutlineArrowLeft size={22} />}
