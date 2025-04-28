@@ -153,7 +153,7 @@ function SidebarContent({
 
         <SidebarItem icon={<AiOutlineMessage size={22} />} text="MyForum" href="/myforum" pathname={pathname} onClick={closeSidebar} />
         <SidebarItem icon={<AiOutlineRobot size={22} />} text="MyAI" href="/myai" pathname={pathname} onClick={closeSidebar} />
-        <SidebarItem icon={<AiOutlineFile size={22} />} text="MyFile" href="/file" pathname={pathname} onClick={closeSidebar} />
+        <SidebarItem icon={<AiOutlineFile size={22} />} text="MyFile" href="/myfile" pathname={pathname} onClick={closeSidebar} />
         <SidebarItem icon={<AiOutlineSetting size={22} />} text="Guide" href="/guide" pathname={pathname} onClick={closeSidebar} />
 
         {user?.role === 'admin' && (

@@ -88,7 +88,7 @@ export default function AccueilPage() {
     { name: "Dashboard KPIs", path: "/dashboards", roles: ["admin", "user"] },
     { name: "MyForum", path: "/myforum", roles: ["admin", "user"] },
     { name: "MyAI", path: "/myai", roles: ["admin", "user"] },
-    { name: "MyFiles", path: "/myfiles", roles: ["admin"] },
+    { name: "MyFile", path: "/myfile", roles: ["admin"] },
     { name: "Guide MyIT", path: "/guide", roles: ["admin", "user"] },
     { name: "Paramètres", path: "/settings", roles: ["admin", "user"] },
     { name: "MyPropos", path: "/mypropos", roles: ["admin", "user"] },

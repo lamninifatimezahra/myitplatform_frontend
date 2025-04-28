@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -7,15 +7,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import fetchWithAuth from "@/utils/fetchWithAuth";
-import {
-  AiOutlineArrowLeft,
-  AiOutlineArrowRight,
-  AiOutlineUser,
-  AiOutlineLogout,
-} from "react-icons/ai";
+import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineUser, AiOutlineLogout } from "react-icons/ai";
 import { BsChevronDown } from "react-icons/bs";
 
-export default function DashboardsPage() {
+export default function MyFilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const popupRef = useRef(null);
@@ -47,31 +42,20 @@ export default function DashboardsPage() {
     };
   }, []);
 
-  // ✅ Spinner si chargement
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
         <div className="relative w-24 h-24">
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Image
-              src="/logo-myit.png"
-              alt="Logo MyIT"
-              width={48}
-              height={48}
-              className="object-contain"
-            />
+            <Image src="/logo-myit.png" alt="Logo MyIT" width={48} height={48} className="object-contain" />
           </div>
         </div>
 
         <style jsx>{`
           @keyframes spin-custom {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
           .animate-spin-custom {
             animation: spin-custom 1.1s ease-in-out infinite;
@@ -82,10 +66,7 @@ export default function DashboardsPage() {
   }
 
   const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHIUS"];
-  const accessibleDashboards =
-    user.role === "admin"
-      ? dashboards
-      : dashboards.filter((d) => user?.dashboards?.includes(d));
+  const accessibleDashboards = user.role === "admin" ? dashboards : dashboards.filter((d) => user?.dashboards?.includes(d));
 
   const handleLogout = async () => {
     try {
@@ -118,6 +99,7 @@ export default function DashboardsPage() {
 
   return (
     <main className="flex flex-col min-h-screen bg-white text-gray-800 relative overflow-hidden">
+      {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center z-0"
         style={{
@@ -127,7 +109,7 @@ export default function DashboardsPage() {
         }}
       />
 
-      {/* HEADER */}
+      {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 sm:px-12 bg-transparent">
         <div className="flex items-center gap-3">
           <button
@@ -144,7 +126,7 @@ export default function DashboardsPage() {
           </button>
         </div>
 
-        {/* USER INFO */}
+        {/* Utilisateur */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
@@ -175,10 +157,7 @@ export default function DashboardsPage() {
                   <div className="flex flex-wrap gap-2 mt-1">
                     {getActivities().length > 0 ? (
                       getActivities().map((item, index) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full"
-                        >
+                        <span key={index} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
                           {item}
                         </span>
                       ))
@@ -202,7 +181,7 @@ export default function DashboardsPage() {
         </div>
       </div>
 
-      {/* MAIN */}
+      {/* Contenu principal */}
       <div className="relative z-10 flex-1 flex flex-col justify-start pt-28 px-6 py-12 sm:px-12">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-10">
@@ -221,11 +200,11 @@ export default function DashboardsPage() {
             transition={{ duration: 0.6 }}
             className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#31327e] mb-4"
           >
-            Dashboards Métiers
+            Espace MyFile
           </motion.h1>
 
           <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Accédez aux dashboards des différents activités en un seul clic.
+            Uploadez vos fichiers selon votre activité métier.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
@@ -240,7 +219,7 @@ export default function DashboardsPage() {
                   className="w-full max-w-sm"
                 >
                   {hasAccess ? (
-                    <Link href={`/${dept.toLowerCase()}`}>
+                    <Link href={`/myfile/${dept.toLowerCase()}`}>
                       <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl">
                         {dept}
                       </div>
@@ -256,14 +235,7 @@ export default function DashboardsPage() {
           </div>
         </div>
       </div>
-
-      {showScrollHint && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-          <BsChevronDown className="text-[#31327e] animate-bounce text-xl" />
-        </div>
-      )}
-
-<footer className="relative z-10 text-center text-sm text-gray-400 py-4 mt-10">
+      <footer className="relative z-10 text-center text-sm text-gray-400 py-4 mt-10">
         © {new Date().getFullYear()} MyIT – Plateforme interne Intelcia IT Solutions
       </footer>
     </main>
