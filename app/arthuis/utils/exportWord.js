@@ -123,7 +123,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
             📊 KPI – Key Performance Indicators
           </h2>
           <p style="color:#6b7280; font-size:8pt;">
-            Suivi des indicateurs essentiels de performance Arthius.
+            Suivi des indicateurs essentiels de performance Arthuis.
           </p>
         </td>
       </tr>
@@ -202,7 +202,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         <!-- Titre principal -->
         <div style="background:#31327e; padding:20px; text-align:center; color:white;">
           <h1 style="font-size:16pt; margin:0;">
-            Compte rendu détaillé de l'activité Arthius
+            Compte rendu détaillé de l'activité Arthuis
           </h1>
         </div>
 
@@ -243,7 +243,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Compte-rendu_ARTHIUS_${today.replace(/\//g, "-")}.docx`;
+  a.download = `Compte-rendu_ARTHUIS_${today.replace(/\//g, "-")}.docx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

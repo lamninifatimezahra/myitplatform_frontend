@@ -81,7 +81,7 @@ export default function DashboardsPage() {
     );
   }
 
-  const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHIUS"];
+  const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHUIS"];
   const accessibleDashboards =
     user.role === "admin"
       ? dashboards

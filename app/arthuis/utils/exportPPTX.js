@@ -117,7 +117,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
       intro.addText("ERREUR: Fond d'introduction manquant", { x:0.5, y:0.5, w:9, h:0.5, color:"FF0000", fontSize:18, align:"center" });
   }
 
-  intro.addText("Compte Rendu ARTHIUS", { x: 0, y: 2.5, w: "100%", h: 0.7, align: "center", fontFace: "Segoe UI", fontSize: 36, bold: true, color: "FFFFFF" });
+  intro.addText("Compte Rendu ARTHUIS", { x: 0, y: 2.5, w: "100%", h: 0.7, align: "center", fontFace: "Segoe UI", fontSize: 36, bold: true, color: "FFFFFF" });
   intro.addText("Suivi d'activité et analyse des performances", { x: 0, y: 3.2, w: "100%", h: 0.5, align: "center", fontFace: "Segoe UI Light", fontSize: 20, color: "FFFFFF" });
   
   if (periodText) {
