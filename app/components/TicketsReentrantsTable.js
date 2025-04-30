@@ -125,8 +125,10 @@ export default function TicketsReentrantsTable({
     return Object.entries(processed)
       .map(([id, ticket]) => {
         const semainesApparition = Object.entries(ticket.semaineCounts)
-          .map(([week, count]) => (count > 1 ? `${week}(${count})` : `${week}`))
-          .join(", ");
+        .map(([week, count]) =>
+          count > 1 ? `S${week}(${count} itérations)` : `S${week}`
+        )
+        .join(", ");
         return {
           id_ticket: id,
           ...ticket,
