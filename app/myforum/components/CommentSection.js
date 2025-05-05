@@ -13,7 +13,7 @@ export default function CommentSection({ postId }) {
   useEffect(() => {
     async function fetchComments() {
       try {
-        const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/comments/?post=${postId}`);
+        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/comments/?post=${postId}`);
         if (!res.ok) throw new Error("Erreur lors du chargement des commentaires");
         const data = await res.json();
         setComments(data.reverse());
@@ -28,7 +28,7 @@ export default function CommentSection({ postId }) {
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
     try {
-      const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${postId}/comments/`, {
+      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${postId}/comments/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: newComment, post: postId }),

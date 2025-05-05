@@ -24,7 +24,7 @@ export default function PostDetail({ post }) {
   useEffect(() => {
     async function trackView() {
       try {
-        await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${post.id}/track-view/`, {
+        await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${post.id}/track-view/`, {
           method: 'POST',
           credentials: 'include'
         });
@@ -37,7 +37,7 @@ export default function PostDetail({ post }) {
 
   const handleLike = async () => {
     try {
-      const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${post.id}/like/`, {
+      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${post.id}/like/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ export default function PostDetail({ post }) {
 
   const fetchLikes = async () => {
     try {
-      const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${post.id}/likes/`);
+      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${post.id}/likes/`);
       const data = await res.json();
       setLikeUsers(data);
       setShowLikes(true);

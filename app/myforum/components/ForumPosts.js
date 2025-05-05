@@ -57,7 +57,7 @@ export default function ForumPostsCarousel() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const res = await fetchWithAuth('http://127.0.0.1:8000/myforum/posts/');
+        const res = await fetchWithAuth('https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/');
         if (!res.ok) throw new Error('Erreur lors du chargement des posts');
         const data = await res.json();
         setPosts(data);

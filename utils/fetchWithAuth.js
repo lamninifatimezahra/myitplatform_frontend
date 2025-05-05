@@ -8,7 +8,7 @@ export default async function fetchWithAuth(url, options = {}) {
       console.log("Token expiré, tentative de rafraîchissement...");
       
       // Tenter de rafraîchir le token
-      const refreshRes = await fetch("http://127.0.0.1:8000/api/refresh/", {
+      const refreshRes = await fetch("https://myit-backend-ed72239b4b8e.herokuapp.com/api/refresh/", {
         method: 'POST',
         credentials: 'include',
       });
