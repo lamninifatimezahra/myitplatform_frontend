@@ -1,65 +1,85 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FaUserCircle, FaTrash } from 'react-icons/fa';
+import { useParams, useRouter } from 'next/navigation';
+import fetchWithAuth from '@/utils/fetchWithAuth';
 
-export default function CommentSection({ postId }) {
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
+export default function EditPost() {
+  const { id: postId } = useParams();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [post, setPost] = useState(null);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
 
+  // Fetch current post data
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('myit_comments') || '{}');
-    setComments(data[postId] || []);
+    async function fetchPost() {
+      try {
+        const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${postId}/`);
+        if (!res.ok) throw new Error('Erreur de chargement');
+        const data = await res.json();
+        setPost(data);
+        setTitle(data.title);
+        setContent(data.content);
+      } catch (error) {
+        console.error('Erreur:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (postId) fetchPost();
   }, [postId]);
 
-  const handlePublish = () => {
-    if (!newComment.trim()) return;
-    const comment = {
-      id: Date.now(),
-      author: 'Ayoub Lahdoud',
-      content: newComment.trim(),
-      date: new Date().toLocaleString(),
-    };
-    const updated = [...comments, comment];
-    setComments(updated);
-    const all = JSON.parse(localStorage.getItem('myit_comments') || '{}');
-    all[postId] = updated;
-    localStorage.setItem('myit_comments', JSON.stringify(all));
-    setNewComment('');
+  const handleUpdate = async () => {
+    try {
+      const res = await fetchWithAuth(`/myforum/posts/${postId}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, content }),
+      });
+      if (!res.ok) throw new Error('Mise à jour échouée');
+      router.push(`/myforum/posts/${postId}`);
+    } catch (error) {
+      console.error('Erreur de mise à jour :', error);
+    }
   };
 
-  const handleDelete = (id) => {
-    const updated = comments.filter((c) => c.id !== id);
-    setComments(updated);
-    const all = JSON.parse(localStorage.getItem('myit_comments') || '{}');
-    all[postId] = updated;
-    localStorage.setItem('myit_comments', JSON.stringify(all));
-  };
+  if (loading) return <p>Chargement...</p>;
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-3 text-[#31327e]">💬 Commentaires</h2>
-      <div className="flex gap-2 mb-4">
-        <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Ajouter un commentaire..." className="flex-1 px-4 py-2 border rounded-full" />
-        <button onClick={handlePublish} className="bg-[#68bddd] text-white px-4 py-2 rounded-full hover:bg-[#6f80ac] transition">Publier</button>
+    <div className="max-w-2xl mx-auto mt-10">
+      <h1 className="text-xl font-bold mb-6">✏️ Modifier le post</h1>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
+        <input
+          type="text"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          className="w-full border rounded-lg p-2"
+        />
       </div>
-      <div className="space-y-4">
-        {comments.length === 0
-          ? <p className="text-gray-500 text-sm">Aucun commentaire pour l’instant.</p>
-          : comments.map(c => (
-            <div key={c.id} className="bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between">
-              <div className="flex gap-3">
-                <FaUserCircle className="text-[#6f80ac] text-xl" />
-                <div>
-                  <p className="font-semibold text-sm">{c.author}</p>
-                  <p className="text-xs text-gray-400">{c.date}</p>
-                  <p className="text-sm mt-1">{c.content}</p>
-                </div>
-              </div>
-              <button onClick={() => handleDelete(c.id)} title="Supprimer" className="text-red-500 hover:text-red-700"><FaTrash /></button>
-            </div>
-          ))}
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Contenu</label>
+        <textarea
+          rows="6"
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          className="w-full border rounded-lg p-2"
+        />
       </div>
+
+      <button
+        onClick={handleUpdate}
+        className="bg-[#68bddd] text-white px-4 py-2 rounded hover:bg-[#5aa6c5] transition"
+      >
+        Enregistrer
+      </button>
     </div>
   );
 }

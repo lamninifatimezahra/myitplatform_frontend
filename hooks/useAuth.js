@@ -15,7 +15,7 @@ export default function useAuth(requiredRole = null, requiredDashboard = null) {
 
     const checkAuth = async () => {
       try {
-        const res = await fetch("https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/", {
+        const res = await fetch("http://127.0.0.1:8000/api/me/", {
           method: 'GET',
           credentials: 'include',
         });
@@ -31,15 +31,17 @@ export default function useAuth(requiredRole = null, requiredDashboard = null) {
           return;
         }
 
-        if (
-          requiredDashboard &&
-          data.role !== 'admin' &&
-          !data.dashboards.includes(requiredDashboard)
-        ) {
-          router.push('/unauthorized');
-          return;
+        if (requiredDashboard) {
+          const isAdmin = data.role === 'admin';
+          if (isAdmin) {
+            console.log("✅ Admin bypass activé");
+          } else if (!data.dashboards.includes(requiredDashboard)) {
+            console.log("⛔ Non admin sans accès dashboard");
+            router.push('/unauthorized');
+            return;
+          }
         }
-
+        
         setAuthorized(true);
       } catch (err) {
         if (isMounted) router.push('/login');

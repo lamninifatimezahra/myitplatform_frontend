@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import LayoutForum from '../../components/LayoutForum';
-import { posts as staticPosts } from '../../data/posts';
+import fetchWithAuth from '@/utils/fetchWithAuth';
 import Image from 'next/image';
 
 export default function EditPostPage() {
@@ -25,24 +25,27 @@ export default function EditPostPage() {
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    const dynamicPosts = JSON.parse(localStorage.getItem('myit_dynamic_posts') || '[]');
-    const allPosts = [...dynamicPosts, ...staticPosts];
-    const post = allPosts.find((p) => p.id === parseInt(id));
-
-    if (post) {
-      setForm({
-        title: post.title,
-        description: post.description,
-        category: post.category,
-        link: post.link || '',
-        image: post.image || '',
-        file: null,
-      });
-      setImagePreview(post.image || '');
-      setLoaded(true);
-    } else {
-      setNotFound(true);
+    async function fetchPost() {
+      try {
+        const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${id}/`);
+        if (!res.ok) throw new Error('Not found');
+        const data = await res.json();
+        setForm({
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          link: data.link || '',
+          image: data.image || '',
+          file: null,
+        });
+        setImagePreview(data.image || '');
+        setLoaded(true);
+      } catch (err) {
+        setNotFound(true);
+      }
     }
+
+    fetchPost();
   }, [id]);
 
   const handleChange = (e) => {
@@ -75,41 +78,54 @@ export default function EditPostPage() {
       if (messageRef.current) {
         messageRef.current.scrollIntoView({ behavior: 'smooth' });
       }
-    }, 100); // petit délai pour laisser le message s'afficher
+    }, 100);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!window.confirm('Confirmer les modifications ?')) return;
-
-    const posts = JSON.parse(localStorage.getItem('myit_dynamic_posts') || '[]');
-    const updatedPosts = posts.map((p) =>
-      p.id === parseInt(id)
-        ? {
-            ...p,
-            ...form,
-            image: form.image,
-          }
-        : p
-    );
-
-    localStorage.setItem('myit_dynamic_posts', JSON.stringify(updatedPosts));
-    setMessage('✅ Modifications enregistrées avec succès.');
-    scrollToMessage();
-
-    setTimeout(() => router.push(`/myforum/${id}`), 1500);
+  
+    try {
+      const formData = new FormData();
+      formData.append('title', form.title);
+      formData.append('description', form.description);
+      formData.append('category', form.category);
+      formData.append('link', form.link);
+      if (form.file) {
+        formData.append('image', form.file); // send the actual file, not base64
+      }
+  
+      const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${id}/`, {
+        method: 'PUT',
+        body: formData,
+      });
+  
+      if (!res.ok) throw new Error('Échec de la mise à jour');
+      setMessage('✅ Modifications enregistrées avec succès.');
+      scrollToMessage();
+  
+      setTimeout(() => router.push(`/myforum/${id}`), 1500);
+    } catch (err) {
+      console.error(err);
+      setMessage('❌ Une erreur est survenue.');
+      scrollToMessage();
+    }
   };
-
-  const handleDelete = () => {
+  
+  const handleDelete = async () => {
     if (!window.confirm('Supprimer définitivement ce post ?')) return;
 
-    const posts = JSON.parse(localStorage.getItem('myit_dynamic_posts') || '[]');
-    const filtered = posts.filter((p) => p.id !== parseInt(id));
-    localStorage.setItem('myit_dynamic_posts', JSON.stringify(filtered));
-    setMessage('🗑️ Post supprimé avec succès.');
-    scrollToMessage();
+    try {
+      const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${id}/`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Échec de la suppression');
+      setMessage('🗑️ Post supprimé avec succès.');
+      scrollToMessage();
 
-    setTimeout(() => router.push('/myforum'), 1500);
+      setTimeout(() => router.push('/myforum'), 1500);
+    } catch (err) {
+      setMessage('❌ Une erreur est survenue.');
+      scrollToMessage();
+    }
   };
 
   if (notFound) {

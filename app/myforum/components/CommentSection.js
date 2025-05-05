@@ -1,42 +1,46 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AiOutlineSend } from "react-icons/ai";
 import Image from "next/image";
+import fetchWithAuth from '@/utils/fetchWithAuth';
 
-const initialComments = [
-  {
-    id: 1,
-    author: "Fatima M.",
-    avatar: "/avatar.png",
-    message: "Merci pour ce post très utile !",
-    date: "Il y a 10 min",
-  },
-  {
-    id: 2,
-    author: "Omar L.",
-    avatar: "/avatar.png",
-    message: "J'ai rencontré le même problème, voici comment j'ai fait...",
-    date: "Il y a 25 min",
-  },
-];
-
-export default function CommentSection() {
-  const [comments, setComments] = useState(initialComments);
+export default function CommentSection({ postId }) {
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
-  const handleAddComment = () => {
+  useEffect(() => {
+    async function fetchComments() {
+      try {
+        const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/comments/?post=${postId}`);
+        if (!res.ok) throw new Error("Erreur lors du chargement des commentaires");
+        const data = await res.json();
+        setComments(data.reverse());
+      } catch (err) {
+        console.error("Erreur de chargement des commentaires:", err);
+      }
+    }
+
+    fetchComments();
+  }, [postId]);
+
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    const newObj = {
-      id: Date.now(),
-      author: "Ayoub Lahdoud",
-      avatar: "/avatar.png",
-      message: newComment,
-      date: "À l’instant",
-    };
-    setComments([newObj, ...comments]);
-    setNewComment("");
+    try {
+      const res = await fetchWithAuth(`http://127.0.0.1:8000/myforum/posts/${postId}/comments/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newComment, post: postId }),
+      });
+
+      if (!res.ok) throw new Error("Erreur lors de l'envoi du commentaire");
+      const newData = await res.json();
+      setComments([newData, ...comments]);
+      setNewComment("");
+    } catch (err) {
+      console.error("Erreur d'ajout:", err);
+    }
   };
 
   return (
@@ -47,7 +51,7 @@ export default function CommentSection() {
       <div className="flex items-start gap-3 mb-6">
         <Image
           src="/avatar.png"
-          alt="Ayoub"
+          alt="Avatar"
           width={36}
           height={36}
           className="rounded-full object-cover"
@@ -81,18 +85,18 @@ export default function CommentSection() {
             className="flex items-start gap-3 bg-white p-3 rounded-lg shadow-sm border border-gray-100"
           >
             <Image
-              src={comment.avatar}
-              alt={comment.author}
+              src="/avatar.png"
+              alt={comment.author_name}
               width={36}
               height={36}
               className="rounded-full object-cover"
             />
             <div className="flex-1">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-[#31327e]">{comment.author}</span>
-                <span className="text-xs text-gray-400">{comment.date}</span>
+                <span className="text-sm font-medium text-[#31327e]">{comment.author_name}</span>
+                <span className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</span>
               </div>
-              <p className="text-sm text-gray-700 mt-1">{comment.message}</p>
+              <p className="text-sm text-gray-700 mt-1">{comment.content}</p>
             </div>
           </motion.div>
         ))}
