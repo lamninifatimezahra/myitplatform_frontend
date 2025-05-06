@@ -1,6 +1,7 @@
 import htmlDocx from "html-docx-js/dist/html-docx";
 import { toPng } from "html-to-image";
 
+// 🔢 Calcul du numéro de la semaine
 function getWeekNumber(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
@@ -9,9 +10,11 @@ function getWeekNumber(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
+// 📸 Capture et redimensionnement d'un graphe HTML
 async function captureAndResize(id, width = 280, height = 180) {
   const el = document.getElementById(id);
   if (!el) return "<p style='color:red;'>Graphique indisponible</p>";
+
   try {
     await new Promise((resolve) => {
       let attempt = 0;
@@ -28,6 +31,7 @@ async function captureAndResize(id, width = 280, height = 180) {
     });
 
     const originalUrl = await toPng(el, { backgroundColor: "#ffffff" });
+
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -47,9 +51,11 @@ async function captureAndResize(id, width = 280, height = 180) {
   }
 }
 
+// 📝 Génération du document Word complet
 export async function generateWordFromGraphs(_, __, ___, globalStartDate, globalEndDate) {
   const today = new Date();
   const todayStr = today.toLocaleDateString("fr-FR");
+
   let periodLine = "";
   let weekPart = "";
 
@@ -170,7 +176,6 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
       <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
     </tr></table>
     <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-    <h1 class="title">Vue d’ensemble des graphiques</h1>
     ${periodLine}
     <p class="subtitle">📊 Vue combinée du Backlog</p>
     <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${vueBacklog}</div></div>
@@ -227,32 +232,23 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
     </div>
   </td></tr></table>
 
-  <!-- ✅ PAGE 6 – Répartition Manuelle -->
-<div class="page-break"></div>
-<table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
-  <table class="header-logos"><tr>
-    <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-    <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-  </tr></table>
-
-  <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-  ${periodLine}
-
-  <p class="subtitle">👥 Répartition Manuelle (Acteur)</p>
-  <div style="margin-top:4pt; text-align:center;">
-    <div style="margin-bottom: 6pt;">${repartitionManuelle}</div>
-  </div>
-
-  <div class="comment-block">
-    <div class="comment-block-title">💬 Votre commentaire</div>
-    <div class="comment-text">
-      “Visualisation claire des répartitions.”<br/>
-      “Bonne compréhension du volume traité par acteur.”
+  <!-- PAGE 6 -->
+  <div class="page-break"></div>
+  <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
+    <table class="header-logos"><tr>
+      <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
+      <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+    </tr></table>
+    <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
+    ${periodLine}
+    <p class="subtitle">👥 Répartition Manuelle (Acteur)</p>
+    <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${repartitionManuelle}</div></div>
+    <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
+      <div class="comment-text">“Visualisation claire des répartitions.”<br/>“Bonne compréhension du volume traité par acteur.”</div>
     </div>
-  </div>
-</td></tr></table>
+  </td></tr></table>
 
-<!-- 🌟 Pied de page esthétique et unifié -->
+  <!-- 🌟 Pied de page esthétique et unifié -->
 <div style="
   width: 96%;
   margin: 20pt auto 0 auto;
@@ -267,12 +263,11 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
   box-shadow: 0 0 2pt rgba(0, 0, 0, 0.05);
 ">
   Générée automatiquement par 
-  <strong style="color:#004aad;">${author}</strong><br/>
-  <a href="https://myit-its.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
+  <strong style="color:#004aad;">Meryem SAYOUTI</strong><br/>
+  <a href="https://myit-three.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
     Dashboard FTTH, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
   </a>
 </div>
-
 
 
 </body>
