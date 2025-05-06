@@ -86,14 +86,14 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
       </p>`;
   }
 
-  const kpi1 = await captureAndResize("kpi-backlog-j1", 380, 100);
-  const kpi2 = await captureAndResize("kpi-backlog-j", 380, 100);
-  const objectif = await captureAndResize("canvas-graph-objectif", 500, 280);
-  const vueBacklog = await captureAndResize("canvas-graph-vue-ensemble", 650, 350);
-  const topRegles = await captureAndResize("canvas-graph-top-regles", 650, 350);
-  const topReglesParJour = await captureAndResize("canvas-graph-top-regles-par-jour", 650, 350);
-  const entrantsSortants = await captureAndResize("canvas-graph-entrants-sortants", 650, 350);
-  const repartitionManuelle = await captureAndResize("canvas-graph-repartition-manuelle", 650, 350);
+  const kpi1 = await captureAndResize("kpi-backlog-j1", 280, 100);
+  const kpi2 = await captureAndResize("kpi-backlog-j", 280, 100);
+  const objectif = await captureAndResize("canvas-graph-objectif", 400, 280);
+  const vueBacklog = await captureAndResize("canvas-graph-vue-ensemble", 550, 350);
+  const topRegles = await captureAndResize("canvas-graph-top-regles", 550, 350);
+  const topReglesParJour = await captureAndResize("canvas-graph-top-regles-par-jour", 550, 350);
+  const entrantsSortants = await captureAndResize("canvas-graph-entrants-sortants", 550, 350);
+  const repartitionManuelle = await captureAndResize("canvas-graph-repartition-manuelle", 550, 350);
 
   const html = `
 <!DOCTYPE html>
