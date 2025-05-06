@@ -1,47 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import {
-  FaArrowLeft, FaRegStar, FaStar, FaRegHeart,
-  FaHeart, FaRegEdit, FaCommentDots
+  FaArrowLeft, FaRegHeart, FaHeart, FaRegEdit, FaStar
 } from 'react-icons/fa';
-import { format } from 'date-fns';
 import MarkdownPreview from '@uiw/react-markdown-preview';
+import fetchWithAuth from '@/utils/fetchWithAuth';
+import CommentSection from './CommentSection';
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export default function PostDetail({ post }) {
   const router = useRouter();
-  const [likes, setLikes] = useState(post.likes || 0);
-  const [stars, setStars] = useState(post.stars || 0);
-  const [userLiked, setUserLiked] = useState(false);
-  const [comment, setComment] = useState('');
-  const [comments, setComments] = useState(post.comments || []);
+  const [likes, setLikes] = useState(post.likes_count || 0);
+  const [userLiked, setUserLiked] = useState(post.is_liked);
+  const [views, setViews] = useState(post.views_count);
+  const [likeUsers, setLikeUsers] = useState([]);
+  const [showLikes, setShowLikes] = useState(false);
 
-  const handleLike = () => {
-    setUserLiked(!userLiked);
-    setLikes((prev) => (userLiked ? prev - 1 : prev + 1));
+  useEffect(() => {
+    async function trackView() {
+      try {
+        await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${post.id}/track-view/`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (err) {
+        console.error("Erreur tracking vue:", err);
+      }
+    }
+    trackView();
+  }, [post.id]);
+
+  const handleLike = async () => {
+    try {
+      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${post.id}/like/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await res.json();
+      setUserLiked(data.liked);
+      setLikes((prev) => data.liked ? prev + 1 : prev - 1);
+    } catch (err) {
+      console.error("Erreur de like:", err);
+    }
   };
 
-  const handleStar = (index) => {
-    setStars(index + 1);
-  };
-
-  const handleCommentSubmit = () => {
-    if (!comment.trim()) return;
-
-    const newComment = {
-      id: Date.now(),
-      author: 'Ayoub Lahdoud',
-      date: format(new Date(), 'dd/MM/yyyy HH:mm:ss'),
-      content: comment,
-    };
-
-    setComments([newComment, ...comments]);
-    setComment('');
+  const fetchLikes = async () => {
+    try {
+      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${post.id}/likes/`);
+      const data = await res.json();
+      setLikeUsers(data);
+      setShowLikes(true);
+    } catch (err) {
+      console.error("Erreur lors du chargement des likes", err);
+    }
   };
 
   return (
@@ -66,21 +85,27 @@ export default function PostDetail({ post }) {
       )}
 
       <h1 className="text-2xl font-bold text-[#31327e]">{post.title}</h1>
-      <p className="text-sm text-gray-500">{post.createdAt}</p>
+      <p className="text-sm text-gray-500">{new Date(post.created_at).toLocaleString()}</p>
 
       <div className="flex items-center gap-3 mt-2">
-        <img
-          src={post.author?.avatar || '/avatar.png'}
-          alt={post.author?.name || 'Auteur'}
-          className="w-10 h-10 rounded-full object-cover"
+        <Image
+          src="/avatar.png"
+          alt="Auteur"
+          width={40}
+          height={40}
+          className="rounded-full"
         />
         <div className="text-sm">
-          <p className="font-semibold">{post.author?.name}</p>
-          <p className="text-gray-500">{post.author?.role}</p>
+          <p className="font-semibold">{post.author_name}</p>
+          <p className="text-gray-500">{post.author_role}</p>
         </div>
       </div>
 
-      <p className="text-gray-700 mt-4">{post.description}</p>
+      <MarkdownPreview
+        source={post.description}
+        className="text-gray-800 mt-4"
+        style={{ backgroundColor: 'transparent' }}
+      />
 
       {post.link && (
         <p className="text-sm text-blue-500 underline cursor-pointer hover:text-blue-700">
@@ -93,73 +118,51 @@ export default function PostDetail({ post }) {
           onClick={handleLike}
           className="flex items-center gap-1 text-gray-600 hover:text-[#31327e] transition"
         >
-          {userLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
-          <span>{likes}</span>
+          {userLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart />} <span>{likes}</span>
+        </button>
+
+        <button
+          onClick={fetchLikes}
+          className="text-xs text-blue-500 underline"
+        >
+          Voir qui a liké
         </button>
 
         <div className="flex items-center gap-1 text-yellow-500">
           {Array.from({ length: 5 }).map((_, index) => (
-            <button key={index} onClick={() => handleStar(index)}>
-              {index < stars ? <FaStar /> : <FaRegStar />}
-            </button>
+            <FaStar key={index} />
           ))}
         </div>
+
+        <span className="ml-auto text-xs text-gray-500">👁️ {views} vues</span>
 
         <button
           onClick={() => router.push(`/myforum/${post.id}/edit`)}
-          className="ml-auto px-4 py-2 rounded-full bg-gradient-to-r from-[#68bddd] to-[#6f80ac] text-white flex items-center gap-2 font-medium shadow hover:shadow-lg transition-all duration-200 hover:scale-105"
+          className="px-4 py-2 rounded-full bg-gradient-to-r from-[#68bddd] to-[#6f80ac] text-white flex items-center gap-2 font-medium shadow hover:shadow-lg transition-all duration-200 hover:scale-105"
         >
-          <FaRegEdit className="text-white" />
-          Modifier
+          <FaRegEdit className="text-white" /> Modifier
         </button>
       </div>
 
-      {/* 💬 Commentaires */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-[#31327e] mb-4">
-          <FaCommentDots /> Commentaires
-        </h3>
-
-        {/* ✅ Champ commentaire markdown */}
-        <div data-color-mode="light" className="mb-4 border border-gray-300 rounded-xl overflow-hidden bg-white">
-          <MDEditor
-            value={comment}
-            onChange={setComment}
-            preview="edit"
-            height={200}
-            className="!bg-white !shadow-none !rounded-xl"
-          />
-        </div>
-
-        <button
-          onClick={handleCommentSubmit}
-          className="px-4 py-2 bg-gradient-to-r from-[#68bddd] to-[#6f80ac] text-white rounded-full font-semibold hover:shadow-md transition-all"
-        >
-          Publier
-        </button>
-
-        {/* Liste des commentaires */}
-        <div className="mt-6 space-y-4">
-          {comments.map((c) => (
-            <div key={c.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-800 shadow-sm">
-              <p className="font-medium text-[#31327e]">{c.author}</p>
-              <p className="text-xs text-gray-500">{c.date}</p>
-              <MarkdownPreview
-                source={c.content}
-                style={{
-                  backgroundColor: 'transparent',
-                  color: 'inherit',
-                  padding: 0,
-                  fontSize: '0.9rem',
-                }}
-                className="mt-2"
-              />
-            </div>
+          {showLikes && (
+      <div className="mt-4 p-4 bg-gray-50 rounded-xl border">
+        <h4 className="font-semibold mb-2">👍 Liké par :</h4>
+        <ul className="space-y-1 text-sm">
+          {likeUsers.map((u, i) => (
+            <li key={i} className="text-gray-700">• {u.user}</li>
           ))}
-        </div>
+        </ul>
+        <button
+          onClick={() => setShowLikes(false)}
+          className="mt-2 text-xs text-blue-500 underline"
+        >
+          Fermer
+        </button>
       </div>
+    )}
 
-      {/* ✅ Corrige le fond noir par défaut */}
+      <CommentSection postId={post.id} />
+
       <style jsx global>{`
         .wmde-markdown {
           background-color: transparent !important;

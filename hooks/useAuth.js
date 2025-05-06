@@ -31,15 +31,17 @@ export default function useAuth(requiredRole = null, requiredDashboard = null) {
           return;
         }
 
-        if (
-          requiredDashboard &&
-          data.role !== 'admin' &&
-          !data.dashboards.includes(requiredDashboard)
-        ) {
-          router.push('/unauthorized');
-          return;
+        if (requiredDashboard) {
+          const isAdmin = data.role === 'admin';
+          if (isAdmin) {
+            console.log("✅ Admin bypass activé");
+          } else if (!data.dashboards.includes(requiredDashboard)) {
+            console.log("⛔ Non admin sans accès dashboard");
+            router.push('/unauthorized');
+            return;
+          }
         }
-
+        
         setAuthorized(true);
       } catch (err) {
         if (isMounted) router.push('/login');
