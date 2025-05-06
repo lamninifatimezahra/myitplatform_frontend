@@ -264,7 +264,7 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
 ">
   Générée automatiquement par 
   <strong style="color:#004aad;">Meryem SAYOUTI</strong><br/>
-  <a href="https://myit-three.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
+  <a href="https://myit-its.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
     Dashboard FTTH, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
   </a>
 </div>
