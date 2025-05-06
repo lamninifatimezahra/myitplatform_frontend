@@ -277,7 +277,7 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Compte_rendu_FTTH_${weekPart}_${todayStr.replace(/\//g, "-")}.docx`;
+  a.download = `Compte_rendu_FTTH_(${weekPart})_${todayStr.replace(/\//g, "-")}.docx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
