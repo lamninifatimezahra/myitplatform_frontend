@@ -217,75 +217,76 @@ export default function Header({ onGlobalFilter, setSidebarOpen }) {
                   📄 CR (Format Word)
                 </div>
                 <div
-                  onClick={() => setFormat("pptx")}
-                  className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded"
-                >
-                  📊 CR (Format PPTX)
-                </div>
+  onClick={() => setFormat("pptx")}
+  className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded"
+>
+  📊 COMOP FTTH (Format PPTX)
+</div>
+
               </div>
 
-              {(format === "word" || format === "pptx") && (
-                <div className="border-t pt-2 space-y-2">
-                  <div className="flex justify-between text-sm px-2 font-medium">
-                    <button onClick={() => toggleAll(true)} className="text-blue-600">Tout cocher</button>
-                    <button onClick={() => toggleAll(false)} className="text-red-600">Tout décocher</button>
-                  </div>
-                  <div className="border-b border-gray-300 mt-2 mb-2"></div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {graphList.map((graph) => (
-                      <label key={graph.id} className="flex items-center gap-2 px-2 py-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedGraphs.includes(graph.id)}
-                          onChange={() => toggleGraph(graph.id)}
-                        />
-                        <span className="text-sm text-gray-700">{graph.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <button
-                    disabled={selectedGraphs.length === 0}
-                    className={`w-full mt-2 py-2 text-white rounded-lg ${
-                      selectedGraphs.length === 0
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    }`}
-                    onClick={async () => {
-                      const confirmed = window.confirm(
-                        `Vous avez sélectionné ${selectedGraphs.length} graphique(s).\nLe téléchargement va commencer.`
-                      );
-                      if (!confirmed) return;
+              {format === "word" && (
+  <div className="border-t pt-2 space-y-2">
+    <div className="flex justify-between text-sm px-2 font-medium">
+      <button onClick={() => toggleAll(true)} className="text-blue-600">Tout cocher</button>
+      <button onClick={() => toggleAll(false)} className="text-red-600">Tout décocher</button>
+    </div>
+    <div className="border-b border-gray-300 mt-2 mb-2"></div>
+    <div className="max-h-48 overflow-y-auto">
+      {graphList.map((graph) => (
+        <label key={graph.id} className="flex items-center gap-2 px-2 py-1">
+          <input
+            type="checkbox"
+            checked={selectedGraphs.includes(graph.id)}
+            onChange={() => toggleGraph(graph.id)}
+          />
+          <span className="text-sm text-gray-700">{graph.label}</span>
+        </label>
+      ))}
+    </div>
+    <button
+      disabled={selectedGraphs.length === 0}
+      className={`w-full mt-2 py-2 text-white rounded-lg ${
+        selectedGraphs.length === 0
+          ? "bg-gray-300 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
+      }`}
+      onClick={async () => {
+        const confirmed = window.confirm(
+          `Vous avez sélectionné ${selectedGraphs.length} graphique(s).\nLe téléchargement va commencer.`
+        );
+        if (!confirmed) return;
 
-                      const graphs = await Promise.all(
-                        selectedGraphs.map(async (id) => {
-                          const el = document.querySelector(`#canvas-${id}`);
-                          if (!el) return null;
-                          const dataUrl = await toPng(el);
-                          return {
-                            title: graphList.find((g) => g.id === id)?.label,
-                            imagePath: dataUrl,
-                            comment: "[Aucun commentaire fourni]",
-                          };
-                        })
-                      );
+        await generateWordFromGraphs(selectedGraphs, graphList, {}, startDate, endDate);
+      }}
+    >
+      Télécharger le CR WORD
+    </button>
+  </div>
+)}
 
-                      if (format === "word") {
-                        await generateWordFromGraphs(selectedGraphs, graphList, {}, startDate, endDate);
-                      } else {
-                        await generatePPTFromGraphs({
-                          selectedGraphIds: selectedGraphs,
-                          graphList,
-                          commentMap: {},
-                          globalStartDate: startDate,
-                          globalEndDate: endDate,
-                        });
-                      }
-                    }}
-                  >
-                    Télécharger le CR {format === "pptx" ? "PPTX" : "WORD"}
-                  </button>
-                </div>
-              )}
+{format === "pptx" && (
+  <div className="border-t pt-3 space-y-2">
+    <button
+      className="w-full py-2 text-white rounded-lg bg-blue-600 hover:bg-blue-700"
+      onClick={async () => {
+        const confirmed = window.confirm("Télécharger le COMOP FTTH (Format PPTX) ?");
+        if (!confirmed) return;
+
+        await generatePPTFromGraphs({
+          selectedGraphIds: [], // vide ou spécifique à un preset COMOP
+          graphList,
+          commentMap: {},
+          globalStartDate: startDate,
+          globalEndDate: endDate,
+        });
+      }}
+    >
+      Télécharger le COMOP FTTH PPTX
+    </button>
+  </div>
+)}
+
             </div>
           )}
         </div>
@@ -381,70 +382,66 @@ export default function Header({ onGlobalFilter, setSidebarOpen }) {
       </button>
     </div>
 
-    {(format === "word" || format === "pptx") && (
-      <>
-        <div className="flex justify-between text-sm font-medium mb-2">
-          <button onClick={() => toggleAll(true)} className="text-blue-600">
-            Tout cocher
-          </button>
-          <button onClick={() => toggleAll(false)} className="text-red-600">
-            Tout décocher
-          </button>
-        </div>
-        <div className="max-h-40 overflow-y-auto mb-3">
-          {graphList.map((graph) => (
-            <label key={graph.id} className="flex items-center gap-2 py-1">
-              <input
-                type="checkbox"
-                checked={selectedGraphs.includes(graph.id)}
-                onChange={() => toggleGraph(graph.id)}
-              />
-              <span className="text-sm">{graph.label}</span>
-            </label>
-          ))}
-        </div>
-        <button
-          disabled={selectedGraphs.length === 0}
-          className={`w-full py-2 rounded-lg text-white ${
-            selectedGraphs.length === 0
-              ? "bg-gray-300"
-              : "bg-blue-600 hover:bg-blue-700"
-          }`}
-          onClick={async () => {
-            const confirmed = window.confirm(
-              `Vous avez sélectionné ${selectedGraphs.length} graphique(s).\nLe téléchargement va commencer.`
-            );
-            if (!confirmed) return;
-            const graphs = await Promise.all(
-              selectedGraphs.map(async (id) => {
-                const el = document.querySelector(`#canvas-${id}`);
-                if (!el) return null;
-                const dataUrl = await toPng(el);
-                return {
-                  title: graphList.find((g) => g.id === id)?.label,
-                  imagePath: dataUrl,
-                  comment: "[Aucun commentaire fourni]",
-                };
-              })
-            );
-            if (format === "word") {
-              await generateWordFromGraphs(selectedGraphs, graphList, {}, startDate, endDate);
-            } else {
-              await generatePPTFromGraphs({
-                selectedGraphIds: selectedGraphs,
-                graphList,
-                commentMap: {},
-                globalStartDate: startDate,
-                globalEndDate: endDate,
-              });
-            }
-            setMobileDownloadOpen(false);
-          }}
-        >
-          Télécharger le CR {format === "pptx" ? "PPTX" : "WORD"}
-        </button>
-      </>
-    )}
+    {format === "word" && (
+  <>
+    <div className="flex justify-between text-sm font-medium mb-2">
+      <button onClick={() => toggleAll(true)} className="text-blue-600">Tout cocher</button>
+      <button onClick={() => toggleAll(false)} className="text-red-600">Tout décocher</button>
+    </div>
+    <div className="border-b border-gray-300 mt-2 mb-2"></div>
+    <div className="max-h-48 overflow-y-auto">
+      {graphList.map((graph) => (
+        <label key={graph.id} className="flex items-center gap-2 px-2 py-1">
+          <input
+            type="checkbox"
+            checked={selectedGraphs.includes(graph.id)}
+            onChange={() => toggleGraph(graph.id)}
+          />
+          <span className="text-sm text-gray-700">{graph.label}</span>
+        </label>
+      ))}
+    </div>
+    <button
+      disabled={selectedGraphs.length === 0}
+      className={`w-full mt-2 py-2 text-white rounded-lg ${
+        selectedGraphs.length === 0
+          ? "bg-gray-300 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
+      }`}
+      onClick={async () => {
+        const confirmed = window.confirm(
+          `Vous avez sélectionné ${selectedGraphs.length} graphique(s).\nLe téléchargement va commencer.`
+        );
+        if (!confirmed) return;
+        await generateWordFromGraphs(selectedGraphs, graphList, {}, startDate, endDate);
+      }}
+    >
+      Télécharger le CR WORD
+    </button>
+  </>
+)}
+
+{format === "pptx" && (
+  <div className="pt-2">
+    <button
+      className="w-full py-2 text-white rounded-lg bg-blue-600 hover:bg-blue-700"
+      onClick={async () => {
+        const confirmed = window.confirm("Télécharger le COMOP FTTH (Format PPTX) ?");
+        if (!confirmed) return;
+        await generatePPTFromGraphs({
+          selectedGraphIds: [],
+          graphList,
+          commentMap: {},
+          globalStartDate: startDate,
+          globalEndDate: endDate,
+        });
+      }}
+    >
+      Télécharger le COMOP FTTH PPTX
+    </button>
+  </div>
+)}
+
   </div>
 </Modal>
 
