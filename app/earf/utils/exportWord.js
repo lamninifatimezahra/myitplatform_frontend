@@ -5,33 +5,55 @@ const getWeekNumber = (date) => {
   if (!date) return null;
   
   // Création d'une copie de la date pour ne pas modifier l'originale
-  const d = new Date(date);
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   
   // Définir le premier jour de l'année
-  const startOfYear = new Date(d.getFullYear(), 0, 1);
-  
-  // Nombre de jours écoulés depuis le début de l'année
-  const days = Math.floor((d - startOfYear) / (24 * 60 * 60 * 1000));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   
   // Calculer le numéro de semaine
-  // getDay() retourne 0 pour dimanche, donc on ajuste pour que lundi soit le premier jour
-  const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  
-  return weekNum;
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 };
 
 export async function generateWordFromImages(imageList, startDate = null, endDate = null) {
   // Debug : Affichage complet de l'imageList reçue
   console.log("DEBUG: Contenu de imageList :", imageList);
 
-  const today = new Date().toLocaleDateString("fr-FR");
-  
-  // Formatage de la période sélectionnée si disponible
-  let periodText = "";
+  const today = new Date();
+  const todayStr = today.toLocaleDateString("fr-FR");
+
+  // Formater information de période sélectionnée
+  let periodLine = "";
+  let weekPart = "";
+
   if (startDate && endDate) {
-    const startWeek = getWeekNumber(startDate);
-    const endWeek = getWeekNumber(endDate);
-    periodText = `${startDate.toLocaleDateString("fr-FR")} (S${startWeek}) → ${endDate.toLocaleDateString("fr-FR")} (S${endWeek})`;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const startStr = start.toLocaleDateString("fr-FR");
+    const endStr = end.toLocaleDateString("fr-FR");
+    
+    // Collecter toutes les semaines dans la période
+    const allWeeks = [];
+    let cursor = new Date(start);
+    while (cursor <= end) {
+      allWeeks.push(getWeekNumber(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    const uniqueWeeks = [...new Set(allWeeks)].sort((a, b) => a - b);
+    weekPart = `S${uniqueWeeks.join(", S")}`;
+    
+    periodLine = `
+      <p style="text-align:center; font-size:11pt; color:#1f2937; margin-top:6pt;">
+        <strong>Période :</strong> du <strong>${startStr}</strong> au <strong>${endStr}</strong> – ${diffDays} jour(s), ${weekPart}
+      </p>`;
+  } else {
+    weekPart = `S${getWeekNumber(today)}`;
+    periodLine = `
+      <p style="text-align:center; font-size:11pt; color:#1f2937; margin-top:6pt;">
+        <strong>Date du jour :</strong> ${todayStr} – ${weekPart}
+      </p>`;
   }
 
   // Tableau fixe des KPI à inclure dans tous les compte-rendus
@@ -61,183 +83,187 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     return !normalizedFixedLabels.includes(currentLabel.trim().toLowerCase());
   });
 
-  // Fonction générant un bloc HTML pour un KPI
-  // Utilisation de dimensions fixes
-  const generateKpiBlock = (kpi) => {
-    const currentLabel = kpi.label != null ? kpi.label : kpi.id;
-    const imageHtml = kpi.image
-      ? `<img src="${kpi.image}" width="150" height="150" style="border-radius:5px;" />`
-      : `<div style="width:40px; height:40px; border:1px dashed #cdcdcd; text-align:center; color:#999;">N/A</div>`;
+  // Disposition des KPI - strictement 3 par ligne
+  let kpiHtml = '';
+  // Calcul du nombre de lignes nécessaires
+  const numRows = Math.ceil(kpiImages.length / 3);
+  
+  for (let row = 0; row < numRows; row++) {
+    kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
     
-    return `
-      <div style="background:#ffffff; padding:15px; border:1px solid #cdcdcd;">
-        <h2 style="color:#31327e; font-size:12pt; text-align:center; margin-bottom:10px;">
-          ${currentLabel}
-        </h2>
-        <div style="text-align:center; margin-bottom:10px;">
-          ${imageHtml}
-        </div>
-        <div style="background:#f9fafb; border:1px dashed #68bddd; padding:10px;">
-          <p style="font-size:8pt; color:#4b5563; font-style:italic; margin:0;">
-            💬 Commentaire : ___________
-          </p>
-        </div>
-      </div>
-    `;
-  };
-
-  // Regroupement des KPI en lignes de deux
-  let kpiRowsHtml = "";
-  for (let i = 0; i < kpiImages.length; i += 2) {
-    if (i + 1 < kpiImages.length) {
-      kpiRowsHtml += `
-        <tr>
-          <td style="padding:10px; text-align:center; width:50%;">${generateKpiBlock(kpiImages[i])}</td>
-          <td style="padding:10px; text-align:center; width:50%;">${generateKpiBlock(kpiImages[i+1])}</td>
-        </tr>
-      `;
-    } else {
-      kpiRowsHtml += `
-        <tr>
-          <td colspan="2" style="padding:10px; text-align:center;">${generateKpiBlock(kpiImages[i])}</td>
-        </tr>
-      `;
+    // Traiter chaque colonne de cette ligne
+    for (let col = 0; col < 3; col++) {
+      const index = row * 3 + col;
+      if (index < kpiImages.length) {
+        const kpi = kpiImages[index];
+        const imageHtml = kpi.image
+          ? `<img src="${kpi.image}" width="200" height="120" style="width:200px; height:120px; object-fit:contain;" />`
+          : `<div style="width:300px; height:100px; border:1px dashed #cdcdcd; text-align:center; color:#999;">N/A</div>`;
+          
+        kpiHtml += `
+          <td width="33.33%" align="center" valign="middle" style="padding:5pt;">
+            ${imageHtml}
+          </td>
+        `;
+      } else {
+        // Cellule vide pour maintenir 3 colonnes
+        kpiHtml += '<td width="33.33%"></td>';
+      }
     }
+    
+    kpiHtml += '</tr></table>';
   }
 
-  // Ajout du bloc de période sélectionnée dans la section KPI si disponible
-  const periodBlock = periodText ? `
-    <tr>
-      <td colspan="2" style="text-align:center; padding:10px;">
-        <div style="background:#e6f7ff; border:1px solid #68bddd; padding:10px; display:inline-block; margin:0 auto;">
-          <p style="font-size:10pt; color:#31327e; font-weight:bold; margin:0;">
-            <span style="font-weight:normal;">Période sélectionnée :</span> ${periodText}
-          </p>
-        </div>
-      </td>
-    </tr>
-  ` : '';
-
-  const kpiSection = `
-    <table style="width:100%; background:#f9fafb; border:1px solid #cdcdcd; padding:20px; margin-top:30px; margin-bottom:30px; border-collapse:collapse;">
-      <tr>
-        <td colspan="2" style="text-align:center; padding:20px;">
-          <h2 style="font-size:14pt; color:#31327e; margin-bottom:5px;">
-            📊 KPI – Key Performance Indicators
-          </h2>
-          <p style="color:#6b7280; font-size:8pt;">
-            Suivi des indicateurs essentiels de performance EARF.
-          </p>
-        </td>
-      </tr>
-      ${periodBlock}
-      ${kpiRowsHtml}
-    </table>
-  `;
-
-  // Génération des graphiques avec dimensions fixes
-  const graphBlocks = graphImagesList.map(item => {
+  // Génération des pages graphiques avec une page complète par graphique
+  let graphPagesHtml = '';
+  
+  // Traiter chaque graphique individuellement (une page par graphique)
+  graphImagesList.forEach((item, index) => {
     const currentLabel = item.label != null ? item.label : item.id;
-    return `
-      <div style="background:#ffffff; padding:15px; border:1px solid #cdcdcd; margin-bottom:20px;">
-        <h2 style="color:#31327e; font-size:14pt; text-align:center; margin-bottom:15px;">
-          ${currentLabel}
-        </h2>
-        <div style="text-align:center; margin-bottom:15px;">
-          <img src="${item.image}" width="600" height="450" style="border:1px solid #e5e7eb;" />
-        </div>
-        <div style="background:#f9fafb; border:1px dashed #68bddd; padding:10px;">
-          <p style="font-size:8pt; color:#4b5563; font-style:italic; margin:0;">
-            💬 Commentaire : ___________________________________________
-          </p>
-        </div>
+    
+    // Forcer un saut de page pour chaque nouveau graphique avec style pour contenir tout dans une page
+    graphPagesHtml += `
+      <div style="page-break-before: always; page-break-after: always; height: 26cm; overflow: hidden; display: block;">
+        <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm;">
+          <tr><td style="padding:14pt 24pt; vertical-align: top;">
+            <table class="header-logos"><tr>
+              <td><img src="https://myit-its.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
+              <td style="text-align:right;"><img src="https://myit-its.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+            </tr></table>
+            <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
+            ${periodLine}
+            <p class="subtitle">📊 ${currentLabel}</p>
+            <div style="margin-top:4pt; text-align:center;">
+              <div style="margin-bottom:6pt;">
+                <img src="${item.image}" width="700" height="500" style="width:700px; height:500px; object-fit:contain; display:block; margin:0 auto;" />
+              </div>
+            </div>
+            <div class="comment-block" style="margin-top:8pt; min-height: 100px;">
+              <div class="comment-block-title">💬 Votre commentaire</div>
+              <div class="comment-text" style="min-height: 100px; padding-top: 10px; padding-bottom: 10px;">
+                ___________________________________________<br/>
+                ___________________________________________<br/>
+                ___________________________________________<br/>
+                ___________________________________________<br/>
+                ___________________________________________<br/>
+              </div>
+            </div>
+          </td></tr>
+        </table>
       </div>
     `;
   });
 
-  // Regroupement des graphiques par paires pour les sauts de page
-  let pagesHtml = "";
-  for (let i = 0; i < graphBlocks.length; i += 2) {
-    let pageContent = graphBlocks[i];
-    if (i + 1 < graphBlocks.length) {
-      pageContent += graphBlocks[i + 1];
-    }
-    pagesHtml += `<div style="page-break-after:always;">${pageContent}</div>`;
-  }
-
-  // Préparation du bloc de période pour la section "Date du jour"
-  const periodDateBlock = periodText ? `
-    <p style="margin-top:10px; font-size:10pt;">
-      <strong>Période sélectionnée :</strong> ${periodText}
-    </p>
-  ` : '';
-
-  // Préparation du bloc de période pour l'en-tête de la section Graphiques
-  const periodGraphHeaderBlock = periodText ? `
-    <p style="font-size:9pt; color:#f0f9ff; margin-top:5px;">Période : ${periodText}</p>
-  ` : '';
-
   // Construction complète du document Word
   const html = `
-  <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        @page { margin: 2cm; }
-        body { font-family: Arial, sans-serif; }
-      </style>
-    </head>
-    <body>
-        <!-- Entête -->
-        <table style="width:100%; margin-bottom:10px; border-collapse:collapse;">
-          <tr>
-            <td><img src="https://myit-its.vercel.app/logo-intelcia-small_1.png" style="height:26px;" /></td>
-            <td style="text-align:right;"><img src="https://myit-its.vercel.app/logo_sfr_small.png" style="height:26px;" /></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td style="text-align:right; font-size:8pt; color:#6b7280;">
-              Généré le : ${today}
-            </td>
-          </tr>
-        </table>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { margin: 0pt; size: 21cm 29.7cm; }
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; color: #111827; }
+    .title {
+      font-size: 24pt;
+      font-weight: bold;
+      text-align: center;
+      color: #004aad;
+      margin: 2pt 0 2pt 0;
+    }
+    .subtitle {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #69b3d4;
+      text-align: center;
+      margin-top: 14pt;
+    }
+    .header-logos { width: 100%; border-collapse: collapse; margin: 2pt 0 0 0; }
+    .header-logos td { vertical-align: top; }
+    .date-row { width: 100%; }
+    .date-cell { text-align: right; font-size: 9pt; color: #6b7280; padding: 1pt 24pt 1pt 0; }
+    .comment-block {
+      margin-top: 6pt;
+      width: 92%;
+      margin-left: auto;
+      margin-right: auto;
+      border: 1.5pt dashed #69b3d4;
+      border-radius: 10pt;
+      padding: 12pt;
+      background: #f9fafb;
+      text-align: center;
+    }
+    .comment-block-title { font-size: 11pt; font-weight: bold; color: #1f2937; margin-bottom: 5pt; }
+    .comment-text {
+      font-style: italic;
+      color: #4b5563;
+      font-size: 9.8pt;
+      line-height: 1.4;
+    }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
 
-        <!-- Titre principal -->
-        <div style="background:#31327e; padding:20px; text-align:center; color:white;">
-          <h1 style="font-size:16pt; margin:0;">
-            Compte rendu détaillé de l'activité EARF
-          </h1>
+  <!-- PAGE 1 - KPI -->
+  <div style="page-break-after: always; height: 30cm; overflow: hidden; display: block;">
+    <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 35cm; max-height: 35cm;">
+      <tr><td style="padding:14pt 24pt; vertical-align: top;">
+        <table class="header-logos"><tr>
+          <td><img src="https://myit-its.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
+          <td style="text-align:right;"><img src="https://myit-its.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+        </tr></table>
+        <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
+        <h1 class="title" style="font-size:20pt;">Compte rendu détaillé de l'activité EARF</h1>
+        ${periodLine}
+        
+        <!-- Section des KPI -->
+        <p class="subtitle" style="margin-top:10pt; margin-bottom:5pt;">📊 KPI – Key Performance Indicators</p>
+        <div style="margin-top:5pt;">
+          ${kpiHtml}
         </div>
+        
+        <div class="comment-block" style="margin-top:8pt; min-height: 100px;">
+          <div class="comment-block-title">💬 Votre commentaire</div>
+          <div class="comment-text" style="min-height: 100px; padding-top: 10px; padding-bottom: 10px;">
+            ___________________________________________<br/>
+            ___________________________________________<br/>
+            ___________________________________________<br/>
+            ___________________________________________<br/>
+            ___________________________________________<br/>
+            ___________________________________________<br/>
 
-        <!-- Date -->
-        <p style="margin-top:15px; font-size:10pt;">
-          <strong>Date du jour :</strong> ${today}
-        </p>
-        ${periodDateBlock}
-
-        <!-- Section KPI -->
-        ${kpiSection}
-
-        <!-- Titre section Graphiques -->
-        <div style="background:#68bddd; padding:15px; text-align:center; margin-top:20px; margin-bottom:20px;">
-          <h2 style="font-size:16pt; color:#ffffff; margin:0;">Vue d'ensemble des graphiques</h2>
-          <p style="font-size:8pt; color:#f0f9ff; margin-top:5px;">Rapport généré le ${today}</p>
-          ${periodGraphHeaderBlock}
+          </div>
         </div>
+      </td></tr>
+    </table>
+  </div>
 
-        <!-- Section Graphiques (2 par page) -->
-        ${pagesHtml}
+  <!-- Pages des graphiques -->
+  ${graphPagesHtml}
 
-        <!-- Pied de page -->
-        <table style="width:100%; margin-top:30px; background:#cdcdcd; padding:10px 0; border-collapse:collapse;">
-          <tr>
-            <td style="text-align:center; font-size:8pt; color:#374151;">
-              Rapport généré automatiquement par <strong style="color:#31327e;">MyIT</strong>
-            </td>
-          </tr>
-        </table>
-    </body>
-  </html>
+  <!-- Pied de page esthétique -->
+  <div style="
+    width: 96%;
+    margin: 20pt auto 0 auto;
+    padding: 10pt 16pt;
+    background: #eef2f7;
+    border-radius: 10pt;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 9.8pt;
+    color: #1f2937;
+    text-align: center;
+    line-height: 1.5;
+    box-shadow: 0 0 2pt rgba(0, 0, 0, 0.05);
+  ">
+    Rapport généré automatiquement par 
+    <strong style="color:#004aad;">MyIT</strong><br/>
+    <a href="https://myit-its.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
+      Dashboard EARF, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
+    </a>
+  </div>
+
+</body>
+</html>
   `;
 
   console.log("DEBUG: HTML final :", html);
@@ -246,7 +272,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Compte-rendu_EARF_${today.replace(/\//g, "-")}.docx`;
+  a.download = `Compte-rendu_EARF_${todayStr.replace(/\//g, "-")}.docx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
