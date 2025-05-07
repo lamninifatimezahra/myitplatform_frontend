@@ -87,7 +87,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
 
   // --- Préchargement des images de fond
   const introBackgroundUrl = "/introduction.png";
-  const contentBackgroundUrl = "/page_principal.png";
+  const contentBackgroundUrl = "/ftth_diapo.png";
   const finalImageUrl = "/fin.png";
 
   let introBackgroundBase64 = null;
