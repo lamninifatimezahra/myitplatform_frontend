@@ -218,18 +218,19 @@ async function createGraphSlide(pptx, id, graphList, commentMap, background, blu
     const isObjectif = id === "graph-objectif";
 
     if (isObjectif) {
-      slide.addShape(pptx.ShapeType.roundRect, {
+      slide.addShape(pptx.ShapeType.rect, {
         x: 2.0, y: 1.5, w: 6.0, h: 3.2,
         fill: { color: "#ffffff" },
-        line: { color: "#d1d5db", width: 1 },
-        roundRadius: 5,
+        line: { color: "#d1d5db", width: 1 }
       });
+      
       slide.addImage({ data: image, x: 2.1, y: 1.6, w: 5.8, h: 3.0 });
     } else {
-      slide.addShape(pptx.ShapeType.roundRect, {
+      slide.addShape(pptx.ShapeType.rect, {
         x: 0.7, y: 1.4, w: 5.2, h: 3.1,
-        fill: { color: "#ffffff" }, line: { color: "#d1d5db", width: 1 }, roundRadius: 5
+        fill: { color: "#ffffff" }, line: { color: "#d1d5db", width: 1 }
       });
+      
       slide.addImage({ data: image, x: 0.8, y: 1.5, w: 5.0, h: 2.9 });
 
       slide.addShape(pptx.ShapeType.roundRect, {
