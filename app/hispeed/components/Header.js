@@ -4,43 +4,36 @@ import ReactDOM from "react-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale, setDefaultLocale } from "react-datepicker";
-import fr from 'date-fns/locale/fr';
+import fr from "date-fns/locale/fr";
 import { FaFilter, FaInfoCircle } from "react-icons/fa";
-import { AiOutlineBell, AiOutlineUser, AiOutlineDownload, AiOutlineClockCircle } from "react-icons/ai";
+import {
+  AiOutlineDownload,
+  AiOutlineClockCircle,
+} from "react-icons/ai";
 import { generateWordFromImages } from "../utils/exportWord";
 import { generatePPTFromImages } from "../utils/exportPPTX";
 import html2canvas from "html2canvas-pro";
 import fetchWithAuth from "@/utils/fetchWithAuth";
-// Import du contexte global de filtre
 import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
+import ProfileMenu from "@/app/ftth/components/ProfileMenu";
+import NotificationMenu from "@/app/ftth/components/NotificationMenu";
 
 // Enregistrement de la localisation française
-registerLocale('fr', fr);
-setDefaultLocale('fr');
+registerLocale("fr", fr);
+setDefaultLocale("fr");
 
-// Fonction pour calculer le numéro de semaine d'une date
 const getWeekNumber = (date) => {
   if (!date) return null;
-  
-  // Création d'une copie de la date pour ne pas modifier l'originale
   const d = new Date(date);
-  
-  // Définir le premier jour de l'année
   const startOfYear = new Date(d.getFullYear(), 0, 1);
-  
-  // Nombre de jours écoulés depuis le début de l'année
   const days = Math.floor((d - startOfYear) / (24 * 60 * 60 * 1000));
-  
-  // Calculer le numéro de semaine
-  // getDay() retourne 0 pour dimanche, donc on ajuste pour que lundi soit le premier jour
   const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  
   return weekNum;
 };
 
 export default function Header({ type = "HISPEED" }) {
   const [showMenu, setShowMenu] = useState(false);
-  const [downloadStep, setDownloadStep] = useState("chooseFormat"); // "chooseFormat" ou "selectGraphs"
+  const [downloadStep, setDownloadStep] = useState("chooseFormat");
   const [selectedFormat, setSelectedFormat] = useState(null);
   const [graphList, setGraphList] = useState([]);
   const [selectedGraphs, setSelectedGraphs] = useState([]);
@@ -49,85 +42,49 @@ export default function Header({ type = "HISPEED" }) {
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const [portalContainer, setPortalContainer] = useState(null);
-  const todayStr = new Date().toISOString().split("T")[0];
-  const formattedDate = new Date().toLocaleDateString("fr-FR");
 
-  // Accès au filtre global du contexte
   const { globalStartDate, globalEndDate, setGlobalFilter } = useGlobalFilter();
-
-  // États locaux pour le DatePicker global
   const [localStartDate, setLocalStartDate] = useState(globalStartDate);
   const [localEndDate, setLocalEndDate] = useState(globalEndDate);
   const endDateRef = useRef(null);
 
-  // Fonction pour appliquer le filtre global (mise à jour du contexte)
-  const handleGlobalFilter = () => {
-    setGlobalFilter(localStartDate, localEndDate);
-  };
-
-  // Pour afficher une étiquette de la période sélectionnée
   const periodText =
     localStartDate && localEndDate
       ? `${localStartDate.toLocaleDateString("fr-FR")} (S${getWeekNumber(localStartDate)}) → ${localEndDate.toLocaleDateString("fr-FR")} (S${getWeekNumber(localEndDate)})`
       : "Aucune période sélectionnée";
 
-  // Fonction pour récupérer la date du dernier upload
   const fetchLastUploadDate = async () => {
     setIsLoadingUploadDate(true);
     try {
-      // Déterminer l'URL en fonction du type de dashboard
       const apiUrl = `https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/${type.toLowerCase()}/files/`;
-      
       const response = await fetchWithAuth(apiUrl);
-      
-      if (!response.ok) {
-        throw new Error("Erreur lors de la récupération des données");
-      }
-      
+      if (!response.ok) throw new Error("Erreur récupération données");
       const data = await response.json();
-      
-      // Si des fichiers existent, prendre la date du plus récent
       if (data && data.length > 0) {
-        // Trier les fichiers par date d'upload (descendant)
-        const sortedFiles = [...data].sort((a, b) => {
-          // Convertir les dates au format français (DD/MM/YYYY HH:MM) en objets Date
-          const dateA = parseCustomDate(a.uploaded_at);
-          const dateB = parseCustomDate(b.uploaded_at);
-          return dateB - dateA;
-        });
-        
+        const sortedFiles = [...data].sort((a, b) => parseCustomDate(b.uploaded_at) - parseCustomDate(a.uploaded_at));
         setLastUploadDate(sortedFiles[0].uploaded_at);
       } else {
         setLastUploadDate(null);
       }
-    } catch (error) {
-      console.error("Erreur de récupération des données d'upload:", error);
+    } catch (err) {
+      console.error("Erreur récupération upload:", err);
       setLastUploadDate(null);
     } finally {
       setIsLoadingUploadDate(false);
     }
   };
 
-  // Fonction pour parser une date au format "DD/MM/YYYY HH:MM"
   const parseCustomDate = (dateStr) => {
     if (!dateStr) return new Date(0);
-    
-    const [datePart, timePart] = dateStr.split(' ');
-    const [day, month, year] = datePart.split('/');
-    const [hours, minutes] = timePart ? timePart.split(':') : ['0', '0'];
-    
+    const [datePart, timePart] = dateStr.split(" ");
+    const [day, month, year] = datePart.split("/");
+    const [hours, minutes] = timePart ? timePart.split(":") : ["0", "0"];
     return new Date(year, month - 1, day, hours, minutes);
   };
 
   useEffect(() => {
-    // Récupérer la date du dernier upload au chargement du composant
     fetchLastUploadDate();
-    
-    // Actualiser la date toutes les 5 minutes
-    const interval = setInterval(() => {
-      fetchLastUploadDate();
-    }, 5 * 60 * 1000);
-    
+    const interval = setInterval(fetchLastUploadDate, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [type]);
 
@@ -164,7 +121,6 @@ export default function Header({ type = "HISPEED" }) {
         !buttonRef.current.contains(e.target)
       ) {
         setShowMenu(false);
-        // Réinitialiser l'étape et le format sélectionné lors de la fermeture du menu
         setDownloadStep("chooseFormat");
         setSelectedFormat(null);
       }
@@ -186,14 +142,17 @@ export default function Header({ type = "HISPEED" }) {
   const captureScreenshots = async () => {
     document.body.classList.add("disable-animations");
     await new Promise((resolve) => setTimeout(resolve, 100));
-
     const elements = Array.from(document.querySelectorAll(".visualisation")).filter((el) =>
       selectedGraphs.includes(el.getAttribute("data-id"))
     );
     const images = [];
     for (const el of elements) {
       try {
-        const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
+        const canvas = await html2canvas(el, {
+          backgroundColor: "#ffffff",
+          scale: 2,
+          useCORS: true,
+        });
         images.push({
           id: el.getAttribute("data-id"),
           label: el.getAttribute("data-graph-label") || el.getAttribute("data-id"),
@@ -210,28 +169,22 @@ export default function Header({ type = "HISPEED" }) {
   const generateWord = async () => {
     if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
     const images = await captureScreenshots();
-    // Passage des dates du filtre global à la fonction generateWordFromImages
     await generateWordFromImages(images, globalStartDate, globalEndDate);
   };
-  
+
   const generatePPT = async () => {
-    if (selectedGraphs.length === 0)
-      return alert("Sélectionnez au moins une visualisation.");
-    
+    if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
     const images = await captureScreenshots();
-    
-    // Passage des dates du filtre global à la fonction generatePPTFromImages
     await generatePPTFromImages(images, globalStartDate, globalEndDate);
   };
 
   const handleDownload = () => {
-    // Selon le format sélectionné, lancez la bonne fonction
-    if (selectedFormat === "word") {
-      generateWord();
-    } else if (selectedFormat === "pptx") {
-      // Passage des dates du filtre global à la fonction generatePPTFromImages
-      generatePPT(globalStartDate, globalEndDate);
-    }
+    if (selectedFormat === "word") generateWord();
+    else if (selectedFormat === "pptx") generatePPT();
+  };
+
+  const handleGlobalFilter = () => {
+    setGlobalFilter(localStartDate, localEndDate);
   };
 
   const renderDropdown = () => {
@@ -248,40 +201,26 @@ export default function Header({ type = "HISPEED" }) {
         }}
       >
         {downloadStep === "chooseFormat" ? (
-          // Étape 1 : Choix du format de CR
           <div className="space-y-2">
-            <div
-              onClick={() => {
-                setSelectedFormat("word");
-                setDownloadStep("selectGraphs");
-              }}
-              className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded text-gray-700 border border-gray-200"
-            >
+            <div onClick={() => {
+              setSelectedFormat("word");
+              setDownloadStep("selectGraphs");
+            }} className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded text-gray-700 border border-gray-200">
               📄 CR (Format Word)
             </div>
-            <div
-              onClick={() => {
-                setSelectedFormat("pptx");
-                setDownloadStep("selectGraphs");
-              }}
-              className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded text-gray-700 border border-gray-200"
-            >
+            <div onClick={() => {
+              setSelectedFormat("pptx");
+              setDownloadStep("selectGraphs");
+            }} className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded text-gray-700 border border-gray-200">
               📊 CR (Format PPTX)
             </div>
           </div>
         ) : (
-          // Étape 2 : Sélection des graphes/KPI et bouton de téléchargement final
           <div className="space-y-3">
-            <button
-              onClick={() => {
-                // Permet de revenir à l'étape précédente pour changer le format
-                setDownloadStep("chooseFormat");
-                setSelectedFormat(null);
-              }}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              ← Retour au choix du format
-            </button>
+            <button onClick={() => {
+              setDownloadStep("chooseFormat");
+              setSelectedFormat(null);
+            }} className="text-sm text-blue-600 hover:underline">← Retour</button>
             <div className="flex justify-between text-sm px-2 text-blue-600 font-medium">
               <button onClick={() => toggleAll(true)}>Tout cocher</button>
               <button onClick={() => toggleAll(false)}>Tout décocher</button>
@@ -315,7 +254,7 @@ export default function Header({ type = "HISPEED" }) {
 
   return (
     <header className="bg-white shadow-md px-4 sm:px-6 py-4 flex flex-col gap-y-4 sticky top-0 z-50">
-      {/* Bloc supérieur (titre et bienvenue) */}
+      {/* LIGNE HAUTE : TITRE ET MENUS */}
       <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
@@ -327,7 +266,10 @@ export default function Header({ type = "HISPEED" }) {
               <div className="ml-4 flex items-center text-gray-600">
                 <AiOutlineClockCircle className="mr-1" />
                 <span>
-                  Dernière mise à jour : <span className="font-medium text-blue-600">{lastUploadDate}</span>
+                  Dernière mise à jour :{" "}
+                  <span className="font-medium text-blue-600">
+                    {lastUploadDate}
+                  </span>
                 </span>
               </div>
             )}
@@ -338,32 +280,20 @@ export default function Header({ type = "HISPEED" }) {
             )}
           </div>
         </div>
+
         <div className="flex items-center gap-4 flex-wrap justify-end flex-1">
-          <AiOutlineBell className="text-gray-600" size={20} />
-          <AiOutlineUser className="text-gray-600" size={20} />
-          <div className="relative">
-            <button
-              ref={buttonRef}
-              onClick={() => {
-                setShowMenu(!showMenu);
-                // Réinitialiser l'étape à chaque ouverture du menu
-                if (!showMenu) {
-                  setDownloadStep("chooseFormat");
-                  setSelectedFormat(null);
-                }
-              }}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
-            >
-              <AiOutlineDownload />
-              <span>Télécharger CR</span>
-            </button>
-          </div>
+          <NotificationMenu />
+          <ProfileMenu />
         </div>
       </div>
-      {/* Bloc de filtre global */}
-      <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="text-gray-700 font-medium">Période sélectionnée :</label>
+
+      {/* FILTRE + BOUTON TÉLÉCHARGER CR SUR UNE LIGNE */}
+      <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl px-4 py-3 flex flex-col lg:flex-row justify-between items-start gap-4">
+        {/* Bloc gauche : filtres */}
+        <div className="flex flex-wrap items-center gap-3 flex-1">
+          <label className="text-gray-700 font-medium">
+            Période sélectionnée :
+          </label>
           <DatePicker
             selected={localStartDate}
             onChange={(date) => {
@@ -375,8 +305,8 @@ export default function Header({ type = "HISPEED" }) {
             endDate={localEndDate}
             placeholderText="Date de début"
             className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
-            locale="fr"  // Utilisation de la locale française
-            dateFormat="dd/MM/yyyy"  // Format de date français
+            locale="fr"
+            dateFormat="dd/MM/yyyy"
           />
           <DatePicker
             ref={endDateRef}
@@ -388,8 +318,8 @@ export default function Header({ type = "HISPEED" }) {
             minDate={localStartDate}
             placeholderText="Date de fin"
             className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
-            locale="fr"  // Utilisation de la locale française
-            dateFormat="dd/MM/yyyy"  // Format de date français
+            locale="fr"
+            dateFormat="dd/MM/yyyy"
           />
           <button
             onClick={handleGlobalFilter}
@@ -404,7 +334,27 @@ export default function Header({ type = "HISPEED" }) {
             </span>
           )}
         </div>
+
+        {/* Bloc droit : bouton télécharger */}
+        <div className="mt-2 lg:mt-0">
+          <button
+            ref={buttonRef}
+            onClick={() => {
+              setShowMenu(!showMenu);
+              if (!showMenu) {
+                setDownloadStep("chooseFormat");
+                setSelectedFormat(null);
+              }
+            }}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
+          >
+            <AiOutlineDownload />
+            <span>Télécharger CR</span>
+          </button>
+        </div>
       </div>
+
+      {/* Menu de sélection CR Word/PPTX */}
       {renderDropdown()}
     </header>
   );
