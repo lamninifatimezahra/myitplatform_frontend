@@ -96,16 +96,17 @@ export default function GraphTopReglesParJour({
 
         const all = [];
         Object.entries(grouped).forEach(([date, rules]) => {
-          const top5 = rules.sort((a, b) => b.nbr_stoc_du_jour - a.nbr_stoc_du_jour).slice(0, 5);
-          top5.forEach((rule, index) => {
-            all.push({
-              group: new Date(date).toLocaleDateString("fr-FR"),
-              rule: rule.regle,
-              value: rule.nbr_stoc_du_jour,
-              color: getColorForRule(rule.regle),
-              position: index,
-            });
-          });
+          const top5 = rules.sort((a, b) => (b.nouveau_cas || 0) - (a.nouveau_cas || 0)).slice(0, 5);
+top5.forEach((rule, index) => {
+  all.push({
+    group: new Date(date).toLocaleDateString("fr-FR"),
+    rule: rule.regle,
+    value: rule.nouveau_cas || 0,
+    color: getColorForRule(rule.regle),
+    position: index,
+  });
+});
+
           all.push({ group: "", rule: "", value: null, color: "transparent", position: -1 });
         });
 

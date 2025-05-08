@@ -93,9 +93,10 @@ export default function GraphTopRegles({
         });
 
         const ruleTotals = filtered.reduce((acc, curr) => {
-          acc[curr.regle] = (acc[curr.regle] || 0) + curr.nbr_stoc_du_jour;
+          acc[curr.regle] = (acc[curr.regle] || 0) + (curr.nouveau_cas || 0);
           return acc;
         }, {});
+        
 
         const top5 = Object.entries(ruleTotals)
           .map(([rule, total]) => ({ name: rule, value: total }))

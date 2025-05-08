@@ -1,7 +1,7 @@
 import htmlDocx from "html-docx-js/dist/html-docx";
 import { toPng } from "html-to-image";
 
-// 🔢 Calcul du numéro de la semaine
+// 🔢 Semaine ISO
 function getWeekNumber(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
@@ -10,11 +10,10 @@ function getWeekNumber(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
-// 📸 Capture et redimensionnement d'un graphe HTML
-async function captureAndResize(id, width = 280, height = 180) {
+// 📸 Capture image avec tailles standardisées (KPI = 280x100, Objectif = 400x280, autres = 550x350)
+async function captureAndResize(id, width = 550, height = 350) {
   const el = document.getElementById(id);
   if (!el) return "<p style='color:red;'>Graphique indisponible</p>";
-
   try {
     await new Promise((resolve) => {
       let attempt = 0;
@@ -29,9 +28,7 @@ async function captureAndResize(id, width = 280, height = 180) {
       };
       check();
     });
-
     const originalUrl = await toPng(el, { backgroundColor: "#ffffff" });
-
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -51,21 +48,18 @@ async function captureAndResize(id, width = 280, height = 180) {
   }
 }
 
-// 📝 Génération du document Word complet
-export async function generateWordFromGraphs(_, __, ___, globalStartDate, globalEndDate) {
+// 📝 Génération Word
+export async function generateWordFromGraphs(selectedGraphIds = [], graphList = [], commentMap = {}, globalStartDate, globalEndDate) {
   const today = new Date();
   const todayStr = today.toLocaleDateString("fr-FR");
 
-  let periodLine = "";
-  let weekPart = "";
-
+  let weekPart = "", periodLine = "";
   if (globalStartDate && globalEndDate) {
     const start = new Date(globalStartDate);
     const end = new Date(globalEndDate);
     const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
     const startStr = start.toLocaleDateString("fr-FR");
     const endStr = end.toLocaleDateString("fr-FR");
-
     const allWeeks = [];
     let cursor = new Date(start);
     while (cursor <= end) {
@@ -74,77 +68,42 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
     }
     const uniqueWeeks = [...new Set(allWeeks)].sort((a, b) => a - b);
     weekPart = `S${uniqueWeeks.join(", S")}`;
-    periodLine = `
-      <p style="text-align:center; font-size:11pt; color:#1f2937; margin-top:6pt;">
+    periodLine = `<p style="text-align:center; font-size:11pt; color:#1f2937; margin-top:6pt;">
         <strong>Période :</strong> du <strong>${startStr}</strong> au <strong>${endStr}</strong> – ${diffDays} jour(s), ${weekPart}
       </p>`;
   } else {
     weekPart = `S${getWeekNumber(today)}`;
-    periodLine = `
-      <p style="text-align:center; font-size:11pt; color:#1f2937; margin-top:6pt;">
+    periodLine = `<p style="text-align:center; font-size:11pt; color:#1f2937; margin-top:6pt;">
         <strong>Date du jour :</strong> ${todayStr} – ${weekPart}
       </p>`;
   }
 
+  // 🎯 Graphiques exclus (Objectif déjà inclus page 1)
+  selectedGraphIds = selectedGraphIds.filter(id => id !== "graph-objectif");
+
+  const idToDomId = {
+    "graph-objectif": "canvas-graph-objectif",
+    "graph-vue-ensemble": "canvas-graph-vue-ensemble",
+    "graph-top-regles": "canvas-graph-top-regles",
+    "graph-top-regles-par-jour": "canvas-graph-top-regles-par-jour",
+    "graph-entrants-sortants": "canvas-graph-entrants-sortants",
+    "graph-repartition-manuelle": "canvas-graph-repartition-manuelle",
+  };
+
+  const defaultCommentMap = {
+    "graph-objectif": `“Performance satisfaisante, aucun backlog critique signalé.”<br/>“Rien à signaler cette semaine, bon équilibre global.”`,
+    "graph-vue-ensemble": `“Tendance stable, aucune alerte détectée.”<br/>“Visualisation claire de l’évolution des indicateurs.”`,
+    "graph-top-regles": `“Les règles critiques sont bien identifiées.”<br/>“Priorité à accorder aux plus récurrentes.”`,
+    "graph-top-regles-par-jour": `“Suivi quotidien très utile.”<br/>“Permet une meilleure identification des pics d’activité.”`,
+    "graph-entrants-sortants": `“Indicateurs bien structurés.”<br/>“Volume traité visible et comparé efficacement.”`,
+    "graph-repartition-manuelle": `“Visualisation claire des répartitions.”<br/>“Bonne compréhension du volume traité par acteur.”`,
+  };
+
   const kpi1 = await captureAndResize("kpi-backlog-j1", 280, 100);
   const kpi2 = await captureAndResize("kpi-backlog-j", 280, 100);
-  const objectif = await captureAndResize("canvas-graph-objectif", 400, 280);
-  const vueBacklog = await captureAndResize("canvas-graph-vue-ensemble", 550, 350);
-  const topRegles = await captureAndResize("canvas-graph-top-regles", 550, 350);
-  const topReglesParJour = await captureAndResize("canvas-graph-top-regles-par-jour", 550, 350);
-  const entrantsSortants = await captureAndResize("canvas-graph-entrants-sortants", 550, 350);
-  const repartitionManuelle = await captureAndResize("canvas-graph-repartition-manuelle", 550, 350);
+  const objectif = await captureAndResize("canvas-graph-objectif", 450, 300);
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    @page { margin: 0pt; }
-    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; color: #111827; }
-    .title {
-      font-size: 24pt;
-      font-weight: bold;
-      text-align: center;
-      color: #004aad;
-      margin: 2pt 0 2pt 0;
-    }
-    .subtitle {
-      font-size: 13pt;
-      font-weight: bold;
-      color: #69b3d4;
-      text-align: center;
-      margin-top: 14pt;
-    }
-    .header-logos { width: 100%; border-collapse: collapse; margin: 2pt 0 0 0; }
-    .header-logos td { vertical-align: top; }
-    .date-row { width: 100%; }
-    .date-cell { text-align: right; font-size: 9pt; color: #6b7280; padding: 1pt 24pt 1pt 0; }
-    .comment-block {
-      margin-top: 6pt;
-      width: 92%;
-      margin-left: auto;
-      margin-right: auto;
-      border: 1.5pt dashed #69b3d4;
-      border-radius: 10pt;
-      padding: 12pt;
-      background: #f9fafb;
-      text-align: center;
-    }
-    .comment-block-title { font-size: 11pt; font-weight: bold; color: #1f2937; margin-bottom: 5pt; }
-    .comment-text {
-      font-style: italic;
-      color: #4b5563;
-      font-size: 9.8pt;
-      line-height: 1.4;
-    }
-    .page-break { page-break-before: always; }
-  </style>
-</head>
-<body>
-
-  <!-- PAGE 1 -->
+  let bodyHtml = `
   <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;">
     <tr><td style="padding:14pt 24pt;">
       <table class="header-logos"><tr>
@@ -163,115 +122,70 @@ export async function generateWordFromGraphs(_, __, ___, globalStartDate, global
       </div>
       <div class="comment-block">
         <div class="comment-block-title">💬 Votre commentaire</div>
-        <div class="comment-text">“Performance satisfaisante, aucun backlog critique signalé.”<br/>“Rien à signaler cette semaine, bon équilibre global.”</div>
+        <div class="comment-text">${defaultCommentMap["graph-objectif"]}</div>
       </div>
     </td></tr>
-  </table>
+  </table>`;
 
-  <!-- PAGE 2 -->
+  // 🔄 Autres pages
+  for (const graphId of selectedGraphIds) {
+    const label = graphList.find(g => g.id === graphId)?.label || graphId;
+    const domId = idToDomId[graphId] || graphId;
+    const graphHtml = await captureAndResize(domId, 600, 400);
+    const comment = commentMap[graphId] || defaultCommentMap[graphId] || "Aucun commentaire.";
+
+    bodyHtml += `
+    <div class="page-break"></div>
+    <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
+      <table class="header-logos"><tr>
+        <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
+        <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+      </tr></table>
+      <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
+      ${periodLine}
+      <p class="subtitle">📊 ${label}</p>
+      <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${graphHtml}</div></div>
+      <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
+        <div class="comment-text">${comment}</div>
+      </div>
+    </td></tr></table>`;
+  }
+
+  // ✅ Footer
+  bodyHtml += `
   <div class="page-break"></div>
-  <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
-    <table class="header-logos"><tr>
-      <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-      <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-    </tr></table>
-    <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-    ${periodLine}
-    <p class="subtitle">📊 Vue combinée du Backlog</p>
-    <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${vueBacklog}</div></div>
-    <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
-      <div class="comment-text">“Tendance stable, aucune alerte détectée.”<br/>“Visualisation claire de l’évolution des indicateurs.”</div>
-    </div>
-  </td></tr></table>
+  <div style="width: 96%; margin: 20pt auto 0 auto; padding: 10pt 16pt; background: #eef2f7; border-radius: 10pt;
+              font-family: 'Segoe UI', sans-serif; font-size: 9.8pt; color: #1f2937; text-align: center; line-height: 1.5;
+              box-shadow: 0 0 2pt rgba(0, 0, 0, 0.05);">
+    Générée automatiquement par 
+    <strong style="color:#004aad;">Meryem SAYOUTI</strong><br/>
+    <a href="https://myit-its.vercel.app" target="_blank"
+       style="text-decoration: none; color: #004aad; font-weight: bold;">
+       Dashboard FTTH, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
+    </a>
+  </div>`;
 
-  <!-- PAGE 3 -->
-  <div class="page-break"></div>
-  <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
-    <table class="header-logos"><tr>
-      <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-      <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-    </tr></table>
-    <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-    ${periodLine}
-    <p class="subtitle">🏆 Top 5 RÈGLES</p>
-    <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${topRegles}</div></div>
-    <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
-      <div class="comment-text">“Les règles critiques sont bien identifiées.”<br/>“Priorité à accorder aux plus récurrentes.”</div>
-    </div>
-  </td></tr></table>
-
-  <!-- PAGE 4 -->
-  <div class="page-break"></div>
-  <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
-    <table class="header-logos"><tr>
-      <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-      <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-    </tr></table>
-    <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-    ${periodLine}
-    <p class="subtitle">📅 Top 5 RÈGLES par jour</p>
-    <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${topReglesParJour}</div></div>
-    <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
-      <div class="comment-text">“Suivi quotidien très utile.”<br/>“Permet une meilleure identification des pics d’activité.”</div>
-    </div>
-  </td></tr></table>
-
-  <!-- PAGE 5 -->
-  <div class="page-break"></div>
-  <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
-    <table class="header-logos"><tr>
-      <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-      <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-    </tr></table>
-    <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-    ${periodLine}
-    <p class="subtitle">📦 Entrants – Sortants – Nouveaux cas</p>
-    <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${entrantsSortants}</div></div>
-    <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
-      <div class="comment-text">“Indicateurs bien structurés.”<br/>“Volume traité visible et comparé efficacement.”</div>
-    </div>
-  </td></tr></table>
-
-  <!-- PAGE 6 -->
-  <div class="page-break"></div>
-  <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;"><tr><td style="padding:14pt 24pt;">
-    <table class="header-logos"><tr>
-      <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-      <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-    </tr></table>
-    <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-    ${periodLine}
-    <p class="subtitle">👥 Répartition Manuelle (Acteur)</p>
-    <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${repartitionManuelle}</div></div>
-    <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
-      <div class="comment-text">“Visualisation claire des répartitions.”<br/>“Bonne compréhension du volume traité par acteur.”</div>
-    </div>
-  </td></tr></table>
-
-  <!-- 🌟 Pied de page esthétique et unifié -->
-<div style="
-  width: 96%;
-  margin: 20pt auto 0 auto;
-  padding: 10pt 16pt;
-  background: #eef2f7;
-  border-radius: 10pt;
-  font-family: 'Segoe UI', sans-serif;
-  font-size: 9.8pt;
-  color: #1f2937;
-  text-align: center;
-  line-height: 1.5;
-  box-shadow: 0 0 2pt rgba(0, 0, 0, 0.05);
-">
-  Générée automatiquement par 
-  <strong style="color:#004aad;">Meryem SAYOUTI</strong><br/>
-  <a href="https://myit-its.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
-    Dashboard FTTH, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
-  </a>
-</div>
-
-
-</body>
-</html>`;
+  const html = `
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  @page { margin: 0pt; }
+  body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; color: #111827; }
+  .title { font-size: 24pt; font-weight: bold; text-align: center; color: #004aad; margin: 2pt 0; }
+  .subtitle { font-size: 13pt; font-weight: bold; color: #69b3d4; text-align: center; margin-top: 14pt; }
+  .header-logos { width: 100%; border-collapse: collapse; margin: 2pt 0; }
+  .header-logos td { vertical-align: top; }
+  .date-row { width: 100%; }
+  .date-cell { text-align: right; font-size: 9pt; color: #6b7280; padding: 1pt 24pt 1pt 0; }
+  .comment-block {
+    margin-top: 6pt; width: 92%; margin-left: auto; margin-right: auto;
+    border: 1.5pt dashed #69b3d4; border-radius: 10pt; padding: 12pt; background: #f9fafb; text-align: center;
+  }
+  .comment-block-title { font-size: 11pt; font-weight: bold; color: #1f2937; margin-bottom: 5pt; }
+  .comment-text { font-style: italic; color: #4b5563; font-size: 9.8pt; line-height: 1.4; }
+  .page-break { page-break-before: always; }
+</style>
+</head><body>${bodyHtml}</body></html>`;
 
   const blob = htmlDocx.asBlob(html);
   const url = URL.createObjectURL(blob);
