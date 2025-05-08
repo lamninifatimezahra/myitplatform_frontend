@@ -182,12 +182,13 @@ export default function EditPostPage() {
               Choisir une catégorie
             </option>
             <option value="FTTH">FTTH</option>
-            <option value="SI3C">SI3C</option>
-            <option value="DOOR">DOOR</option>
-            <option value="B2B">B2B</option>
-            <option value="Support">Support</option>
-          </select>
+            <option value="HISPEED">HISPEED</option>
+            <option value="FTTB">FTTB</option>
+            <option value="DSL">DSL</option>
+            <option value="EARF">EARF</option>
+            <option value="ARTHUIS">ARTHUIS</option>
 
+          </select>
           <input
             name="link"
             value={form.link}

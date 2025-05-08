@@ -13,6 +13,9 @@ import html2canvas from "html2canvas-pro";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 // Import du contexte global de filtre
 import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
+import ProfileMenu from "@/app/ftth/components/ProfileMenu";
+import NotificationMenu from "@/app/ftth/components/NotificationMenu";
+
 
 // Enregistrement de la localisation française
 registerLocale('fr', fr);
@@ -314,98 +317,112 @@ export default function Header({ type = "Arthius" }) {
   };
 
   return (
-    <header className="bg-white shadow-md px-4 sm:px-6 py-4 flex flex-col gap-y-4 sticky top-0 z-50">
-      {/* Bloc supérieur (titre et bienvenue) */}
-      <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-            <span className="text-blue-600">Dashboard de la documentation Confluence ARTHUIS</span>
-          </h1>
-          <div className="flex items-center text-gray-500 text-sm">
-            <span>Bienvenue !</span>
-            {lastUploadDate && (
-              <div className="ml-4 flex items-center text-gray-600">
-                <AiOutlineClockCircle className="mr-1" />
-                <span>
-                  Dernière mise à jour : <span className="font-medium text-blue-600">{lastUploadDate}</span>
-                </span>
-              </div>
-            )}
-            {isLoadingUploadDate && (
-              <div className="ml-4 text-gray-400 flex items-center">
-                <span className="animate-pulse">Chargement des données...</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-4 flex-wrap justify-end flex-1">
-          <AiOutlineBell className="text-gray-600" size={20} />
-          <AiOutlineUser className="text-gray-600" size={20} />
-          <div className="relative">
-            <button
-              ref={buttonRef}
-              onClick={() => {
-                setShowMenu(!showMenu);
-                // Réinitialiser l'étape à chaque ouverture du menu
-                if (!showMenu) {
-                  setDownloadStep("chooseFormat");
-                  setSelectedFormat(null);
-                }
-              }}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
-            >
-              <AiOutlineDownload />
-              <span>Télécharger CR</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      {/* Bloc de filtre global */}
-      <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="text-gray-700 font-medium">Période sélectionnée :</label>
-          <DatePicker
-            selected={localStartDate}
-            onChange={(date) => {
-              setLocalStartDate(date);
-              setTimeout(() => endDateRef.current?.setFocus(), 200);
-            }}
-            selectsStart
-            startDate={localStartDate}
-            endDate={localEndDate}
-            placeholderText="Date de début"
-            className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
-            locale="fr"  // Utilisation de la locale française
-            dateFormat="dd/MM/yyyy"  // Format de date français
-          />
-          <DatePicker
-            ref={endDateRef}
-            selected={localEndDate}
-            onChange={(date) => setLocalEndDate(date)}
-            selectsEnd
-            startDate={localStartDate}
-            endDate={localEndDate}
-            minDate={localStartDate}
-            placeholderText="Date de fin"
-            className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
-            locale="fr"  // Utilisation de la locale française
-            dateFormat="dd/MM/yyyy"  // Format de date français
-          />
-          <button
-            onClick={handleGlobalFilter}
-            className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg shadow hover:bg-gray-200"
-          >
-            <FaFilter />
-            <span>Filtrer</span>
-          </button>
-          {periodText && (
-            <span className="text-sm text-blue-700 font-medium whitespace-nowrap ml-3">
-              {periodText}
+<header className="bg-white shadow-md px-4 sm:px-6 py-4 flex flex-col gap-y-4 sticky top-0 z-50">
+  {/* Ligne de titre et menus utilisateur */}
+  <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
+    <div>
+      <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
+        <span className="text-blue-600">
+          Dashboard de la documentation Confluence ARTHUIS
+        </span>
+      </h1>
+      <div className="flex items-center text-gray-500 text-sm">
+        <span>Bienvenue !</span>
+        {lastUploadDate && (
+          <div className="ml-4 flex items-center text-gray-600">
+            <AiOutlineClockCircle className="mr-1" />
+            <span>
+              Dernière mise à jour :{" "}
+              <span className="font-medium text-blue-600">
+                {lastUploadDate}
+              </span>
             </span>
-          )}
-        </div>
+          </div>
+        )}
+        {isLoadingUploadDate && (
+          <div className="ml-4 text-gray-400 flex items-center">
+            <span className="animate-pulse">Chargement des données...</span>
+          </div>
+        )}
       </div>
-      {renderDropdown()}
-    </header>
+    </div>
+
+    {/* Menus utilisateur à droite */}
+    <div className="flex items-center gap-4 flex-wrap justify-end flex-1">
+      <NotificationMenu />
+      <ProfileMenu />
+    </div>
+  </div>
+
+  {/* Bloc de filtre et bouton télécharger sur la même ligne */}
+  <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl px-4 py-3 flex flex-col lg:flex-row justify-between items-start gap-4">
+    {/* Filtres */}
+    <div className="flex flex-wrap items-center gap-3 flex-1">
+      <label className="text-gray-700 font-medium">
+        Période sélectionnée :
+      </label>
+      <DatePicker
+        selected={localStartDate}
+        onChange={(date) => {
+          setLocalStartDate(date);
+          setTimeout(() => endDateRef.current?.setFocus(), 200);
+        }}
+        selectsStart
+        startDate={localStartDate}
+        endDate={localEndDate}
+        placeholderText="Date de début"
+        className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
+        locale="fr"
+        dateFormat="dd/MM/yyyy"
+      />
+      <DatePicker
+        ref={endDateRef}
+        selected={localEndDate}
+        onChange={(date) => setLocalEndDate(date)}
+        selectsEnd
+        startDate={localStartDate}
+        endDate={localEndDate}
+        minDate={localStartDate}
+        placeholderText="Date de fin"
+        className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
+        locale="fr"
+        dateFormat="dd/MM/yyyy"
+      />
+      <button
+        onClick={handleGlobalFilter}
+        className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg shadow hover:bg-gray-200"
+      >
+        <FaFilter />
+        <span>Filtrer</span>
+      </button>
+      {periodText && (
+        <span className="text-sm text-blue-700 font-medium whitespace-nowrap ml-3">
+          {periodText}
+        </span>
+      )}
+    </div>
+
+    {/* Bouton Télécharger CR */}
+    <div className="mt-2 lg:mt-0">
+      <button
+        ref={buttonRef}
+        onClick={() => {
+          setShowMenu(!showMenu);
+          if (!showMenu) {
+            setDownloadStep("chooseFormat");
+            setSelectedFormat(null);
+          }
+        }}
+        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
+      >
+        <AiOutlineDownload />
+        <span>Télécharger CR</span>
+      </button>
+    </div>
+  </div>
+
+  {/* Dropdown */}
+  {renderDropdown()}
+</header>
   );
 }

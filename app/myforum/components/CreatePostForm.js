@@ -95,7 +95,7 @@ export default function CreatePostForm() {
         name="category"
         value={form.category}
         onChange={handleChange}
-        options={["FTTH", "SI3C", "DOOR", "B2B", "Autre"]}
+        options={["FTTH", "HISPEED", "FTTB", "DSL", "EARF", "ARTHUIS"]}
       />
 
       <InputField
@@ -137,7 +137,6 @@ export default function CreatePostForm() {
   );
 }
 
-// Reusable Input
 function InputField({ icon, label, name, value, onChange }) {
   return (
     <div className="relative">

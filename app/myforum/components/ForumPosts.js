@@ -16,7 +16,9 @@ export default function ForumPostsCarousel() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Tous');
-  const categories = ['Tous', 'FTTH', 'SI3C', 'DOOR', 'B2B', 'Support'];
+
+  const categories = ['FTTH', 'HISPEED', 'FTTB', 'DSL', 'EARF', 'ARTHUIS'];
+  const allCategories = ['Tous', ...categories];
 
   const scroll = (dir, manual = false) => {
     if (scrollRef.current) {
@@ -109,7 +111,7 @@ export default function ForumPostsCarousel() {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2">
           <div className="flex flex-wrap gap-2">
-            {categories.map((cat, idx) => (
+            {allCategories.map((cat, idx) => (
               <button
                 key={idx}
                 onClick={() => setCategory(cat)}

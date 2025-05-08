@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function FilterBar({ onFilterChange }) {
-  const filters = ["Tous", "FTTH", "SI3C", "DOOR", "B2B", "Support"];
+  const filters = ["Tous", "FTTH", "HISPEED", "FTTB", "DSL", "EARF", "ARTHUIS"];
   const [selectedCategory, setSelectedCategory] = useState("Tous");
   const [searchTerm, setSearchTerm] = useState("");
 
