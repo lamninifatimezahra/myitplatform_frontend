@@ -354,7 +354,6 @@ export default function Header({ type = "HISPEED" }) {
         </div>
       </div>
 
-      {/* Menu de sélection CR Word/PPTX */}
       {renderDropdown()}
     </header>
   );
