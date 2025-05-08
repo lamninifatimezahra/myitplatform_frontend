@@ -137,7 +137,6 @@ export default function CreatePostForm() {
   );
 }
 
-// Reusable Input
 function InputField({ icon, label, name, value, onChange }) {
   return (
     <div className="relative">
