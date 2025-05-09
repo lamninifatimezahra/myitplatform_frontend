@@ -17,7 +17,7 @@ import ProfileMenu from "@/app/ftth/components/ProfileMenu";
 import NotificationMenu from "@/app/ftth/components/NotificationMenu";
 
 
-// Enregistrement de la localisation française
+
 registerLocale('fr', fr);
 setDefaultLocale('fr');
 
