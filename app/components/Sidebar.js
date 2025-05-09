@@ -151,6 +151,8 @@ function SidebarContent({
           </ul>
         )}
 
+        {/* 👤 Ajout de MyProfile ici */}
+        <SidebarItem icon={<AiOutlineUser size={22} />} text="MyProfile" href="/myprofile" pathname={pathname} onClick={closeSidebar} />
         <SidebarItem icon={<AiOutlineMessage size={22} />} text="MyForum" href="/myforum" pathname={pathname} onClick={closeSidebar} />
         <SidebarItem icon={<AiOutlineRobot size={22} />} text="MyAI" href="/myai" pathname={pathname} onClick={closeSidebar} />
         <SidebarItem icon={<AiOutlineFile size={22} />} text="MyFile" href="/myfile" pathname={pathname} onClick={closeSidebar} />

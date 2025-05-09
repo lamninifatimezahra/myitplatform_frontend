@@ -86,9 +86,10 @@ export default function AccueilPage() {
 
   const modules = [
     { name: "Dashboard KPIs", path: "/dashboards", roles: ["admin", "user"] },
+    { name: "MyProfile", path: "/myprofile", roles: ["admin", "user"] },  // ✅ Ajouté ici
     { name: "MyForum", path: "/myforum", roles: ["admin", "user"] },
     { name: "MyAI", path: "/myai", roles: ["admin", "user"] },
-    { name: "MyFile", path: "/myfile", roles: ["admin"] },
+    { name: "MyFile", path: "/myfile", roles: ["admin", "user"] },
     { name: "Guide MyIT", path: "/guide", roles: ["admin", "user"] },
     { name: "Paramètres", path: "/settings", roles: ["admin", "user"] },
     { name: "MyPropos", path: "/mypropos", roles: ["admin", "user"] },
