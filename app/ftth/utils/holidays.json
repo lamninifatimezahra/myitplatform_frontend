@@ -1,0 +1,34 @@
+{
+    "france": {
+      "2025-01-01": "Jour de l'an",
+      "2025-04-21": "Lundi de Pâques",
+      "2025-05-01": "Fête du Travail",
+      "2025-05-08": "Victoire des alliés",
+      "2025-05-29": "Ascension",
+      "2025-06-09": "Lundi de Pentecôte",
+      "2025-07-14": "Fête Nationale",
+      "2025-08-15": "Assomption",
+      "2025-11-01": "Toussaint",
+      "2025-11-11": "Armistice",
+      "2025-12-25": "Noël"
+    },
+    "morocco": {
+      "2025-01-01": "Nouvel An",
+      "2025-01-11": "Anniversaire du Manifeste de l’Indépendance",
+      "2025-01-14": "Nouvel An Amazigh",
+      "2025-05-01": "Fête du Travail",
+      "2025-07-30": "Fête du Trône",
+      "2025-08-14": "Anniversaire de la Récupération de Oued Eddahab",
+      "2025-08-20": "Révolution du Roi et du Peuple",
+      "2025-08-21": "Fête de la Jeunesse",
+      "2025-11-06": "Anniversaire de la Marche Verte",
+      "2025-11-18": "Fête de l’Indépendance",
+      "2025-03-31": "Aïd Al Fitr (fin du Ramadan) - Jour 1",
+      "2025-04-01": "Aïd Al Fitr (fin du Ramadan) - Jour 2",
+      "2025-06-06": "Aïd Al Adha (fête du sacrifice) - Jour 1",
+      "2025-06-07": "Aïd Al Adha (fête du sacrifice) - Jour 2",
+      "2025-06-27": "1er Moharram (Nouvel An Hégirien)",
+      "2025-09-05": "Aïd Al Mawlid (naissance du Prophète)"
+    }
+  }
+  
