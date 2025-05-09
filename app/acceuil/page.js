@@ -86,12 +86,12 @@ export default function AccueilPage() {
 
   const modules = [
     { name: "Dashboard KPIs", path: "/dashboards", roles: ["admin", "user"] },
-    { name: "MyProfile", path: "/myprofile", roles: ["admin", "user"] },  
-    { name: "MyForum", path: "/myforum", roles: ["admin", "user"] },
-    { name: "MyAI", path: "/myai", roles: ["admin", "user"] },
     { name: "MyFile", path: "/myfile", roles: ["admin", "user"] },
-    { name: "Guide MyIT", path: "/guide", roles: ["admin", "user"] },
+    { name: "MyForum", path: "/myforum", roles: ["admin", "user"] },
     { name: "MyPropos", path: "/mypropos", roles: ["admin", "user"] },
+    { name: "MyAI", path: "/myai", roles: ["admin", "user"] },
+    { name: "Guide MyIT", path: "/guide", roles: ["admin", "user"] },
+    { name: "MyProfile", path: "/myprofile", roles: ["admin", "user"] },  
     { name: "Espace Admin", path: "/admin", roles: ["admin"] },
   ];
 
