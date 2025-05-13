@@ -84,7 +84,7 @@ export default function HispeedDashboard() {
 
             {/* Ligne 1 : KPI */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              <KpiTicketsEntrants apiUrl={API_HISPEED_DATA} dateFilterField="date_sortie" />
+              <KpiTicketsEntrants apiUrl={API_HISPEED_DATA} dateFilterField="date_derniere_maj" />
               <KpiTicketTraite apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" />
               <KpiReentrant apiUrl={API_HISPEED_DATA} tagField="tag_reentrant" dateField="date_sortie" />
               <KpiTicketsEnCours apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
