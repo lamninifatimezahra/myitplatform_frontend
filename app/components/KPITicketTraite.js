@@ -37,7 +37,7 @@ const normalizeDate = (input) => {
 
 export default function KpiTicketsEntrants({
   apiUrl,
-  title = "Tickets Entrants",
+  title = "Tickets Traités",
   dateFilterField = "date_sortie"
 }) {
   const id = `KPI ${title}`;
