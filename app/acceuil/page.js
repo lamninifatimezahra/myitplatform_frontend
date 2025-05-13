@@ -47,7 +47,6 @@ export default function AccueilPage() {
     };
   }, []);
 
-  // ✅ Spinner custom si loading
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
