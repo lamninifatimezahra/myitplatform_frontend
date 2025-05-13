@@ -127,7 +127,7 @@ export default function KpiTicketsEntrants({
       return;
     }
 
-    if (filterType === "all" || (!start || !end)) {
+    if (!start || !end){
       setTicketsCount(tickets.length);
     } else {
       const startStr = start.toISOString().split("T")[0];
