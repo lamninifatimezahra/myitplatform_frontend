@@ -34,76 +34,61 @@ const renderCustomHeader = ({
 );
 
 export default function KpiTicketsEntrants({
-  apiUrl, // URL de l'API requise sans valeur par défaut
+  apiUrl,
   title = "Tickets Entrants",
-  dateFilterField = "date_sortie",
-  filterType = "all"  // "all" = tous, "range" = filtrer sur une plage
+  dateFilterField = "date_derniere_maj",
+  filterType = "all"
 }) {
   const id = `KPI ${title}`;
-
-  // Référence pour le composant DatePicker
   const calendarRef = useRef(null);
 
-  // États pour les données
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
-  
-  // États locaux pour le filtre spécifique à ce composant
   const [localStartDate, setLocalStartDate] = useState(null);
   const [localEndDate, setLocalEndDate] = useState(null);
   const [localModifiedAt, setLocalModifiedAt] = useState(0);
-
-  // Récupération du filtre global via le contexte
-  const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
-
   const [ticketsCount, setTicketsCount] = useState(0);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Effet pour gérer les clics extérieurs au calendrier
+  const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
+
+  // Fermer le calendrier si clic en dehors
   useEffect(() => {
     function handleClickOutside(event) {
-      // Si le calendrier est ouvert et que le clic est en dehors du calendrier et du bouton d'ouverture
-      if (isCalendarOpen && 
-          calendarRef.current && 
-          !calendarRef.current.contains(event.target) &&
-          !event.target.closest('button[data-calendar-toggle]')) {
+      if (
+        isCalendarOpen &&
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target) &&
+        !event.target.closest('button[data-calendar-toggle]')
+      ) {
         setIsCalendarOpen(false);
       }
     }
-    
-    // Ajouter l'écouteur d'événements
     document.addEventListener("mousedown", handleClickOutside);
-    
-    // Nettoyer l'écouteur d'événements
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isCalendarOpen]);
 
-  // Synchronisation : si le filtre global a été modifié plus récemment que le local, on l'applique
+  // Appliquer filtre global si plus récent que local
   useEffect(() => {
     if (globalModifiedAt > localModifiedAt) {
       setLocalStartDate(globalStartDate);
       setLocalEndDate(globalEndDate);
-      // Optionnel : mettre à jour localModifiedAt si vous souhaitez
-      // setLocalModifiedAt(globalModifiedAt);
+      setLocalModifiedAt(globalModifiedAt); // 🔄 important pour ne pas bloquer le filtre global
     }
   }, [globalStartDate, globalEndDate, globalModifiedAt, localModifiedAt]);
 
-  // Détermination de la plage de dates effective selon la dernière modification
   const effectiveStartDate =
     globalModifiedAt > localModifiedAt && globalStartDate ? globalStartDate : localStartDate;
   const effectiveEndDate =
     globalModifiedAt > localModifiedAt && globalEndDate ? globalEndDate : localEndDate;
 
-  // Chargement des données initial et calcul avec le filtre effectif
+  // Chargement des données
   useEffect(() => {
     if (!apiUrl) {
       setError("L'URL de l'API est requise");
       return;
     }
 
-    setError(null);
     fetchWithAuth(apiUrl)
       .then((res) => res.json())
       .then((jsonData) => {
@@ -111,36 +96,46 @@ export default function KpiTicketsEntrants({
         calculateTickets(jsonData, effectiveStartDate, effectiveEndDate);
       })
       .catch((err) => {
-        console.error("Erreur de chargement :", err);
         setError("Erreur lors du chargement des données");
       });
   }, [apiUrl, effectiveStartDate, effectiveEndDate]);
 
-  // Recalculer lorsque le filtre effectif change
+  // Recalculer à chaque changement
   useEffect(() => {
     calculateTickets(data, effectiveStartDate, effectiveEndDate);
-  }, [data, effectiveStartDate, effectiveEndDate, dateFilterField, filterType]);
+  }, [data, effectiveStartDate, effectiveEndDate, dateFilterField]);
 
+  // ✅ Fonction de calcul finale avec log de débogage
+  const normalizeDate = (d) => {
+    const nd = new Date(d);
+    nd.setHours(0, 0, 0, 0);
+    return nd;
+  };
+  
   const calculateTickets = (tickets, start, end) => {
     if (!tickets || tickets.length === 0) {
       setTicketsCount(0);
       return;
     }
-
-    if (filterType === "all" || (!start || !end)) {
+  
+    if (!start || !end) {
       setTicketsCount(tickets.length);
-    } else {
-      const startStr = start.toISOString().split("T")[0];
-      const endStr = end.toISOString().split("T")[0];
-      const filtered = tickets.filter((t) => {
-        // Si le ticket n'a pas la propriété demandée ou si elle est null, on le saute
-        if (!t[dateFilterField]) return false;
-        return t[dateFilterField] >= startStr && t[dateFilterField] <= endStr;
-      });
-      setTicketsCount(filtered.length);
+      return;
     }
+  
+    const startDate = normalizeDate(start);
+    const endDate = normalizeDate(end);
+  
+    const filtered = tickets.filter((t) => {
+      const dateRaw = t[dateFilterField];
+      if (!dateRaw) return false;
+      const ticketDate = normalizeDate(dateRaw);
+      return ticketDate >= startDate && ticketDate <= endDate;
+    });
+  
+    setTicketsCount(filtered.length);
   };
-
+  
   const formatDate = (date) => {
     if (!date) return "";
     const formatted = date.toLocaleDateString("fr-FR");
@@ -153,22 +148,16 @@ export default function KpiTicketsEntrants({
       ? `${formatDate(effectiveStartDate)} → ${formatDate(effectiveEndDate)}`
       : "Toutes les périodes";
 
-  // Gestion de la modification du DatePicker local
   const handleDateChange = (dates) => {
     const [start, end] = dates;
     setLocalStartDate(start);
     setLocalEndDate(end);
     setLocalModifiedAt(Date.now());
-    
-    // Fermer le calendrier si une plage complète est sélectionnée
     if (start && end) {
-      setTimeout(() => {
-        setIsCalendarOpen(false);
-      }, 300);
+      setTimeout(() => setIsCalendarOpen(false), 300);
     }
   };
 
-  // Afficher une erreur si l'URL d'API n'est pas fournie
   if (error) {
     return (
       <div className="visualisation relative w-64" data-id={id}>
@@ -183,26 +172,24 @@ export default function KpiTicketsEntrants({
   return (
     <div className="visualisation relative w-64" data-id={id}>
       <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
-        {/* Header flexible avec titre et bouton */}
         <div className="flex justify-between items-start w-full mb-2">
           <h3 className="text-gray-800 text-lg font-medium">{title}</h3>
           <button
             className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"
             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-            data-calendar-toggle="true">
+            data-calendar-toggle="true"
+          >
             <AiOutlineCalendar size={20} className="text-gray-800" />
           </button>
         </div>
-        
-        {/* Contenu principal */}
         <p className="text-xs text-gray-500 mb-1">{periodeLabel}</p>
         <p className="text-3xl font-bold text-black">{ticketsCount}</p>
-        
-        {/* Calendrier flottant qui se ferme en cliquant ailleurs */}
+
         {isCalendarOpen && (
-          <div 
-            ref={calendarRef} 
-            className="absolute right-0 top-14 mt-2 bg-white shadow-lg rounded-md p-2 z-50">
+          <div
+            ref={calendarRef}
+            className="absolute right-0 top-14 mt-2 bg-white shadow-lg rounded-md p-2 z-50"
+          >
             <DatePicker
               selectsRange
               startDate={localStartDate}

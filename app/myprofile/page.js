@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Sidebar from '@/app/components/Sidebar';
-import Header from './components/Header';
+import Header from './components/Header'
 import fetchWithAuth from '@/utils/fetchWithAuth';
 import useAuth from '@/hooks/useAuth';
 import Image from 'next/image';
