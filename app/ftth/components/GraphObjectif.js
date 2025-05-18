@@ -122,7 +122,7 @@ export default function GraphObjectif({
   return (
     <div
       data-graph-id="graph-objectif"
-      data-graph-label="KPI: Moyennne"
+      data-graph-label="Objectif"
       className="bg-white shadow-xl rounded-2xl p-6 relative"
     >
       {loading && (
@@ -138,7 +138,7 @@ export default function GraphObjectif({
 
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-2xl font-semibold text-gray-800">Objectif</h3>
+        <h3 className="text-2xl font-semibold text-gray-800">KPI: Moyennne</h3>
         <div className="flex gap-2">
           <button
             onClick={handleRefresh}
