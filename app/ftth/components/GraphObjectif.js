@@ -122,7 +122,7 @@ export default function GraphObjectif({
   return (
     <div
       data-graph-id="graph-objectif"
-      data-graph-label="Objectif"
+      data-graph-label="KPI: Moyennne"
       className="bg-white shadow-xl rounded-2xl p-6 relative"
     >
       {loading && (
