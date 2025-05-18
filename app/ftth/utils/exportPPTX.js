@@ -349,19 +349,17 @@ async function createGraphSlide(pptx, id, graphList, commentMap, background, blu
     }
 
     // 📆 Affichage de la plage de dates dans tous les cas
-    // 📆 Affichage de la plage de dates uniquement si ce n'est PAS le slide Objectif
-if (dateRangeText && !isObjectif) {
-  slide.addText(dateRangeText, {
-    x: 0.7,
-    y: 4.7,
-    w: 5.2,
-    h: 0.4,
-    align: "center",
-    fontSize: 12,
-    color: "#6b7280"
-  });
-}
-
+    if (dateRangeText) {
+      slide.addText(dateRangeText, {
+        x: isObjectif ? 2.1 : 0.7,
+        y: 4.7,
+        w: isObjectif ? 6.0 : 5.2,
+        h: 0.4,
+        align: "center",
+        fontSize: 12,
+        color: "#6b7280"
+      });
+    }
   } catch (err) {
     console.error("Erreur slide", id, err);
   }

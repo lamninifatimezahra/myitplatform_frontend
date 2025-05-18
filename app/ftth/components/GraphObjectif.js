@@ -117,7 +117,6 @@ export default function GraphObjectif({
   const displayPeriod = () => {
     if (!globalStartDate || !globalEndDate) return "";
     const weeks = `${getWeekNumber(globalStartDate)}-${getWeekNumber(globalEndDate)}`;
-    return `Période : S${weeks} | Du ${formatDate(globalStartDate)} au ${formatDate(globalEndDate)}`;
   };
 
   return (
@@ -159,35 +158,47 @@ export default function GraphObjectif({
       </div>
 
       {/* Graph */}
-      <div id="canvas-graph-objectif" ref={chartRef} className="relative mt-4 h-[400px] flex items-center justify-center rounded-xl bg-white shadow-inner p-4 overflow-hidden">
-        <div className="relative">
-          <svg width="200" height="200" viewBox="0 0 240 240">
-            <circle cx="120" cy="120" r="100" stroke="black" strokeWidth="5" fill="none" />
-            <path d="M40,120 A80,80 0 0,1 200,120" stroke="black" strokeWidth="10" fill="none" />
-            <line
-              x1="120"
-              y1="120"
-              x2={120 + 45 * Math.cos((Math.PI / 180) * fixedAngle)}
-              y2={120 + 45 * Math.sin((Math.PI / 180) * fixedAngle)}
-              stroke="black"
-              strokeWidth="5"
-            />
-            <circle cx="120" cy="120" r="7" fill="black" />
-          </svg>
-        </div>
+{/* Graph */}
+<div 
+  id="canvas-graph-objectif" 
+  ref={chartRef} 
+  className="relative mt-4 h-[400px] flex items-center justify-center rounded-xl bg-white shadow-inner p-4 overflow-hidden"
+>
+  <div className="relative">
+    <svg width="200" height="200" viewBox="0 0 240 240">
+      <circle cx="120" cy="120" r="100" stroke="black" strokeWidth="5" fill="none" />
+      <path d="M40,120 A80,80 0 0,1 200,120" stroke="black" strokeWidth="10" fill="none" />
+      <line
+        x1="120"
+        y1="120"
+        x2={120 + 45 * Math.cos((Math.PI / 180) * fixedAngle)}
+        y2={120 + 45 * Math.sin((Math.PI / 180) * fixedAngle)}
+        stroke="black"
+        strokeWidth="5"
+      />
+      <circle cx="120" cy="120" r="7" fill="black" />
+    </svg>
 
-        <div className="flex flex-col items-start ml-10">
-          <div className="flex items-center gap-4 mb-1">
-            <div className="text-[6rem] font-extrabold text-green-600">{value}</div>
-            <div className="text-gray-700 font-bold text-4xl">commandes</div>
-          </div>
-          {globalStartDate && globalEndDate && (
-            <p className="text-gray-700 font-semibold text-[0.95rem] mt-[-20px]">
-              {displayPeriod()}
-            </p>
-          )}
-        </div>
-      </div>
+    {/* ✅ Deux rectangles ajoutés et bien centrés */}
+    <div className="absolute top-[125px] left-1/2 transform -translate-x-1/2 flex gap-3">
+      <span className="w-14 h-4 rounded-md bg-red-500"></span>
+      <span className="w-14 h-4 rounded-md bg-green-500"></span>
+    </div>
+  </div>
+
+  <div className="flex flex-col items-start ml-10">
+    <div className="flex items-center gap-4 mb-1">
+      <div className="text-[6rem] font-extrabold text-green-600">{value}</div>
+      <div className="text-gray-700 font-bold text-4xl">commandes</div>
+    </div>
+    {globalStartDate && globalEndDate && (
+      <p className="text-gray-700 font-semibold text-[0.95rem] mt-[-20px]">
+        {displayPeriod()}
+      </p>
+    )}
+  </div>
+</div>
+
 
       {/* Modal */}
       <Modal
