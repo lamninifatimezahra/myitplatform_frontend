@@ -101,7 +101,7 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
 
   const kpi1 = await captureAndResize("kpi-backlog-j1", 280, 100);
   const kpi2 = await captureAndResize("kpi-backlog-j", 280, 100);
-  const objectif = await captureAndResize("canvas-graph-objectif", 450, 300);
+const objectif = await captureAndResize("canvas-graph-objectif", 550, 280);
 
   let bodyHtml = `
   <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;">
