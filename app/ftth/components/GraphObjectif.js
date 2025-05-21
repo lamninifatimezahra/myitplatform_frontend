@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaExpand, FaSyncAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import holidaysData from "@/app/ftth/utils/holidays.json";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
@@ -27,7 +26,6 @@ export default function GraphObjectif({
   const [hasFilter, setHasFilter] = useState(false);
 
   const chartRef = useRef(null);
-  const endDateRef = useRef(null);
 
   const normalizeDate = (d) => {
     const date = new Date(d);
@@ -43,7 +41,7 @@ export default function GraphObjectif({
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
   };
 
-  const fetchAverageNonTraite = async () => {
+  const fetchAverageNonTraite = async (forceKPIDuJour = false) => {
     setLoading(true);
     try {
       const res = await fetchWithAuth(
@@ -65,8 +63,8 @@ export default function GraphObjectif({
       let start = new Date(today);
       let end = new Date(today);
 
-      if (isFirstLoad) {
-        setHasFilter(false); // 🛑 Ignore les dates globales si KPI du jour
+      if (forceKPIDuJour || isFirstLoad) {
+        setHasFilter(false);
       } else if (globalStartDate && globalEndDate) {
         start = normalizeDate(globalStartDate);
         end = normalizeDate(globalEndDate);
@@ -80,7 +78,7 @@ export default function GraphObjectif({
         return date >= start && date <= end && isWorkingDay(e.date);
       });
 
-      if (isFirstLoad) {
+      if (forceKPIDuJour || isFirstLoad) {
         const mostRecentDay = sortedData.find((e) => isWorkingDay(e.date));
         setValue(mostRecentDay?.non_traite || 0);
         setIsFirstLoad(false);
@@ -107,9 +105,9 @@ export default function GraphObjectif({
       setSelectedPeriod("day");
       setStartDate(null);
       setEndDate(null);
-      setIsFirstLoad(true);     // Forcer retour au KPI du jour
+      setIsFirstLoad(true);
       setHasFilter(false);
-      fetchAverageNonTraite();  // Recharger
+      fetchAverageNonTraite(true); // 🔥 appel avec KPI du jour forcé
     }
   };
 
