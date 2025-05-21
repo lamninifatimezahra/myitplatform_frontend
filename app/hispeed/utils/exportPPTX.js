@@ -229,20 +229,20 @@ nonKpiImages.forEach(img => {
 
   // Cercle avec numéro 1
   slideKpiTitle.addShape(ppt.ShapeType.ellipse, {
-    x: 1.3, y: 2.5, w: 0.6, h: 0.6,
+    x: 1.5, y: 2.6, w: 0.6, h: 0.6,
     fill: { color: "FFFFFF" },
     line: { color: "FFFFFF" }
   });
   slideKpiTitle.addText("1", {
-    x: 1.3, y: 2.5, w: 0.6, h: 0.6,
+    x: 1.5, y: 2.6, w: 0.6, h: 0.6,
     align: "center", valign: "middle",
     fontSize: 20, bold: true, color: "0B2F5A"
   });
 
   // Titre blanc centré
   slideKpiTitle.addText("KPIs Opérationnels​", {
-    x: 2.0, y: 2.4, w: 7, h: 1,
-    fontSize: 40, bold: true, color: "FFFFFF", align: "center"
+    x: 2.2, y: 2.4, w: 7, h: 1,
+    fontSize: 40, bold: true, color: "FFFFFF"
   });
 
   // --- Génération des slides KPI (Fond statique + Contenu) ---
@@ -593,18 +593,18 @@ nonKpiImages.forEach(img => {
     }
     
     slideTitleReentrants.addShape(ppt.ShapeType.ellipse, {
-      x: 1.3, y: 2.5, w: 0.6, h: 0.6,
+      x: 1.5, y: 2.6, w: 0.6, h: 0.6,
       fill: { color: "FFFFFF" },
       line: { color: "FFFFFF" }
     });
     slideTitleReentrants.addText("2", {
-      x: 1.3, y: 2.5, w: 0.6, h: 0.6,
+      x: 1.5, y: 2.6, w: 0.6, h: 0.6,
       align: "center", valign: "middle",
       fontSize: 20, bold: true, color: "0B2F5A"
     });
     slideTitleReentrants.addText("TT Réentrants​", {
-      x: 2.0, y: 2.4, w: 7, h: 1,
-      fontSize: 40, bold: true, color: "FFFFFF", align: "center"
+      x: 2.2, y: 2.4, w: 7, h: 1,
+      fontSize: 40, bold: true, color: "FFFFFF"
     });
   }
   
@@ -690,20 +690,20 @@ nonKpiImages.forEach(img => {
 
   // Cercle avec numéro 3
   slideTransverseTitle.addShape(ppt.ShapeType.ellipse, {
-    x: 1.3, y: 2.5, w: 0.6, h: 0.6,
+    x: 1.5, y: 2.6, w: 0.6, h: 0.6,
     fill: { color: "FFFFFF" },
     line: { color: "FFFFFF" }
   });
   slideTransverseTitle.addText("3", {
-    x: 1.3, y: 2.5, w: 0.6, h: 0.6,
+    x: 1.5, y: 2.6, w: 0.6, h: 0.6,
     align: "center", valign: "middle",
     fontSize: 20, bold: true, color: "0B2F5A"
   });
 
   // Titre blanc centré
   slideTransverseTitle.addText("Synthèse", {
-    x: 2.0, y: 2.4, w: 7, h: 1,
-    fontSize: 40, bold: true, color: "FFFFFF", align: "center"
+    x: 2.2, y: 2.4, w: 7, h: 1,
+    fontSize: 40, bold: true, color: "FFFFFF"
   });
 
     // Slide 7 – Météo & Humeur Générale

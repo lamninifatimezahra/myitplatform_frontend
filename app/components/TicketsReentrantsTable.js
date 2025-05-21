@@ -99,56 +99,57 @@ export default function TicketsReentrantsTable({
   /**
    * Fonction de traitement des tickets (calcul des itérations).
    */
-  const processIterationData = (tickets) => {
-    const processed = {};
-    const cumulativeIterations = {};
+const processIterationData = (tickets) => {
+  const processed = {};
+  const cumulativeIterations = {};
 
-    // Tri par semaine pour avoir un ordre cohérent.
-    tickets
-      .sort((a, b) => a.semaine - b.semaine)
-      .forEach(ticket => {
-        const ticketId = ticket.id_ticket;
-        const week = ticket.semaine;
+  // Tri par semaine pour avoir un ordre cohérent.
+  tickets
+    .sort((a, b) => a.semaine - b.semaine)
+    .forEach(ticket => {
+      const ticketId = ticket.id_ticket;
+      const week = ticket.semaine;
 
-        if (!processed[ticketId]) {
-          processed[ticketId] = {
-            titre_ticket: ticket.compl_title,
-            iterations: {},
-            totalIterations: 0,
-            semaineCounts: {},
-            // Ajout du commentaire réentrant
-            comment_reentrant: ticket.comment_reentrant || ""
-          };
-          cumulativeIterations[ticketId] = 0;
-        }
-        cumulativeIterations[ticketId] += 1;
-        processed[ticketId].iterations[week] = cumulativeIterations[ticketId];
-        processed[ticketId].totalIterations = cumulativeIterations[ticketId];
-        processed[ticketId].semaineCounts[week] =
-          (processed[ticketId].semaineCounts[week] || 0) + 1;
-        
-        // Mise à jour du commentaire si nécessaire
-        if (ticket.comment_reentrant) {
-          processed[ticketId].comment_reentrant = ticket.comment_reentrant;
-        }
-      });
+      if (!processed[ticketId]) {
+        processed[ticketId] = {
+          titre_ticket: ticket.compl_title,
+          iterations: {},
+          totalIterations: 0,
+          semaineCounts: {},
+          // ✅ On prend le commentaire de la première ligne seulement
+          comment_reentrant: ticket.comment_reentrant || ""
+        };
+        cumulativeIterations[ticketId] = 0;
+      }
 
-    return Object.entries(processed)
-      .map(([id, ticket]) => {
-        const semainesApparition = Object.entries(ticket.semaineCounts)
+      cumulativeIterations[ticketId] += 1;
+      processed[ticketId].iterations[week] = cumulativeIterations[ticketId];
+      processed[ticketId].totalIterations = cumulativeIterations[ticketId];
+      processed[ticketId].semaineCounts[week] =
+        (processed[ticketId].semaineCounts[week] || 0) + 1;
+
+      // ❌ Supprimé : ne plus écraser comment_reentrant à chaque ligne
+      // if (ticket.comment_reentrant) {
+      //   processed[ticketId].comment_reentrant = ticket.comment_reentrant;
+      // }
+    });
+
+  return Object.entries(processed)
+    .map(([id, ticket]) => {
+      const semainesApparition = Object.entries(ticket.semaineCounts)
         .map(([week, count]) =>
           count > 1 ? `S${week}(${count} itérations)` : `S${week}`
         )
         .join(", ");
-        return {
-          id_ticket: id,
-          ...ticket,
-          semainesApparition,
-        };
-      })
-      .filter(ticket => ticket.totalIterations >= 2)
-      .sort((a, b) => b.totalIterations - a.totalIterations);
-  };
+      return {
+        id_ticket: id,
+        ...ticket,
+        semainesApparition,
+      };
+    })
+    .filter(ticket => ticket.totalIterations >= 2)
+    .sort((a, b) => b.totalIterations - a.totalIterations);
+};
 
   // Récupération initiale des données et extraction des années disponibles.
   useEffect(() => {
