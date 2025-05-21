@@ -324,25 +324,13 @@ nonKpiImages.forEach(img => {
         });
         
         if (kpiImageData) { 
-            // MODIFIÉ: Centrage de l'image dans le conteneur KPI
-            // Calculer des dimensions pour maintenir le ratio d'aspect tout en centrant l'image
-            const maxImgWidth = kpiBoxW - 0.2;
-            const maxImgHeight = kpiImgH;
-            const imgWidth = maxImgWidth;
-            const imgHeight = maxImgHeight;
-            
-            // Calculer les marges pour centrer l'image
-            const marginX = (maxImgWidth - imgWidth) / 2 + 0.1;
-            const marginY = (maxImgHeight - imgHeight) / 2 + kpiTitleH + 0.1;
-            
             slide.addImage({ 
                 data: kpiImageData, 
-                x: posX + marginX, 
-                y: posY + marginY, 
-                w: imgWidth, 
-                h: imgHeight,
-                sizing: { type: 'contain', w: imgWidth, h: imgHeight }
-            });
+                x: posX + 0.1, 
+                y: posY + kpiTitleH + 0.1, 
+                w: kpiBoxW - 0.2, 
+                h: kpiImgH 
+            }); 
         } else { 
             slide.addText("⚠️ Image N/D", { 
                 x: posX + 0.1, 
@@ -438,29 +426,14 @@ nonKpiImages.forEach(img => {
         const commentX = imageX + imageWidth + 0.2; 
         const commentY = contentStartY;
   
-        // Image avec centrage
-        if (item.image) {
-            // MODIFIÉ: Centrage de l'image dans le conteneur
-            const containerWidth = imageWidth - 0.2;
-            const containerHeight = imageHeight - 0.2;
-            
-            // Ajouter un rectangle d'arrière-plan pour indiquer la zone de l'image
-            slide.addShape(ppt.shapes.RECTANGLE, {
-                x: imageX + 0.1,
-                y: imageY + 0.1,
-                w: containerWidth,
-                h: containerHeight,
-                fill: { color: "FFFFFF" },
-                line: { color: "DDDDDD", width: 1 }
-            });
-            
+        // Image
+        if (item.image) { 
             slide.addImage({ 
                 data: item.image, 
                 x: imageX + 0.1, 
                 y: imageY + 0.1, 
-                w: containerWidth, 
-                h: containerHeight,
-                sizing: { type: 'contain', w: containerWidth, h: containerHeight }
+                w: imageWidth - 0.2, 
+                h: imageHeight - 0.2 
             }); 
         } else { 
             slide.addText("⚠️ Image N/D", { 
@@ -475,6 +448,7 @@ nonKpiImages.forEach(img => {
                 fontSize: 12
             }); 
         }
+  
     }
   } else {
     console.log("Aucun graphique standard trouvé.");
@@ -516,31 +490,15 @@ nonKpiImages.forEach(img => {
     const tableContainerW = availableWidth - 0.4;
     const tableContainerH = Math.max(0.5, tableImageHeight); // S'assurer d'une hauteur min
 
-    // MODIFIÉ: Ajout d'un rectangle blanc pour marquer la zone du tableau
-    slide.addShape(ppt.shapes.RECTANGLE, {
-        x: tableContainerX,
-        y: tableContainerY,
-        w: tableContainerW,
-        h: tableContainerH,
-        fill: { color: "FFFFFF" },
-        line: { color: "DDDDDD", width: 1 }
-    });
-
-    // Image (tableau) - Centré
+    // Image (tableau)
     if (item.image) {
         const imgPadding = 0.1;
-        
-        // Calculer les dimensions intérieures
-        const innerWidth = tableContainerW - (2*imgPadding);
-        const innerHeight = tableContainerH - (2*imgPadding);
-        
         slide.addImage({ 
             data: item.image, 
             x: tableContainerX + imgPadding, 
             y: tableContainerY + imgPadding, 
-            w: innerWidth, 
-            h: innerHeight,
-            sizing: { type: 'contain', w: innerWidth, h: innerHeight }
+            w: tableContainerW - (2*imgPadding), 
+            h: tableContainerH - (2*imgPadding) 
         });
     } else { 
         slide.addText("⚠️ Image N/D", { 
@@ -561,6 +519,8 @@ nonKpiImages.forEach(img => {
     const commentBoxX = tableContainerX;
     const commentBoxW = tableContainerW;
 
+    
+    
     // Notes spéciales selon le type de tableau
     const lowerLabel = tableLabel.toLowerCase();
     
@@ -572,7 +532,7 @@ nonKpiImages.forEach(img => {
           "FFF0F0", "FFB0B0", "8B0000");
     } 
     // Ajouter une note spéciale pour les réitérations
-    else if (lowerLabel.includes("réitérations") || lowerLabel.includes("reiterations")) {
+    else if (lowerLabel.includes("réitérations") || lowerLabel.includes("réentrants")) {
         addSpecialNote(slide, tableContainerX, commentBoxY + commentBoxHeight + 0.1, tableContainerW,
           "⚠️ Note sur les réentrants", 
           "Ce tableau indique les tickets qui ont été réouverts, suggérant des problèmes récurrents ou non résolus. Une attention particulière doit être portée à ces cas pour améliorer la qualité du service.",
@@ -686,30 +646,15 @@ nonKpiImages.forEach(img => {
       const commentX = imageX + imageWidth + 0.2; 
       const commentY = contentStartY;
 
-      // MODIFIÉ: Image avec centrage
-      if (item.image) {
-          // Créer un conteneur avec bordure pour l'image
-          const containerWidth = imageWidth - 0.2;
-          const containerHeight = imageHeight - 0.2;
-          
-          // Ajouter un rectangle d'arrière-plan pour indiquer la zone de l'image
-          slide.addShape(ppt.shapes.RECTANGLE, {
-              x: imageX + 0.1,
-              y: imageY + 0.1,
-              w: containerWidth,
-              h: containerHeight,
-              fill: { color: "FFFFFF" },
-              line: { color: "DDDDDD", width: 1 }
-          });
-          
+      // Image
+      if (item.image) { 
           slide.addImage({ 
               data: item.image, 
               x: imageX + 0.1, 
               y: imageY + 0.1, 
-              w: containerWidth, 
-              h: containerHeight,
-              sizing: { type: 'contain', w: containerWidth, h: containerHeight }
-          });
+              w: imageWidth - 0.2, 
+              h: imageHeight - 0.2 
+          }); 
       } else { 
           slide.addText("⚠️ Image N/D", { 
               x: imageX, 
@@ -763,12 +708,7 @@ nonKpiImages.forEach(img => {
 
     // Slide 7 – Météo & Humeur Générale
     const moodSlide = ppt.addSlide();
-    if (contentBackgroundBase64) {
-      moodSlide.background = { data: contentBackgroundBase64 };
-    } else {
-      moodSlide.background = { color: "FFFFFF" };
-      console.warn("Fond de contenu non chargé, utilisation d'un fond blanc par défaut");
-    }
+    moodSlide.addImage({ path: contentBackgroundUrl, x: 0, y: 0, w: "100%", h: "100%" });
   
     moodSlide.addText("Météo & Humeur Générale", {
       x: 0.6, y: 0.7, w: 8, h: 0.4, fontSize: 20, bold: true, color: "#0B2F5A"
