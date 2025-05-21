@@ -23,6 +23,8 @@ export default function GraphObjectif({
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [hasFilter, setHasFilter] = useState(false);
 
   const chartRef = useRef(null);
   const endDateRef = useRef(null);
@@ -40,8 +42,6 @@ export default function GraphObjectif({
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
   };
-
-  const formatDate = (date) => date.toLocaleDateString("fr-FR");
 
   const fetchAverageNonTraite = async () => {
     setLoading(true);
@@ -62,33 +62,30 @@ export default function GraphObjectif({
       const sortedData = [...json].sort((a, b) => new Date(b.date) - new Date(a.date));
       const today = sortedData[0]?.date ? new Date(sortedData[0].date) : new Date();
 
-      const getPeriodRange = () => {
-        let start = new Date(today);
-        let end = new Date(today);
-        switch (selectedPeriod) {
-          case "week": start.setDate(today.getDate() - 6); break;
-          case "month": start.setMonth(today.getMonth() - 1); break;
-          case "trimestre": start.setMonth(today.getMonth() - 3); break;
-          case "year": start.setFullYear(today.getFullYear() - 1); break;
-          case "custom":
-            if (startDate && endDate) return [startDate, endDate];
-            break;
-          default: break;
-        }
-        return [start, end];
-      };
+      let start = new Date(today);
+      let end = new Date(today);
 
-      let [start, end] = getPeriodRange();
-
-      if (globalStartDate && globalEndDate) {
+      if (isFirstLoad) {
+        setHasFilter(false); // 🛑 Ignore les dates globales si KPI du jour
+      } else if (globalStartDate && globalEndDate) {
         start = normalizeDate(globalStartDate);
         end = normalizeDate(globalEndDate);
+        setHasFilter(true);
+      } else {
+        setHasFilter(false);
       }
 
       const filtered = sortedData.filter((e) => {
         const date = normalizeDate(e.date);
         return date >= start && date <= end && isWorkingDay(e.date);
       });
+
+      if (isFirstLoad) {
+        const mostRecentDay = sortedData.find((e) => isWorkingDay(e.date));
+        setValue(mostRecentDay?.non_traite || 0);
+        setIsFirstLoad(false);
+        return;
+      }
 
       const total = filtered.reduce((acc, el) => acc + (el.non_traite || 0), 0);
       const avg = filtered.length ? total / filtered.length : 0;
@@ -105,18 +102,39 @@ export default function GraphObjectif({
     fetchAverageNonTraite();
   }, [selectedPeriod, startDate, endDate, globalStartDate, globalEndDate]);
 
-  const fixedAngle = -90;
-
   const handleRefresh = () => {
-    setSelectedPeriod("day");
-    setStartDate(null);
-    setEndDate(null);
-    fetchAverageNonTraite();
+    if (hasFilter) {
+      setSelectedPeriod("day");
+      setStartDate(null);
+      setEndDate(null);
+      setIsFirstLoad(true);     // Forcer retour au KPI du jour
+      setHasFilter(false);
+      fetchAverageNonTraite();  // Recharger
+    }
   };
 
-  const displayPeriod = () => {
-    if (!globalStartDate || !globalEndDate) return "";
-    const weeks = `${getWeekNumber(globalStartDate)}-${getWeekNumber(globalEndDate)}`;
+  const getNeedleAngle = (val) => {
+    const clamped = Math.min(Math.max(val, 0), 100);
+    return 180 - (clamped / 100) * 180;
+  };
+
+  const angle = getNeedleAngle(value);
+
+  const getPeriodLabel = () => {
+    if (!hasFilter) return "KPI du jour";
+
+    let label = "KPI : Moyenne";
+    if (globalStartDate && globalEndDate) {
+      const weekStart = getWeekNumber(globalStartDate);
+      const weekEnd = getWeekNumber(globalEndDate);
+      const startStr = globalStartDate.toLocaleDateString("fr-FR");
+      const endStr = globalEndDate.toLocaleDateString("fr-FR");
+
+      label += ` – Période : S${weekStart}`;
+      if (weekStart !== weekEnd) label += `-${weekEnd}`;
+      label += ` | Du ${startStr} au ${endStr}`;
+    }
+    return label;
   };
 
   return (
@@ -138,12 +156,12 @@ export default function GraphObjectif({
 
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-2xl font-semibold text-gray-800">KPI: Moyennne</h3>
+        <h3 className="text-xl font-semibold text-gray-800">{getPeriodLabel()}</h3>
         <div className="flex gap-2">
           <button
             onClick={handleRefresh}
             className="w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition"
-            title="Réinitialiser"
+            title="Revenir au KPI du jour"
           >
             <FaSyncAlt className="text-gray-700" />
           </button>
@@ -158,47 +176,39 @@ export default function GraphObjectif({
       </div>
 
       {/* Graph */}
-{/* Graph */}
-<div 
-  id="canvas-graph-objectif" 
-  ref={chartRef} 
-  className="relative mt-4 h-[400px] flex items-center justify-center rounded-xl bg-white shadow-inner p-4 overflow-hidden"
->
-  <div className="relative">
-    <svg width="200" height="200" viewBox="0 0 240 240">
-      <circle cx="120" cy="120" r="100" stroke="black" strokeWidth="5" fill="none" />
-      <path d="M40,120 A80,80 0 0,1 200,120" stroke="black" strokeWidth="10" fill="none" />
-      <line
-        x1="120"
-        y1="120"
-        x2={120 + 45 * Math.cos((Math.PI / 180) * fixedAngle)}
-        y2={120 + 45 * Math.sin((Math.PI / 180) * fixedAngle)}
-        stroke="black"
-        strokeWidth="5"
-      />
-      <circle cx="120" cy="120" r="7" fill="black" />
-    </svg>
+      <div
+        id="canvas-graph-objectif"
+        ref={chartRef}
+        className="relative mt-4 h-[400px] flex items-center justify-center rounded-xl bg-white shadow-inner p-4 overflow-hidden"
+      >
+        <div className="relative">
+          <svg width="200" height="200" viewBox="0 0 240 240">
+            <circle cx="120" cy="120" r="100" stroke="black" strokeWidth="5" fill="none" />
+            <path d="M40,120 A80,80 0 0,1 200,120" stroke="black" strokeWidth="10" fill="none" />
+            <line
+              x1="120"
+              y1="120"
+              x2={120 + 45 * Math.cos((Math.PI / 180) * angle)}
+              y2={120 - 45 * Math.sin((Math.PI / 180) * angle)}
+              stroke="black"
+              strokeWidth="5"
+            />
+            <circle cx="120" cy="120" r="7" fill="black" />
+          </svg>
 
-    {/* ✅ Deux rectangles ajoutés et bien centrés */}
-    <div className="absolute top-[125px] left-1/2 transform -translate-x-1/2 flex gap-3">
-      <span className="w-14 h-4 rounded-md bg-red-500"></span>
-      <span className="w-14 h-4 rounded-md bg-green-500"></span>
-    </div>
-  </div>
+          <div className="absolute top-[125px] left-1/2 transform -translate-x-1/2 flex gap-3">
+            <span className="w-14 h-4 rounded-md bg-red-500"></span>
+            <span className="w-14 h-4 rounded-md bg-green-500"></span>
+          </div>
+        </div>
 
-  <div className="flex flex-col items-start ml-10">
-    <div className="flex items-center gap-4 mb-1">
-      <div className="text-[6rem] font-extrabold text-green-600">{value}</div>
-      <div className="text-gray-700 font-bold text-4xl">commandes</div>
-    </div>
-    {globalStartDate && globalEndDate && (
-      <p className="text-gray-700 font-semibold text-[0.95rem] mt-[-20px]">
-        {displayPeriod()}
-      </p>
-    )}
-  </div>
-</div>
-
+        <div className="flex flex-col items-start ml-10">
+          <div className="flex items-center gap-4 mb-1">
+            <div className="text-[6rem] font-extrabold text-green-600">{value}</div>
+            <div className="text-gray-700 font-bold text-4xl">commandes</div>
+          </div>
+        </div>
+      </div>
 
       {/* Modal */}
       <Modal
@@ -217,7 +227,6 @@ export default function GraphObjectif({
               <FaExpand className="text-gray-700" />
             </button>
           </div>
-
           <div className="relative h-[400px] flex items-center justify-center">
             <div className="text-5xl font-bold">{value} commandes (moyenne)</div>
           </div>
