@@ -340,7 +340,7 @@ export default function GroupedBarChartEARF({
           </div>
 
           {/* Section Boutons d'action */}
-          <div className="flex gap-2 items-center"> {/* Ajout de items-center pour l'alignement vertical */}
+          <div className="no-export flex gap-2 items-center"> {/* Ajout de items-center pour l'alignement vertical */}
             {/* Bouton Filtre */}
             <button
               className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"
@@ -351,7 +351,7 @@ export default function GroupedBarChartEARF({
               <AiOutlineFilter size={20} className="text-gray-800" />
             </button>
 
-
+          <div className="no-export">
             {/* Bouton Agrandir */}
             <button
               className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"
@@ -360,6 +360,7 @@ export default function GroupedBarChartEARF({
             >
               <FaExpand size={20} className="text-gray-800" />
             </button>
+           </div> 
           </div>
         </div>
 

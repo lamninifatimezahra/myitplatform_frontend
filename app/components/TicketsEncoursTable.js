@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { AiOutlineFilter } from "react-icons/ai";
-import { FaExpand } from "react-icons/fa";
+import { FaExpand, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import Modal from "react-modal";
 
@@ -31,7 +31,6 @@ export default function TicketsEnCoursTable({
     );
   }
 
-
   // Références
   const filterPanelRef = useRef(null);
 
@@ -45,6 +44,10 @@ export default function TicketsEnCoursTable({
   const [sortOrder, setSortOrder] = useState("desc");
   const [isOpen, setIsOpen] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  
+  // États pour l'édition des commentaires
+  const [editingComment, setEditingComment] = useState(null); // {id: ticketId, text: commentText}
+  const [commentSaving, setCommentSaving] = useState(false);
 
   // Effet pour fermer le panneau de filtre en cas de clic extérieur
   useEffect(() => {
@@ -98,11 +101,21 @@ export default function TicketsEnCoursTable({
                 last_maj: maj,
                 semaineCounts: { [week]: 1 },
                 semaines: [week],
+                // Ajouter les champs de commentaire
+                comment_en_cours: ticket.comment_en_cours || "",
+                comment_reentrant: ticket.comment_reentrant || "",
               };
             } else {
               if (maj > grouped[ticketId].last_maj) {
                 grouped[ticketId].delay = delay;
                 grouped[ticketId].last_maj = maj;
+                // Mettre à jour les commentaires si nécessaire
+                if (ticket.comment_en_cours) {
+                  grouped[ticketId].comment_en_cours = ticket.comment_en_cours;
+                }
+                if (ticket.comment_reentrant) {
+                  grouped[ticketId].comment_reentrant = ticket.comment_reentrant;
+                }
               }
               grouped[ticketId].semaineCounts[week] = (grouped[ticketId].semaineCounts[week] || 0) + 1;
               if (!grouped[ticketId].semaines.includes(week)) {
@@ -153,27 +166,80 @@ export default function TicketsEnCoursTable({
     }
   };
 
+  // Nouvelle fonction pour gérer l'édition des commentaires
+  const startEditingComment = (ticketId, currentComment) => {
+    setEditingComment({
+      id: ticketId,
+      text: currentComment || ""
+    });
+  };
+
+  // Annuler l'édition
+  const cancelEditingComment = () => {
+    setEditingComment(null);
+  };
+
+  // Sauvegarder le commentaire
+  const saveComment = async (ticketId, commentText) => {
+    setCommentSaving(true);
+    try {
+      const response = await fetchWithAuth('https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/update-ticket-comment/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id_ticket: ticketId,
+          comment_type: 'en_cours',
+          comment_text: commentText
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Mettre à jour l'état local
+        setTickets(prevTickets => 
+          prevTickets.map(ticket => 
+            ticket[idField] === ticketId 
+              ? { ...ticket, comment_en_cours: commentText } 
+              : ticket
+          )
+        );
+        setEditingComment(null);
+      } else {
+        alert(`Erreur: ${data.message || 'Échec de la sauvegarde du commentaire'}`);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde du commentaire:", error);
+      alert("Une erreur est survenue lors de la sauvegarde du commentaire.");
+    } finally {
+      setCommentSaving(false);
+    }
+  };
+
   if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
   return (
     <div className="visualisation relative" data-id={id}>
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
         {/* Header avec titre et boutons */}
-        <div className="flex justify-between items-start mb-4 relative">
+        <div className="no-export flex justify-between items-start mb-4 relative">
           <h3 className="text-lg font-semibold text-black">Tickets en cours - Plus de 2 semaines</h3>
           <div className="flex gap-2">
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
+            <button
+              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
               onClick={() => setIsOpen(!isOpen)}
               data-filter-toggle="true">
               <AiOutlineFilter size={20} className="text-gray-600" />
             </button>
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
+            <button
+              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
               onClick={() => setModalIsOpen(true)}>
               <FaExpand size={18} className="text-gray-600" />
             </button>
           </div>
+          
           {/* Panneau de filtre */}
           {isOpen && (
             <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
@@ -231,6 +297,7 @@ export default function TicketsEnCoursTable({
                 <th className="border p-2">Titre</th>
                 <th className="border p-2">Délai (jours)</th>
                 <th className="border p-2">Semaines d'apparition</th>
+                <th className="border p-2">Commentaire</th>
               </tr>
             </thead>
             <tbody>
@@ -240,6 +307,46 @@ export default function TicketsEnCoursTable({
                   <td className="border p-2">{ticket.titre_ticket}</td>
                   <td className="border p-2">{ticket.delay}</td>
                   <td className="border p-2">{ticket.semainesApparition}</td>
+                  <td className="border p-2">
+                    {editingComment && editingComment.id === ticket[idField] ? (
+                      <div className="flex flex-col gap-2">
+                        <textarea 
+                          className="w-full border p-2 rounded text-sm"
+                          value={editingComment.text}
+                          onChange={(e) => setEditingComment({...editingComment, text: e.target.value})}
+                          rows={3}
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            className="bg-gray-200 text-gray-800 px-2 py-1 rounded flex items-center text-xs"
+                            onClick={cancelEditingComment}
+                            disabled={commentSaving}
+                          >
+                            <FaTimes className="mr-1" /> Annuler
+                          </button>
+                          <button 
+                            className="bg-green-500 text-white px-2 py-1 rounded flex items-center text-xs"
+                            onClick={() => saveComment(ticket[idField], editingComment.text)}
+                            disabled={commentSaving}
+                          >
+                            {commentSaving ? "..." : <><FaSave className="mr-1" /> Enregistrer</>}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <div className="flex-grow">
+                          {ticket.comment_en_cours || <span className="text-gray-400 italic">Aucun commentaire</span>}
+                        </div>
+                        <button 
+                          className="text-blue-500 hover:text-blue-700 ml-2"
+                          onClick={() => startEditingComment(ticket[idField], ticket.comment_en_cours)}
+                        >
+                          <FaEdit />
+                        </button>
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -247,7 +354,7 @@ export default function TicketsEnCoursTable({
         </div>
 
         {/* Boutons Voir Plus / Voir Moins */}
-        <div className="flex justify-center space-x-3 mt-4">
+        <div className="no-export flex justify-center space-x-3 mt-4">
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
             onClick={() => setVisibleCount(prev => prev + 5)}
@@ -286,6 +393,7 @@ export default function TicketsEnCoursTable({
                   <th className="border p-2">Titre</th>
                   <th className="border p-2">Délai (jours)</th>
                   <th className="border p-2">Semaines d'apparition</th>
+                  <th className="border p-2">Commentaire</th>
                 </tr>
               </thead>
               <tbody>
@@ -295,6 +403,46 @@ export default function TicketsEnCoursTable({
                     <td className="border p-2">{ticket.titre_ticket}</td>
                     <td className="border p-2">{ticket.delay}</td>
                     <td className="border p-2">{ticket.semainesApparition}</td>
+                    <td className="border p-2">
+                      {editingComment && editingComment.id === ticket[idField] ? (
+                        <div className="flex flex-col gap-2">
+                          <textarea 
+                            className="w-full border p-2 rounded text-sm"
+                            value={editingComment.text}
+                            onChange={(e) => setEditingComment({...editingComment, text: e.target.value})}
+                            rows={3}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <button 
+                              className="bg-gray-200 text-gray-800 px-2 py-1 rounded flex items-center text-xs"
+                              onClick={cancelEditingComment}
+                              disabled={commentSaving}
+                            >
+                              <FaTimes className="mr-1" /> Annuler
+                            </button>
+                            <button 
+                              className="bg-green-500 text-white px-2 py-1 rounded flex items-center text-xs"
+                              onClick={() => saveComment(ticket[idField], editingComment.text)}
+                              disabled={commentSaving}
+                            >
+                              {commentSaving ? "..." : <><FaSave className="mr-1" /> Enregistrer</>}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <div className="flex-grow">
+                            {ticket.comment_en_cours || <span className="text-gray-400 italic">Aucun commentaire</span>}
+                          </div>
+                          <button 
+                            className="text-blue-500 hover:text-blue-700 ml-2"
+                            onClick={() => startEditingComment(ticket[idField], ticket.comment_en_cours)}
+                          >
+                            <FaEdit />
+                          </button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

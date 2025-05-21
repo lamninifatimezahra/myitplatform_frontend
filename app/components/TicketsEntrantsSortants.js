@@ -954,86 +954,213 @@ export default function GroupedBarChart({
      return ( <div className="visualisation relative" data-id={id}><div className="relative bg-white p-5 shadow-md rounded-lg w-full h-[450px] flex justify-center items-center"><p className="text-center text-gray-500">Chargement des données...</p></div></div> );
   }
 
-  return (
-    <div className="visualisation relative" data-id={id}>
-      <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4 relative">
-             <div>
-                 <h3 className="text-lg font-semibold text-gray-800">{chartTitle}</h3>
-                 <p className="text-sm text-gray-500 min-h-[20px]"> {/* Min height to prevent layout shift */}
-                     {viewMode !== 'day' && selectedYear ? `Année ${selectedYear} - ` : ''}
-                     {periodeLabelText}
-                 </p>
-             </div>
-          <div className="flex gap-2">
-            <button className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800" onClick={() => setIsOpen(!isOpen)} data-filter-toggle="true" title="Filtrer"><AiOutlineFilter size={20} /></button>
-            <CommentButton containerRef={chartContainerRef} comments={annotations} onAddComment={(c) => setAnnotations([...annotations, c])} onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))} onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))} />
-            <button className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800" onClick={() => setModalIsOpen(true)} title="Agrandir"><FaExpand size={18} /></button>
-          </div>
-          {/* Panneau de filtre */}
-          {isOpen && (
-            <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50 border border-gray-200">
-              <h4 className="font-semibold text-gray-600 text-sm mb-3">Filtrer par :</h4>
-              <div className="flex space-x-1 mb-3 flex-wrap justify-start">
-                {["day", "week", "month", "quarter", "semester"].map(mode => ( <button key={mode} className={`px-2.5 py-1 rounded text-xs mb-1 ${viewMode === mode ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`} onClick={() => handleViewModeChange(mode)}> {mode === "day" ? "Jour" : mode === "week" ? "Sem." : mode === "month" ? "Mois" : mode === "quarter" ? "Trim." : "Sem."} </button> ))}
-              </div>
-              {viewMode === "day" ? (
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Plage de dates :</label>
-                  <DatePicker selected={selectedDates[0]} onChange={handleDayRangeChange} startDate={selectedDates[0]} endDate={selectedDates[1]} selectsRange dateFormat="dd/MM/yyyy" locale={fr} inline filterDate={date => { const day = date.getDay(); return day !== 0 && day !== 6; }} calendarClassName="text-sm" dayClassName={() => "text-xs"} wrapperClassName="w-full" popperPlacement="bottom-end" maxDate={new Date()} showMonthDropdown showYearDropdown dropdownMode="select" />
-                </div>
-              ) : (
-                <>
-                  {multipleYearsExist && (
-                    <div className="mb-3">
-                      <h5 className="text-sm font-medium text-gray-500 mb-1">Année :</h5>
-                      <div className="flex flex-wrap gap-1">
-                        {availableYears.map(year => ( <button key={year} onClick={() => handleYearChange(year)} className={`px-2 py-0.5 text-xs rounded ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}> {year} </button> ))}
-                      </div>
-                    </div>
-                  )}
-                   <div className="mb-2">
-                    <button onClick={handleSelectAll} disabled={availablePeriodsForFilter.length === 0} className={`text-xs px-2 py-1 rounded w-full ${allPeriodsForFilterSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"} disabled:opacity-50 disabled:cursor-not-allowed`}> {allPeriodsForFilterSelected ? "Tout désélectionner" : "Tout sélectionner"} </button>
-                  </div>
-                   <div className="max-h-32 overflow-y-auto border border-gray-200 p-2 rounded text-sm">
-                     {availablePeriodsForFilter.length > 0 ? availablePeriodsForFilter.map((value) => (
-                      <div key={value} className="flex items-center space-x-2 my-0.5">
-                        <input type="checkbox" id={`period-${value}-${viewMode}`} checked={selectedValues.includes(value)} onChange={() => handleSelectionChange(value)} className="cursor-pointer h-3.5 w-3.5" />
-                        <label htmlFor={`period-${value}-${viewMode}`} className="text-gray-600 cursor-pointer select-none text-xs">
-                          {viewMode === "week" ? `S${value}` : viewMode === "month" ? monthNames[value - 1] || `Mois ${value}` : viewMode === "quarter" ? quarterNames[value - 1] || `Trim. ${value}` : viewMode === "semester" ? semesterNames[value - 1] || `Sem. ${value}` : value}
-                        </label>
-                      </div>
-                    )) : ( <p className="text-xs text-gray-400 text-center italic py-2">Aucune période disponible pour {selectedYear}</p> )}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+return (
+  <div className="visualisation relative" data-id={id}>
+    <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-4 relative">
+        <div>
+          <h3 className="no-export text-lg font-semibold text-gray-800">{chartTitle}</h3>
+          <p className="text-sm text-gray-500 min-h-[20px]">
+            {viewMode !== 'day' && selectedYear ? `Année ${selectedYear} - ` : ''}
+            {periodeLabelText}
+          </p>
         </div>
 
-        {/* Conteneur Graphique Principal */}
-        <div className="flex-grow flex justify-center items-center h-[350px] w-full" ref={chartContainerRef}>
-           {showData ? ( <Bar data={chartData} options={chartOptions} plugins={[ChartDataLabels]} /> ) : ( <p className="text-gray-500 italic">Aucune donnée à afficher pour la sélection actuelle.</p> )}
+        <div className="no-export flex gap-2">
+          <button
+            className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800"
+            onClick={() => setIsOpen(!isOpen)}
+            data-filter-toggle="true"
+            title="Filtrer"
+          >
+            <AiOutlineFilter size={20} />
+          </button>
+
+          <CommentButton
+            containerRef={chartContainerRef}
+            comments={annotations}
+            onAddComment={(c) => setAnnotations([...annotations, c])}
+            onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+            onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+          />
+
+          <button
+            className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800"
+            onClick={() => setModalIsOpen(true)}
+            title="Agrandir"
+          >
+            <FaExpand size={18} />
+          </button>
         </div>
+
+        {/* Panneau de filtre */}
+        {isOpen && (
+          <div ref={filterPanelRef} className="no-export absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50 border border-gray-200">
+            <h4 className="font-semibold text-gray-600 text-sm mb-3">Filtrer par :</h4>
+            <div className="flex space-x-1 mb-3 flex-wrap justify-start">
+              {["day", "week", "month", "quarter", "semester"].map(mode => (
+                <button
+                  key={mode}
+                  className={`px-2.5 py-1 rounded text-xs mb-1 ${viewMode === mode ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                  onClick={() => handleViewModeChange(mode)}
+                >
+                  {mode === "day" ? "Jour" : mode === "week" ? "Sem." : mode === "month" ? "Mois" : mode === "quarter" ? "Trim." : "Sem."}
+                </button>
+              ))}
+            </div>
+
+            {viewMode === "day" ? (
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Plage de dates :</label>
+                <DatePicker
+                  selected={selectedDates[0]}
+                  onChange={handleDayRangeChange}
+                  startDate={selectedDates[0]}
+                  endDate={selectedDates[1]}
+                  selectsRange
+                  dateFormat="dd/MM/yyyy"
+                  locale={fr}
+                  inline
+                  filterDate={date => {
+                    const day = date.getDay();
+                    return day !== 0 && day !== 6;
+                  }}
+                  calendarClassName="text-sm"
+                  dayClassName={() => "text-xs"}
+                  wrapperClassName="w-full"
+                  popperPlacement="bottom-end"
+                  maxDate={new Date()}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+            ) : (
+              <>
+                {multipleYearsExist && (
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-500 mb-1">Année :</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {availableYears.map(year => (
+                        <button
+                          key={year}
+                          onClick={() => handleYearChange(year)}
+                          className={`px-2 py-0.5 text-xs rounded ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                        >
+                          {year}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="mb-2">
+                  <button
+                    onClick={handleSelectAll}
+                    disabled={availablePeriodsForFilter.length === 0}
+                    className={`text-xs px-2 py-1 rounded w-full ${allPeriodsForFilterSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {allPeriodsForFilterSelected ? "Tout désélectionner" : "Tout sélectionner"}
+                  </button>
+                </div>
+                <div className="max-h-32 overflow-y-auto border border-gray-200 p-2 rounded text-sm">
+                  {availablePeriodsForFilter.length > 0 ? availablePeriodsForFilter.map((value) => (
+                    <div key={value} className="flex items-center space-x-2 my-0.5">
+                      <input
+                        type="checkbox"
+                        id={`period-${value}-${viewMode}`}
+                        checked={selectedValues.includes(value)}
+                        onChange={() => handleSelectionChange(value)}
+                        className="cursor-pointer h-3.5 w-3.5"
+                      />
+                      <label htmlFor={`period-${value}-${viewMode}`} className="text-gray-600 cursor-pointer select-none text-xs">
+                        {viewMode === "week" ? `S${value}` :
+                          viewMode === "month" ? monthNames[value - 1] || `Mois ${value}` :
+                          viewMode === "quarter" ? quarterNames[value - 1] || `Trim. ${value}` :
+                          viewMode === "semester" ? semesterNames[value - 1] || `Sem. ${value}` :
+                          value}
+                      </label>
+                    </div>
+                  )) : (
+                    <p className="text-xs text-gray-400 text-center italic py-2">
+                      Aucune période disponible pour {selectedYear}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Modal */}
-      <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)} className="flex items-center justify-center fixed inset-0 z-50" overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm" contentLabel={`Modal ${chartTitle}`}>
-        <div className="bg-white rounded-lg p-6 w-11/12 md:w-4/5 lg:w-3/4 shadow-xl max-h-[90vh] overflow-y-auto flex flex-col">
-            <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                 <div>
-                      <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
-                       <p className="text-sm text-gray-500 mt-1 min-h-[20px]"> {viewMode !== 'day' && selectedYear ? `Année ${selectedYear} - ` : ''} {periodeLabelText} </p>
-                 </div>
-                 <button onClick={() => setModalIsOpen(false)} className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-100 transition-colors" title="Fermer"> <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> </button>
-            </div>
-            <div className="relative flex-grow min-h-[400px] md:min-h-[500px] flex items-center justify-center" ref={modalChartContainerRef}>
-                 {showData ? ( <Bar data={chartData} options={{...chartOptions, plugins: {...chartOptions.plugins, datalabels: {...chartOptions.plugins.datalabels, font: { size: 11 }}}}} plugins={[ChartDataLabels]} /> ) : ( <p className="text-gray-500 italic">Aucune donnée à afficher.</p> )}
-                 <CommentButton containerRef={modalChartContainerRef} hideButton={true} comments={annotations} onAddComment={(c) => setAnnotations([...annotations, c])} onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))} onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))} />
-            </div>
-        </div>
-      </Modal>
+      {/* Conteneur Graphique Principal */}
+      <div className="flex-grow flex justify-center items-center h-[350px] w-full" ref={chartContainerRef}>
+        {showData ? (
+          <Bar data={chartData} options={chartOptions} plugins={[ChartDataLabels]} />
+        ) : (
+          <p className="text-gray-500 italic">Aucune donnée à afficher pour la sélection actuelle.</p>
+        )}
+      </div>
     </div>
-  );
+
+    {/* Modal */}
+    <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={() => setModalIsOpen(false)}
+      className="flex items-center justify-center fixed inset-0 z-50"
+      overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
+      contentLabel={`Modal ${chartTitle}`}
+    >
+      <div className="bg-white rounded-lg p-6 w-11/12 md:w-4/5 lg:w-3/4 shadow-xl max-h-[90vh] overflow-y-auto flex flex-col">
+        <div className="flex items-center justify-between mb-4 flex-shrink-0">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
+            <p className="text-sm text-gray-500 mt-1 min-h-[20px]">
+              {viewMode !== 'day' && selectedYear ? `Année ${selectedYear} - ` : ''}
+              {periodeLabelText}
+            </p>
+          </div>
+          <button
+            onClick={() => setModalIsOpen(false)}
+            className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-100 transition-colors"
+            title="Fermer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="relative flex-grow min-h-[400px] md:min-h-[500px] flex items-center justify-center" ref={modalChartContainerRef}>
+          {showData ? (
+            <Bar
+              data={chartData}
+              options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  datalabels: {
+                    ...chartOptions.plugins.datalabels,
+                    font: { size: 11 }
+                  }
+                }
+              }}
+              plugins={[ChartDataLabels]}
+            />
+          ) : (
+            <p className="text-gray-500 italic">Aucune donnée à afficher.</p>
+          )}
+          <CommentButton
+            containerRef={modalChartContainerRef}
+            hideButton={true}
+            comments={annotations}
+            onAddComment={(c) => setAnnotations([...annotations, c])}
+            onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+            onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+          />
+        </div>
+      </div>
+    </Modal>
+  </div>
+);
 }

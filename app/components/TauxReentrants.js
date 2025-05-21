@@ -634,38 +634,56 @@ export default function TauxReentrants({
     }
   };
 
-  // Filtrer les tickets pour l'année et les périodes sélectionnées
-  const ticketsForYear = data.filter(t => new Date(t[dateField]).getFullYear() === selectedYear);
-  const filteredTickets = ticketsForYear.filter(t => {
-    let ticketPeriod;
-    if (viewMode === "week") {
-      ticketPeriod = t[weekField];
-    } else if (viewMode === "month") {
-      ticketPeriod = new Date(t[dateField]).getMonth() + 1;
-    } else if (viewMode === "quarter") {
-      ticketPeriod = getQuarter(new Date(t[dateField]));
-    } else if (viewMode === "semester") {
-      ticketPeriod = getSemester(new Date(t[dateField]));
-    }
-    return selectedValues.includes(ticketPeriod);
-  });
 
   // Regrouper les tickets par identifiant afin de calculer le nombre de réentrants
-  const ticketsById = {};
-  filteredTickets.forEach(ticket => {
-    if (!ticketsById[ticket.id_ticket]) {
-      ticketsById[ticket.id_ticket] = [];
-    }
-    ticketsById[ticket.id_ticket].push(ticket);
-  });
+// Étape 1 — Calculer le nombre global d’itérations par ticket
+const ticketIterationsMap = {};
+data.forEach((t) => {
+  const id = t.id_ticket;
+  if (!ticketIterationsMap[id]) ticketIterationsMap[id] = [];
+  ticketIterationsMap[id].push(t);
+});
 
-  let nonReentrantCount = 0;
-  let reentrantCount = 0;
-  Object.values(ticketsById).forEach(tickets => {
-    const sorted = tickets.sort((a, b) => new Date(a[dateField]) - new Date(b[dateField]));
-    nonReentrantCount += 1;
-    reentrantCount += sorted.length - 1;
+// Étape 2 — Trier les itérations de chaque ticket par date
+Object.keys(ticketIterationsMap).forEach((id) => {
+  ticketIterationsMap[id].sort((a, b) =>
+    new Date(a.date_derniere_maj) - new Date(b.date_derniere_maj)
+  );
+});
+
+// Étape 3 — Analyser les itérations pour ne compter que les 2e+ dans la période sélectionnée
+let reentrantCount = 0;
+let nonReentrantCount = 0;
+
+for (const [ticketId, iterations] of Object.entries(ticketIterationsMap)) {
+  iterations.forEach((t, idx) => {
+    const date = new Date(t[dateField]);
+    const period =
+      viewMode === "week"
+        ? Number(t[weekField]) || getWeekNumber(date)
+        : viewMode === "month"
+        ? date.getMonth() + 1
+        : viewMode === "quarter"
+        ? getQuarter(date)
+        : getSemester(date);
+
+    if (!selectedValues.includes(period)) return;
+
+    if (iterations.length === 1) {
+      // Ticket avec une seule itération
+      nonReentrantCount += 1;
+    } else if (idx === 0) {
+      // Première itération (même si elle est dans la période), jamais considérée réentrante
+      nonReentrantCount += 1;
+    } else {
+      // Itérations ≥ 2 comptées comme réentrantes si dans la période
+      reentrantCount += 1;
+    }
   });
+}
+
+
+
   const total = nonReentrantCount + reentrantCount;
 
   const chartData = {
@@ -751,162 +769,164 @@ export default function TauxReentrants({
     layout: { padding: 10 },
   };
 
-  return (
-    <div className="visualisation relative" data-id={id}>
-      <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
-        {/* En-tête avec titre, sous-titre et boutons */}
-        <div className="flex justify-between items-start mb-4 relative">
+return (
+  <div className="visualisation relative" data-id={id}>
+    <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
+      {/* En-tête avec titre, sous-titre et boutons */}
+      <div className="flex justify-between items-start mb-4 relative">
+        <div>
+          <h3 className="no-export text-lg font-semibold text-gray-800">Taux des Réentrants</h3>
+          <p className="text-sm text-gray-500">
+            {selectedYear && `Année : ${selectedYear} - `}
+            {periodeLabel}
+          </p>
+        </div>
+        <div className="no-export flex gap-2">
+          <button 
+            className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
+            onClick={() => setIsOpen(!isOpen)}
+            data-filter-toggle="true">
+            <AiOutlineFilter size={20} className="text-gray-600" />
+          </button>
+          <CommentButton 
+            containerRef={chartContainerRef} 
+            comments={comments}
+            onAddComment={handleAddComment}
+            onUpdateComment={handleUpdateComment}
+            onDeleteComment={handleDeleteComment}
+          />
+          <button 
+            className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
+            onClick={() => setModalIsOpen(true)}>
+            <FaExpand size={18} className="text-gray-600" />
+          </button>
+        </div>
+
+        {isOpen && (
+          <div ref={filterPanelRef} className="no-export absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
+            <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
+            <div className="flex space-x-2 mb-2 mt-2 flex-wrap">
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("week")}
+              >
+                Semaine
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("month")}
+              >
+                Mois
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("quarter")}
+              >
+                Trimestre
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("semester")}
+              >
+                Semestre
+              </button>
+            </div>
+            {multipleYearsExist && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                <div className="flex flex-wrap gap-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="mb-2">
+              <button
+                onClick={toggleSelectAll}
+                className={`text-xs px-2 py-1 rounded-md w-full ${
+                  allPeriodsSelected 
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                }`}
+              >
+                {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
+            <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
+              {availablePeriods.map(value => (
+                <div key={value} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedValues.includes(value)}
+                    onChange={() => handleSelectionChange(value)}
+                  />
+                  <span className="text-gray-500">
+                    {viewMode === "week" 
+                      ? `Semaine ${value}` 
+                      : viewMode === "month"
+                        ? moisFrancais[value]
+                        : viewMode === "quarter"
+                          ? trimestres[value]
+                          : semestres[value]
+                    }
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-grow flex justify-center items-center w-full" ref={chartContainerRef}>
+        <Doughnut
+          data={chartData}
+          options={chartOptions}
+        />
+      </div>
+    </div>
+
+    {/* Modal d'agrandissement */}
+    <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={() => setModalIsOpen(false)}
+      className="flex items-center justify-center fixed inset-0 z-50"
+      overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
+    >
+      <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">Taux des Réentrants</h3>
-            <p className="text-sm text-gray-500">
-              {selectedYear && `Année : ${selectedYear} - `}
-              {periodeLabel}
+            <h3 className="text-2xl font-semibold text-gray-800">Taux des Réentrants</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {selectedYear && `Année : ${selectedYear} - `}{periodeLabel}
             </p>
           </div>
-          <div className="flex gap-2">
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
-              onClick={() => setIsOpen(!isOpen)}
-              data-filter-toggle="true">
-              <AiOutlineFilter size={20} className="text-gray-600" />
-            </button>
-            <CommentButton 
-              containerRef={chartContainerRef} 
-              comments={comments}
-              onAddComment={handleAddComment}
-              onUpdateComment={handleUpdateComment}
-              onDeleteComment={handleDeleteComment}
-            />
-            <button 
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
-              onClick={() => setModalIsOpen(true)}>
-              <FaExpand size={18} className="text-gray-600" />
-            </button>
-          </div>
-          {isOpen && (
-            <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
-              <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-              <div className="flex space-x-2 mb-2 mt-2 flex-wrap">
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("week")}
-                >
-                  Semaine
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("month")}
-                >
-                  Mois
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("quarter")}
-                >
-                  Trimestre
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("semester")}
-                >
-                  Semestre
-                </button>
-              </div>
-              {multipleYearsExist && (
-                <div className="mb-3">
-                  <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
-                  <div className="flex flex-wrap gap-1">
-                    {availableYears.map(year => (
-                      <button
-                        key={year}
-                        onClick={() => handleYearChange(year)}
-                        className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="mb-2">
-                <button
-                  onClick={toggleSelectAll}
-                  className={`text-xs px-2 py-1 rounded-md w-full ${
-                    allPeriodsSelected 
-                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
-                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  }`}
-                >
-                  {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
-                </button>
-              </div>
-              <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-                {availablePeriods.map(value => (
-                  <div key={value} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedValues.includes(value)}
-                      onChange={() => handleSelectionChange(value)}
-                    />
-                    <span className="text-gray-500">
-                      {viewMode === "week" 
-                        ? `Semaine ${value}` 
-                        : viewMode === "month"
-                          ? moisFrancais[value]
-                          : viewMode === "quarter"
-                            ? trimestres[value]
-                            : semestres[value]
-                      }
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">
+            ❌
+          </button>
         </div>
-        <div className="flex-grow flex justify-center items-center w-full" ref={chartContainerRef}>
+        <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
           <Doughnut
             data={chartData}
             options={chartOptions}
           />
+          <CommentButton 
+            containerRef={modalChartContainerRef} 
+            hideButton={true} 
+            comments={comments}
+            onAddComment={handleAddComment}
+            onUpdateComment={handleUpdateComment}
+            onDeleteComment={handleDeleteComment}
+          />
         </div>
       </div>
-
-      {/* Modal d'agrandissement */}
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={() => setModalIsOpen(false)}
-        className="flex items-center justify-center fixed inset-0 z-50"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-      >
-        <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-800">Taux des Réentrants</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedYear && `Année : ${selectedYear} - `}{periodeLabel}
-              </p>
-            </div>
-            <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">
-              ❌
-            </button>
-          </div>
-          <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
-            <Doughnut
-              data={chartData}
-              options={chartOptions}
-            />
-            <CommentButton 
-              containerRef={modalChartContainerRef} 
-              hideButton={true} 
-              comments={comments}
-              onAddComment={handleAddComment}
-              onUpdateComment={handleUpdateComment}
-              onDeleteComment={handleDeleteComment}
-            />
-          </div>
-        </div>
-      </Modal>
-    </div>
-  );
+    </Modal>
+  </div>
+);
 }

@@ -449,7 +449,7 @@ export default function LineChartRates({
   return (
     <div className="visualisation relative h-96 bg-white rounded-xl shadow-md" data-id={id}>
       {/* Header avec titre et boutons */}
-      <div className="p-4 border-b flex justify-between items-center">
+      <div className="no-export p-4 border-b flex justify-between items-center">
         <div>
           <h3 className="text-gray-800 text-lg font-medium">{title}</h3>
           <p className="text-xs text-gray-500">

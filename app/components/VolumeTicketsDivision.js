@@ -799,13 +799,13 @@ export default function VolumeTicketsDivision({
           {/* Header avec titre, sous-titre et boutons */}
           <div className="flex justify-between items-start mb-4 relative">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+              <h3 className="no-export text-lg font-semibold text-gray-800">{title}</h3>
               <p className="text-sm text-gray-500">
                 {selectedYear && `Année : ${selectedYear} - `}
                 {periodeLabel}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="no-export flex gap-2">
               <button 
                 className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
                 onClick={() => setIsOpen(!isOpen)}

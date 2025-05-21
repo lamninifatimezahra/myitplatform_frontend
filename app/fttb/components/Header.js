@@ -185,29 +185,51 @@ export default function Header({ type = "FTTB" }) {
     setSelectedGraphs(check ? graphList.map((g) => g.id) : []);
   };
 
-  const captureScreenshots = async () => {
-    document.body.classList.add("disable-animations");
-    await new Promise((resolve) => setTimeout(resolve, 100));
+const captureScreenshots = async () => {
+  document.body.classList.add("disable-animations");
 
-    const elements = Array.from(document.querySelectorAll(".visualisation")).filter((el) =>
-      selectedGraphs.includes(el.getAttribute("data-id"))
-    );
-    const images = [];
-    for (const el of elements) {
-      try {
-        const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
-        images.push({
-          id: el.getAttribute("data-id"),
-          label: el.getAttribute("data-graph-label") || el.getAttribute("data-id"),
-          image: canvas.toDataURL("image/png"),
-        });
-      } catch (err) {
-        console.error("Erreur capture image:", err);
-      }
+  // Masquer tous les éléments à ne pas capturer
+  const elementsToHide = document.querySelectorAll(".no-export");
+  elementsToHide.forEach(el => {
+    el.dataset.originalDisplay = el.style.display;
+    el.style.display = "none";
+  });
+
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  const elements = Array.from(document.querySelectorAll(".visualisation")).filter((el) =>
+    selectedGraphs.includes(el.getAttribute("data-id"))
+  );
+
+  const images = [];
+
+  for (const el of elements) {
+    try {
+      const canvas = await html2canvas(el, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+      });
+      images.push({
+        id: el.getAttribute("data-id"),
+        label: el.getAttribute("data-graph-label") || el.getAttribute("data-id"),
+        image: canvas.toDataURL("image/png"),
+      });
+    } catch (err) {
+      console.error("Erreur capture image:", err);
     }
-    document.body.classList.remove("disable-animations");
-    return images;
-  };
+  }
+
+  // Réafficher les éléments
+  elementsToHide.forEach(el => {
+    el.style.display = el.dataset.originalDisplay || "";
+    delete el.dataset.originalDisplay;
+  });
+
+  document.body.classList.remove("disable-animations");
+  return images;
+};
+
 
   const generateWord = async () => {
     if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");

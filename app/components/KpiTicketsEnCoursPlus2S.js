@@ -77,33 +77,10 @@ export default function KpiTicketsEnCoursPlus2S({
     };
   }, [isCalendarOpen]);
 
-  useEffect(() => {
-    if (!apiUrl) {
-      setError("L'URL de l'API est requise");
-      return;
-    }
-
-    setError(null);
-    fetchWithAuth(apiUrl)
-      .then((response) => response.json())
-      .then((jsonData) => {
-        setData(jsonData);
-        calculateTicketsRetard(jsonData, localStartDate, localEndDate);
-      })
-      .catch((error) => {
-        console.error("Erreur de chargement des données :", error);
-        setError("Erreur lors du chargement des données");
-      });
-  }, [apiUrl]);
-
-  useEffect(() => {
-    calculateTicketsRetard(data, localStartDate, localEndDate);
-  }, [localStartDate, localEndDate, data, retardDays, dateSortieField, dateDerniereMajField]);
-
+  // Fonction pour calculer les tickets en retard
   const calculateTicketsRetard = (tickets, start, end) => {
     if (!tickets || tickets.length === 0) {
-      setTicketsRetard(0);
-      return;
+      return 0;
     }
 
     const now = new Date();
@@ -132,8 +109,33 @@ export default function KpiTicketsEnCoursPlus2S({
       return true;
     });
 
-    setTicketsRetard(filteredTickets.length);
+    return filteredTickets.length;
   };
+
+  // Effet pour charger les données initiales
+  useEffect(() => {
+    if (!apiUrl) {
+      setError("L'URL de l'API est requise");
+      return;
+    }
+
+    setError(null);
+    fetchWithAuth(apiUrl)
+      .then((response) => response.json())
+      .then((jsonData) => {
+        setData(jsonData);
+      })
+      .catch((error) => {
+        console.error("Erreur de chargement des données :", error);
+        setError("Erreur lors du chargement des données");
+      });
+  }, [apiUrl]);
+
+  // Effet pour recalculer le nombre de tickets en retard
+  useEffect(() => {
+    const count = calculateTicketsRetard(data, localStartDate, localEndDate);
+    setTicketsRetard(count);
+  }, [data, localStartDate, localEndDate, retardDays, dateSortieField, dateDerniereMajField]);
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -177,7 +179,7 @@ export default function KpiTicketsEnCoursPlus2S({
     <div className="visualisation relative w-64" data-id={id} data-graph-label={id}>
       <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
         {/* Header flexible avec titre et bouton */}
-        <div className="flex justify-between items-start w-full mb-2">
+        <div className="no-export flex justify-between items-start w-full mb-2">
           <h3 className="text-gray-800 text-lg font-medium">{title}</h3>
           <button
             className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"

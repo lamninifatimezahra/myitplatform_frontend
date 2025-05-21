@@ -90,12 +90,10 @@ export default function KpiTicketsEnCours({
     fetchWithAuth(apiUrl)
       .then(res => res.json())
       .then(json => {
-        console.log("🔄 Données API:", json.length);
         setData(json);
         calculateKPI(json, effectiveStartDate, effectiveEndDate);
       })
       .catch(err => {
-        console.error("Erreur de chargement :", err);
         setError("Erreur lors du chargement des données");
       });
   }, [apiUrl, effectiveStartDate, effectiveEndDate]);
@@ -116,7 +114,6 @@ export default function KpiTicketsEnCours({
       return !sortie && (!start || !end || (maj && maj >= start && maj <= end));
     });
 
-    console.log(`✅ KPI En Cours (filtré): ${filtered.length}`);
     setTicketsEnCours(filtered.length);
   };
 
@@ -155,7 +152,7 @@ export default function KpiTicketsEnCours({
   return (
     <div className="visualisation relative w-64" data-id={id}>
       <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
-        <div className="flex justify-between items-start w-full mb-2">
+        <div className="no-export flex justify-between items-start w-full mb-2">
           <h3 className="text-gray-800 text-lg font-medium">{title}</h3>
           <button
             className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"

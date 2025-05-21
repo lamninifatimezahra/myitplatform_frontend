@@ -47,94 +47,94 @@ const getSemester = (date) => {
 
 // Fonction pour générer toutes les semaines entre deux dates (conservée/adaptée)
 function getAllWeeksBetween(startDate, endDate) {
-    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
-    const weeksArray = [];
-    const startWeek = getWeekNumber(startDate);
-    const endWeek = getWeekNumber(endDate);
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-    if (startYear === endYear) {
-      if (startWeek === null || endWeek === null) return []; // Handle invalid week numbers
-      for (let week = startWeek; week <= endWeek; week++) weeksArray.push(week);
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        // Need accurate calculation for weeks in year or use a library
-        const yearStartDate = new Date(Date.UTC(year, 0, 1));
-        const yearEndDate = new Date(Date.UTC(year, 11, 31));
-        const firstWeek = getWeekNumber(yearStartDate);
-        const lastWeek = getWeekNumber(yearEndDate) || 52; // Estimate last week
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
+  const weeksArray = [];
+  const startWeek = getWeekNumber(startDate);
+  const endWeek = getWeekNumber(endDate);
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startYear === endYear) {
+    if (startWeek === null || endWeek === null) return []; // Handle invalid week numbers
+    for (let week = startWeek; week <= endWeek; week++) weeksArray.push(week);
+  } else {
+    for (let year = startYear; year <= endYear; year++) {
+      // Need accurate calculation for weeks in year or use a library
+      const yearStartDate = new Date(Date.UTC(year, 0, 1));
+      const yearEndDate = new Date(Date.UTC(year, 11, 31));
+      const firstWeek = getWeekNumber(yearStartDate);
+      const lastWeek = getWeekNumber(yearEndDate) || 52; // Estimate last week
 
-        const minWeeks = year === startYear ? (startWeek ?? 1) : 1;
-        const maxWeeks = year === endYear ? (endWeek ?? lastWeek) : lastWeek;
+      const minWeeks = year === startYear ? (startWeek ?? 1) : 1;
+      const maxWeeks = year === endYear ? (endWeek ?? lastWeek) : lastWeek;
 
-        for (let week = minWeeks; week <= maxWeeks; week++) weeksArray.push(week);
-      }
+      for (let week = minWeeks; week <= maxWeeks; week++) weeksArray.push(week);
     }
-    // Remove duplicates that might occur at year boundaries if logic isn't perfect
-    return [...new Set(weeksArray)].sort((a, b) => a - b);
   }
+  // Remove duplicates that might occur at year boundaries if logic isn't perfect
+  return [...new Set(weeksArray)].sort((a, b) => a - b);
+}
 
 // Fonction pour générer tous les mois entre deux dates (conservée/adaptée)
 function getAllMonthsBetween(startDate, endDate) {
-    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
-    const monthsArray = [];
-    const startMonth = startDate.getMonth() + 1;
-    const endMonth = endDate.getMonth() + 1;
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-    if (startYear === endYear) {
-      for (let month = startMonth; month <= endMonth; month++) monthsArray.push(month);
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        const maxMonth = year === endYear ? endMonth : 12;
-        const minMonth = year === startYear ? startMonth : 1;
-        for (let month = minMonth; month <= maxMonth; month++) monthsArray.push(month);
-      }
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
+  const monthsArray = [];
+  const startMonth = startDate.getMonth() + 1;
+  const endMonth = endDate.getMonth() + 1;
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startYear === endYear) {
+    for (let month = startMonth; month <= endMonth; month++) monthsArray.push(month);
+  } else {
+    for (let year = startYear; year <= endYear; year++) {
+      const maxMonth = year === endYear ? endMonth : 12;
+      const minMonth = year === startYear ? startMonth : 1;
+      for (let month = minMonth; month <= maxMonth; month++) monthsArray.push(month);
     }
-    return monthsArray;
   }
+  return monthsArray;
+}
 
 // ---- NOUVEAU : Fonctions pour générer Trimestres/Semestres entre dates ----
 function getAllQuartersBetween(startDate, endDate) {
-    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
-    const quartersArray = [];
-    const startQuarter = getQuarter(startDate);
-    const endQuarter = getQuarter(endDate);
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-     if (startQuarter === null || endQuarter === null) return []; // Handle invalid dates
-    if (startYear === endYear) {
-      for (let quarter = startQuarter; quarter <= endQuarter; quarter++) quartersArray.push(quarter);
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        const maxQuarter = year === endYear ? endQuarter : 4;
-        const minQuarter = year === startYear ? startQuarter : 1;
-        for (let quarter = minQuarter; quarter <= maxQuarter; quarter++) quartersArray.push(quarter);
-      }
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
+  const quartersArray = [];
+  const startQuarter = getQuarter(startDate);
+  const endQuarter = getQuarter(endDate);
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startQuarter === null || endQuarter === null) return []; // Handle invalid dates
+  if (startYear === endYear) {
+    for (let quarter = startQuarter; quarter <= endQuarter; quarter++) quartersArray.push(quarter);
+  } else {
+    for (let year = startYear; year <= endYear; year++) {
+      const maxQuarter = year === endYear ? endQuarter : 4;
+      const minQuarter = year === startYear ? startQuarter : 1;
+      for (let quarter = minQuarter; quarter <= maxQuarter; quarter++) quartersArray.push(quarter);
     }
-     // Remove duplicates for multi-year, although less likely for quarters/semesters
-    return [...new Set(quartersArray)].sort((a,b) => a-b);
   }
+  // Remove duplicates for multi-year, although less likely for quarters/semesters
+  return [...new Set(quartersArray)].sort((a, b) => a - b);
+}
 
 function getAllSemestersBetween(startDate, endDate) {
-    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
-    const semestersArray = [];
-    const startSemester = getSemester(startDate);
-    const endSemester = getSemester(endDate);
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-     if (startSemester === null || endSemester === null) return []; // Handle invalid dates
-    if (startYear === endYear) {
-      for (let semester = startSemester; semester <= endSemester; semester++) semestersArray.push(semester);
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        const maxSemester = year === endYear ? endSemester : 2;
-        const minSemester = year === startYear ? startSemester : 1;
-        for (let semester = minSemester; semester <= maxSemester; semester++) semestersArray.push(semester);
-      }
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
+  const semestersArray = [];
+  const startSemester = getSemester(startDate);
+  const endSemester = getSemester(endDate);
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startSemester === null || endSemester === null) return []; // Handle invalid dates
+  if (startYear === endYear) {
+    for (let semester = startSemester; semester <= endSemester; semester++) semestersArray.push(semester);
+  } else {
+    for (let year = startYear; year <= endYear; year++) {
+      const maxSemester = year === endYear ? endSemester : 2;
+      const minSemester = year === startYear ? startSemester : 1;
+      for (let semester = minSemester; semester <= maxSemester; semester++) semestersArray.push(semester);
     }
-     return [...new Set(semestersArray)].sort((a,b) => a-b);
   }
+  return [...new Set(semestersArray)].sort((a, b) => a - b);
+}
 // --- Fin Fonctions Utilitaires ---
 
 
@@ -216,7 +216,7 @@ export default function ClientCoupeChart({
   const [semesterSelectionModifiedAt, setSemesterSelectionModifiedAt] = useState(0);
 
   // ---- Noms des périodes pour affichage ---- (Ajoutés/Complétés)
-  const monthNames = [ "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre" ];
+  const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
   const quarterNames = ["T1", "T2", "T3", "T4"];
   const semesterNames = ["S1", "S2"];
 
@@ -245,7 +245,7 @@ export default function ClientCoupeChart({
 
 
   // --- Fonction pour appliquer le filtre global --- (Adaptée de la référence)
-   const applyGlobalFilter = useCallback(() => {
+  const applyGlobalFilter = useCallback(() => {
     if (!globalStartDate || !globalEndDate || isNaN(globalStartDate.getTime()) || isNaN(globalEndDate.getTime()) || !data || data.length === 0) return; // Added checks
     const currentGlobalYear = globalStartDate.getFullYear();
     const localAvailableYears = availableYears.length > 0 ? availableYears : [...new Set(data.map(t => { const d = new Date(t[dateField]); return !isNaN(d.getTime()) ? d.getFullYear() : null; }).filter(y => y !== null))]; // Added checks for date
@@ -302,9 +302,9 @@ export default function ClientCoupeChart({
 
   // Clics extérieurs (conservé)
   useEffect(() => {
-      function handleClickOutside(event) { if (isOpen && filterPanelRef.current && !filterPanelRef.current.contains(event.target) && !event.target.closest('button[data-filter-toggle]')) setIsOpen(false); }
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleClickOutside(event) { if (isOpen && filterPanelRef.current && !filterPanelRef.current.contains(event.target) && !event.target.closest('button[data-filter-toggle]')) setIsOpen(false); }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
   // Chargement initial (Adapté de la référence)
@@ -331,57 +331,57 @@ export default function ClientCoupeChart({
 
           // Décider s'il faut appliquer le filtre global ou la config par défaut
           if (performDefaultSetup && globalStartDate && globalEndDate && !isNaN(globalStartDate.getTime()) && !isNaN(globalEndDate.getTime()) && years.includes(globalStartDate.getFullYear())) { // Added checks
-             // Comparer la date de modif globale aux dates locales (toutes vues)
-             const lastLocalMod = Math.max(
-                 weekSelectionModifiedAt,
-                 monthSelectionModifiedAt,
-                 quarterSelectionModifiedAt, // Inclure Q/S
-                 semesterSelectionModifiedAt // Inclure Q/S
-             );
-             if (globalModifiedAt > lastLocalMod || lastLocalMod === 0) {
-                 applyGlobalOnLoad = true;
-                 yearToUse = globalStartDate.getFullYear();
-                 performDefaultSetup = false; // Ne pas faire le setup par défaut si on applique le global
-             }
+            // Comparer la date de modif globale aux dates locales (toutes vues)
+            const lastLocalMod = Math.max(
+              weekSelectionModifiedAt,
+              monthSelectionModifiedAt,
+              quarterSelectionModifiedAt, // Inclure Q/S
+              semesterSelectionModifiedAt // Inclure Q/S
+            );
+            if (globalModifiedAt > lastLocalMod || lastLocalMod === 0) {
+              applyGlobalOnLoad = true;
+              yearToUse = globalStartDate.getFullYear();
+              performDefaultSetup = false; // Ne pas faire le setup par défaut si on applique le global
+            }
           }
 
           if (applyGlobalOnLoad) {
-             // Note: applyGlobalFilter dépend maintenant de 'data' et 'availableYears' qui sont définis
-             // Appel différé pour s'assurer que data et availableYears sont bien dans l'état
-             // L'effet sur globalModifiedAt s'en chargera aussi, mais on force ici pour l'init.
-             // On met à jour l'année et on laisse l'effet [globalModifiedAt] faire le reste.
-             setSelectedYear(yearToUse);
-             setHasGlobalFilter(true); // Important pour que le useEffect suivant applique correctement
-             // On ne met PAS à jour selectedValues ici directement, on laisse applyGlobalFilter le faire
-             // pour assurer la cohérence entre toutes les vues.
+            // Note: applyGlobalFilter dépend maintenant de 'data' et 'availableYears' qui sont définis
+            // Appel différé pour s'assurer que data et availableYears sont bien dans l'état
+            // L'effet sur globalModifiedAt s'en chargera aussi, mais on force ici pour l'init.
+            // On met à jour l'année et on laisse l'effet [globalModifiedAt] faire le reste.
+            setSelectedYear(yearToUse);
+            setHasGlobalFilter(true); // Important pour que le useEffect suivant applique correctement
+            // On ne met PAS à jour selectedValues ici directement, on laisse applyGlobalFilter le faire
+            // pour assurer la cohérence entre toutes les vues.
 
           } else if (performDefaultSetup) {
-             // Setup par défaut si pas de filtre global prioritaire
-             if (!selectedYear) setSelectedYear(yearToUse); else yearToUse = selectedYear; // Confirmer l'année à utiliser
+            // Setup par défaut si pas de filtre global prioritaire
+            if (!selectedYear) setSelectedYear(yearToUse); else yearToUse = selectedYear; // Confirmer l'année à utiliser
 
-             // Note: getAvailablePeriodsForYear dépend maintenant de 'data'
-             const availablePeriods = getAvailablePeriodsForYear(yearToUse, viewMode); // Utiliser viewMode initial
-             const lastPeriods = availablePeriods.slice(-defaultNumPeriods);
-             setSelectedValues(lastPeriods);
+            // Note: getAvailablePeriodsForYear dépend maintenant de 'data'
+            const availablePeriods = getAvailablePeriodsForYear(yearToUse, viewMode); // Utiliser viewMode initial
+            const lastPeriods = availablePeriods.slice(-defaultNumPeriods);
+            setSelectedValues(lastPeriods);
 
-             // Mise à jour de la sélection mémorisée pour la vue initiale
-             if (viewMode === "week") setWeekViewSelection({ values: lastPeriods, year: yearToUse });
-             else if (viewMode === "month") setMonthViewSelection({ values: lastPeriods, year: yearToUse });
-             else if (viewMode === "quarter") setQuarterViewSelection({ values: lastPeriods, year: yearToUse });
-             else if (viewMode === "semester") setSemesterViewSelection({ values: lastPeriods, year: yearToUse });
+            // Mise à jour de la sélection mémorisée pour la vue initiale
+            if (viewMode === "week") setWeekViewSelection({ values: lastPeriods, year: yearToUse });
+            else if (viewMode === "month") setMonthViewSelection({ values: lastPeriods, year: yearToUse });
+            else if (viewMode === "quarter") setQuarterViewSelection({ values: lastPeriods, year: yearToUse });
+            else if (viewMode === "semester") setSemesterViewSelection({ values: lastPeriods, year: yearToUse });
 
-             initializationCompleted.current = true;
-             setHasGlobalFilter(false); // Pas de filtre global appliqué par défaut
+            initializationCompleted.current = true;
+            setHasGlobalFilter(false); // Pas de filtre global appliqué par défaut
           } else {
-              // Si ce n'est ni l'initialisation, ni une application globale prioritaire,
-              // on s'assure que l'année est bien celle sélectionnée (ou la dernière si null)
-              if (!selectedYear && latestYear) setSelectedYear(latestYear);
+            // Si ce n'est ni l'initialisation, ni une application globale prioritaire,
+            // on s'assure que l'année est bien celle sélectionnée (ou la dernière si null)
+            if (!selectedYear && latestYear) setSelectedYear(latestYear);
           }
           setLoading(false);
         }
       } catch (error) {
-          console.error(`Erreur fetch pour ${title}:`, error);
-          if (isMounted) { setData([]); setLoading(false); }
+        console.error(`Erreur fetch pour ${title}:`, error);
+        if (isMounted) { setData([]); setLoading(false); }
       }
     }
     fetchDataInternal();
@@ -390,33 +390,33 @@ export default function ClientCoupeChart({
 
 
   // Application du filtre global si changé après l'init (Adapté de la référence)
-   useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     // S'exécute seulement si l'initialisation est terminée et qu'on a des données
     if (initializationCompleted.current && data.length > 0 && globalStartDate && globalEndDate && globalModifiedAt > 0) { // Added checks
-        const lastLocalMod = Math.max(
-            weekSelectionModifiedAt,
-            monthSelectionModifiedAt,
-            quarterSelectionModifiedAt, // Inclure Q/S
-            semesterSelectionModifiedAt // Inclure Q/S
-        );
-        // Appliquer si le filtre global est plus récent que la dernière modif locale
-        if (globalModifiedAt > lastLocalMod) {
-            if (isMounted) {
-                console.log(`Appliying global filter update for ${title}`);
-                applyGlobalFilter();
-            }
+      const lastLocalMod = Math.max(
+        weekSelectionModifiedAt,
+        monthSelectionModifiedAt,
+        quarterSelectionModifiedAt, // Inclure Q/S
+        semesterSelectionModifiedAt // Inclure Q/S
+      );
+      // Appliquer si le filtre global est plus récent que la dernière modif locale
+      if (globalModifiedAt > lastLocalMod) {
+        if (isMounted) {
+          console.log(`Appliying global filter update for ${title}`);
+          applyGlobalFilter();
         }
+      }
     }
     return () => { isMounted = false; };
   }, [globalStartDate, globalEndDate, globalModifiedAt, data, applyGlobalFilter, title]); // applyGlobalFilter, title ajoutés aux dépendances
 
   // Sauvegarde/restauration lors du changement de vue (Adapté de la référence)
-   useEffect(() => {
+  useEffect(() => {
     // Ne rien faire si l'initialisation n'est pas finie ou si l'année n'est pas encore définie
     if (!initializationCompleted.current || !selectedYear) {
-        prevViewMode.current = viewMode; // Mettre à jour même si on ne fait rien d'autre
-        return;
+      prevViewMode.current = viewMode; // Mettre à jour même si on ne fait rien d'autre
+      return;
     }
 
     const previousMode = prevViewMode.current;
@@ -444,35 +444,35 @@ export default function ClientCoupeChart({
 
     // Priorité : Filtre global si actif et l'année correspond
     if (hasGlobalFilter && globalStartDate && globalEndDate && selectedYear === globalStartDate.getFullYear()) {
-        let globalPeriods = [];
-        if (viewMode === "week") globalPeriods = getAllWeeksBetween(globalStartDate, globalEndDate);
-        else if (viewMode === "month") globalPeriods = getAllMonthsBetween(globalStartDate, globalEndDate);
-        else if (viewMode === "quarter") globalPeriods = getAllQuartersBetween(globalStartDate, globalEndDate);
-        else if (viewMode === "semester") globalPeriods = getAllSemestersBetween(globalStartDate, globalEndDate);
-        // Filtrer les périodes globales par celles qui sont réellement disponibles
-        valuesToSet = globalPeriods.filter(p => availablePeriods.includes(p));
+      let globalPeriods = [];
+      if (viewMode === "week") globalPeriods = getAllWeeksBetween(globalStartDate, globalEndDate);
+      else if (viewMode === "month") globalPeriods = getAllMonthsBetween(globalStartDate, globalEndDate);
+      else if (viewMode === "quarter") globalPeriods = getAllQuartersBetween(globalStartDate, globalEndDate);
+      else if (viewMode === "semester") globalPeriods = getAllSemestersBetween(globalStartDate, globalEndDate);
+      // Filtrer les périodes globales par celles qui sont réellement disponibles
+      valuesToSet = globalPeriods.filter(p => availablePeriods.includes(p));
     }
     // Sinon, utiliser la sélection mémorisée si elle correspond à l'année
     else if (selectionToRestore.year === selectedYear && selectionToRestore.values.length > 0) {
-        // Filtrer les valeurs mémorisées par celles qui sont disponibles
-        const validValues = selectionToRestore.values.filter(v => availablePeriods.includes(v));
-        // Si on a des valeurs valides, les utiliser, sinon prendre les dernières par défaut
-        valuesToSet = validValues.length > 0 ? validValues : availablePeriods.slice(-defaultNumPeriods);
+      // Filtrer les valeurs mémorisées par celles qui sont disponibles
+      const validValues = selectionToRestore.values.filter(v => availablePeriods.includes(v));
+      // Si on a des valeurs valides, les utiliser, sinon prendre les dernières par défaut
+      valuesToSet = validValues.length > 0 ? validValues : availablePeriods.slice(-defaultNumPeriods);
     }
     // Sinon (pas de filtre global, pas de sélection mémorisée valide), prendre les dernières périodes par défaut
     else {
-        valuesToSet = availablePeriods.slice(-defaultNumPeriods);
-        // Si on arrive ici, c'est qu'on n'utilise ni le filtre global, ni une sélection mémorisée
-        setHasGlobalFilter(false); // S'assurer que le flag est bien à false
+      valuesToSet = availablePeriods.slice(-defaultNumPeriods);
+      // Si on arrive ici, c'est qu'on n'utilise ni le filtre global, ni une sélection mémorisée
+      setHasGlobalFilter(false); // S'assurer que le flag est bien à false
     }
 
     setSelectedValues(valuesToSet);
     prevViewMode.current = viewMode; // Mettre à jour la référence de la vue précédente
 
-   }, [
-       viewMode, selectedYear, getAvailablePeriodsForYear, defaultNumPeriods, hasGlobalFilter, globalStartDate, globalEndDate, // Ajout dépendances filtre global
-       weekViewSelection, monthViewSelection, quarterViewSelection, semesterViewSelection // Ajout des sélections mémorisées
-   ]);
+  }, [
+    viewMode, selectedYear, getAvailablePeriodsForYear, defaultNumPeriods, hasGlobalFilter, globalStartDate, globalEndDate, // Ajout dépendances filtre global
+    weekViewSelection, monthViewSelection, quarterViewSelection, semesterViewSelection // Ajout des sélections mémorisées
+  ]);
 
 
   // --- Fonctions de gestion des filtres ---
@@ -495,7 +495,7 @@ export default function ClientCoupeChart({
   const toggleSelectAll = () => {
     const availablePeriods = getAvailablePeriodsForYear(selectedYear, viewMode);
     const allSelected = availablePeriods.length > 0 && availablePeriods.every(p => selectedValues.includes(p));
-    const newSelectedValues = allSelected ? [] : [...availablePeriods].sort((a,b)=>a-b); // Tri ajouté
+    const newSelectedValues = allSelected ? [] : [...availablePeriods].sort((a, b) => a - b); // Tri ajouté
     setSelectedValues(newSelectedValues);
     const now = Date.now();
     // Mettre à jour la bonne sélection mémorisée et son timestamp
@@ -513,17 +513,17 @@ export default function ClientCoupeChart({
     setSelectedYear(year); // Met à jour l'année, ce qui déclenchera l'effet [viewMode, selectedYear] pour ajuster les selectedValues
     // La logique de restauration/calcul des selectedValues est maintenant dans l'effet [viewMode, selectedYear]
     // On s'assure juste ici que si le filtre global était actif, il le reste s'il correspond à la nouvelle année.
-    if(hasGlobalFilter && globalStartDate && globalStartDate.getFullYear() !== year) {
-        // Si le filtre global était actif mais ne correspond plus à la nouvelle année, on le désactive pour cette année
-        setHasGlobalFilter(false);
+    if (hasGlobalFilter && globalStartDate && globalStartDate.getFullYear() !== year) {
+      // Si le filtre global était actif mais ne correspond plus à la nouvelle année, on le désactive pour cette année
+      setHasGlobalFilter(false);
     } else if (!hasGlobalFilter && globalStartDate && globalStartDate.getFullYear() === year && globalModifiedAt > 0) {
-         // Si le filtre global n'était pas actif, mais qu'il correspond à la nouvelle année sélectionnée et est valide
-         // On le réactive potentiellement (l'effet [globalModifiedAt] le fera si nécessaire)
-         // On peut forcer ici si on veut être sûr.
-         const lastLocalMod = Math.max(weekSelectionModifiedAt, monthSelectionModifiedAt, quarterSelectionModifiedAt, semesterSelectionModifiedAt);
-         if(globalModifiedAt > lastLocalMod) {
-             setHasGlobalFilter(true); // Force le flag si le global est plus récent
-         }
+      // Si le filtre global n'était pas actif, mais qu'il correspond à la nouvelle année sélectionnée et est valide
+      // On le réactive potentiellement (l'effet [globalModifiedAt] le fera si nécessaire)
+      // On peut forcer ici si on veut être sûr.
+      const lastLocalMod = Math.max(weekSelectionModifiedAt, monthSelectionModifiedAt, quarterSelectionModifiedAt, semesterSelectionModifiedAt);
+      if (globalModifiedAt > lastLocalMod) {
+        setHasGlobalFilter(true); // Force le flag si le global est plus récent
+      }
     }
     // L'effet [viewMode, selectedYear] s'occupera de mettre à jour selectedValues
   };
@@ -531,16 +531,16 @@ export default function ClientCoupeChart({
   // Gestion changement de mode de vue (Adaptée)
   const handleViewModeChange = (newMode) => {
     if (newMode !== viewMode) {
-        // Sauvegarde explicite de l'état actuel AVANT de changer viewMode
-        // (L'effet [viewMode] ne le ferait qu'après le re-render)
-        const currentSelection = { values: selectedValues, year: selectedYear };
-        if (viewMode === "week") setWeekViewSelection(currentSelection);
-        else if (viewMode === "month") setMonthViewSelection(currentSelection);
-        else if (viewMode === "quarter") setQuarterViewSelection(currentSelection);
-        else if (viewMode === "semester") setSemesterViewSelection(currentSelection);
+      // Sauvegarde explicite de l'état actuel AVANT de changer viewMode
+      // (L'effet [viewMode] ne le ferait qu'après le re-render)
+      const currentSelection = { values: selectedValues, year: selectedYear };
+      if (viewMode === "week") setWeekViewSelection(currentSelection);
+      else if (viewMode === "month") setMonthViewSelection(currentSelection);
+      else if (viewMode === "quarter") setQuarterViewSelection(currentSelection);
+      else if (viewMode === "semester") setSemesterViewSelection(currentSelection);
 
-        setViewMode(newMode);
-        // L'effet [viewMode, selectedYear] s'occupera de restaurer/calculer les selectedValues pour newMode
+      setViewMode(newMode);
+      // L'effet [viewMode, selectedYear] s'occupera de restaurer/calculer les selectedValues pour newMode
     }
   };
 
@@ -552,29 +552,29 @@ export default function ClientCoupeChart({
     if (isNaN(ticketDate.getTime())) return null;
 
     if (viewMode === "week") {
-        // Prioriser le champ 'weekField' s'il existe et est valide, sinon calculer la semaine
-        const weekVal = ticket[weekField];
-        return !isNaN(Number(weekVal)) ? Number(weekVal) : getWeekNumber(ticketDate);
+      // Prioriser le champ 'weekField' s'il existe et est valide, sinon calculer la semaine
+      const weekVal = ticket[weekField];
+      return !isNaN(Number(weekVal)) ? Number(weekVal) : getWeekNumber(ticketDate);
     } else if (viewMode === "month") {
-        return ticketDate.getMonth() + 1;
+      return ticketDate.getMonth() + 1;
     } else if (viewMode === "quarter") {
-        return getQuarter(ticketDate);
+      return getQuarter(ticketDate);
     } else if (viewMode === "semester") {
-        return getSemester(ticketDate);
+      return getSemester(ticketDate);
     }
     return null;
   }, [viewMode, dateField, weekField]);
 
   // Filtrer les tickets pour l'année sélectionnée (Conservé mais utilise dateField)
   const ticketsForYear = data.filter(t => {
-      const d = new Date(t[dateField]);
-      return !isNaN(d.getTime()) && d.getFullYear() === selectedYear;
+    const d = new Date(t[dateField]);
+    return !isNaN(d.getTime()) && d.getFullYear() === selectedYear;
   });
 
   // Filtrer les tickets selon les périodes sélectionnées (utilise getTicketPeriod)
   const filteredDataForSelectedPeriods = ticketsForYear.filter(ticket => {
-      const period = getTicketPeriod(ticket);
-      return period !== null && selectedValues.includes(period);
+    const period = getTicketPeriod(ticket);
+    return period !== null && selectedValues.includes(period);
   });
 
   // Création des labels pour le graphique (Adaptée pour Q/S)
@@ -628,7 +628,7 @@ export default function ClientCoupeChart({
       },
     ],
   };
-  
+
   // Texte descriptif de la période sélectionnée (Adapté pour Q/S)
   const periodeLabelText = sortedSelectedValues.length > 0
     ? viewMode === "week"
@@ -678,14 +678,14 @@ export default function ClientCoupeChart({
         },
         // ---- NOUVEAU : Ajouter de l'espace en haut de l'axe Y ----
         grace: '10%' // Ajoute 10% d'espace au-dessus de la valeur max
-                     // Vous pouvez ajuster ce pourcentage (ex: '5%', '15%')
-                     // Ou utiliser un nombre fixe de pixels (ex: grace: 10) si les valeurs sont petites
+        // Vous pouvez ajuster ce pourcentage (ex: '5%', '15%')
+        // Ou utiliser un nombre fixe de pixels (ex: grace: 10) si les valeurs sont petites
       },
     }
   };
   // --- Rendu JSX ---
   if (loading) {
-       return ( <div className="visualisation relative" data-id={id}><div className="relative bg-white p-5 shadow-md rounded-lg w-full h-[450px] flex justify-center items-center"><p className="text-center text-gray-500">Chargement des données...</p></div></div> );
+    return (<div className="visualisation relative" data-id={id}><div className="relative bg-white p-5 shadow-md rounded-lg w-full h-[450px] flex justify-center items-center"><p className="text-center text-gray-500">Chargement des données...</p></div></div>);
   }
 
   // Périodes disponibles pour l'affichage dans le filtre
@@ -698,30 +698,40 @@ export default function ClientCoupeChart({
         {/* Header */}
         <div className="flex justify-between items-start mb-4 relative">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+            <h3 className="no-export text-lg font-semibold text-gray-800">{title}</h3>
             <p className="text-sm text-gray-500">
               {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText}
             </p>
           </div>
           <div className="flex gap-2">
-             {/* Bouton Filtre (conservé) */}
-            <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setIsOpen(!isOpen)} data-filter-toggle="true">
+            {/* Bouton Filtre (ajout no-export) */}
+            <button
+              className="no-export bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+              onClick={() => setIsOpen(!isOpen)}
+              data-filter-toggle="true"
+            >
               <AiOutlineFilter size={20} className="text-gray-600" />
             </button>
-             {/* ---- NOUVEAU : Bouton Commentaires ---- */}
-            <CommentButton
-              containerRef={chartContainerRef} // Ref du conteneur principal
-              comments={annotations}
-              onAddComment={(c) => setAnnotations([...annotations, c])}
-              onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
-              onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
-            />
-             {/* Bouton Agrandir (conservé) */}
-            <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setModalIsOpen(true)}>
+
+            {/* Bouton Commentaires (ajout no-export) */}
+            <div className="no-export">
+              <CommentButton
+                containerRef={chartContainerRef}
+                comments={annotations}
+                onAddComment={(c) => setAnnotations([...annotations, c])}
+                onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+                onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+              />
+            </div>
+
+            {/* Bouton Agrandir (ajout no-export) */}
+            <button
+              className="no-export bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+              onClick={() => setModalIsOpen(true)}
+            >
               <FaExpand size={18} className="text-gray-600" />
             </button>
           </div>
-
           {/* Panneau de filtre (Adapté) */}
           {isOpen && (
             <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
@@ -738,7 +748,7 @@ export default function ClientCoupeChart({
                 <div className="mb-3">
                   <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
                   <div className="flex flex-wrap gap-1">
-                    {availableYears.map((year) => ( <button key={year} onClick={() => handleYearChange(year)} className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>{year}</button> ))}
+                    {availableYears.map((year) => (<button key={year} onClick={() => handleYearChange(year)} className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>{year}</button>))}
                   </div>
                 </div>
               )}
@@ -776,9 +786,9 @@ export default function ClientCoupeChart({
         <div className="flex-grow flex justify-center items-center w-full min-h-[300px] h-[350px]" ref={chartContainerRef}>
           {clientCoupeCounts.length > 0 && clientCoupeCounts.some(c => c > 0) ? ( // Vérifier s'il y a des données > 0
             <Bar
-                data={chartData}
-                options={chartOptions}
-                plugins={[ChartDataLabels]}
+              data={chartData}
+              options={chartOptions}
+              plugins={[ChartDataLabels]}
             />
           ) : (
             <p className="text-gray-500 italic">Aucune donnée à afficher pour la sélection actuelle.</p>
@@ -808,16 +818,16 @@ export default function ClientCoupeChart({
           {/* Conteneur Graphique Modal */}
           {/* ---- MODIFIÉ : Ajout ref, CommentButton caché et taille min/flexible ---- */}
           <div className="relative flex-grow min-h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
-             {clientCoupeCounts.length > 0 && clientCoupeCounts.some(c => c > 0) ? (
-                <Bar
-                  data={chartData}
-                  // Passer les options, mais s'assurer que maintainAspectRatio est false pour le modal
-                  options={{...chartOptions, maintainAspectRatio: false}}
-                  plugins={[ChartDataLabels]}
-                />
-             ) : (
-                <p className="text-gray-500 italic">Aucune donnée à afficher.</p>
-             )}
+            {clientCoupeCounts.length > 0 && clientCoupeCounts.some(c => c > 0) ? (
+              <Bar
+                data={chartData}
+                // Passer les options, mais s'assurer que maintainAspectRatio est false pour le modal
+                options={{ ...chartOptions, maintainAspectRatio: false }}
+                plugins={[ChartDataLabels]}
+              />
+            ) : (
+              <p className="text-gray-500 italic">Aucune donnée à afficher.</p>
+            )}
             {/* ---- NOUVEAU : CommentButton caché pour le modal ---- */}
             <CommentButton
               containerRef={modalChartContainerRef} // Ref du conteneur modal

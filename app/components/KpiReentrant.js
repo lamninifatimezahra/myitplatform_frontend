@@ -38,8 +38,9 @@ const normalizeDate = (input) => {
 export default function KpiReentrant({
   apiUrl,
   title = "Tickets Réentrants",
-  tagField = "tag_reentrant",
-  dateField = "date_sortie"
+  idField = "id_ticket", 
+  dateUpdateField = "date_derniere_maj", // Utilisé pour identifier les tickets et les compter
+  dateField = "date_derniere_maj" // Utilisé pour le filtrage par date (MÊME CHAMP que VolumeReentrants)
 }) {
   const id = `KPI ${title}`;
   const calendarRef = useRef(null);
@@ -75,7 +76,7 @@ export default function KpiReentrant({
       setLocalStartDate(globalStartDate);
       setLocalEndDate(globalEndDate);
     }
-  }, [globalStartDate, globalEndDate, globalModifiedAt]);
+  }, [globalStartDate, globalEndDate, globalModifiedAt, localModifiedAt]);
 
   useEffect(() => {
     if (!apiUrl) {
@@ -87,37 +88,61 @@ export default function KpiReentrant({
       .then((res) => res.json())
       .then((json) => {
         setData(json);
-        calculateReentrantTickets(json, effectiveStartDate, effectiveEndDate);
       })
       .catch((err) => {
+        console.error("Erreur lors du chargement des données:", err);
         setError("Erreur lors du chargement des données");
       });
-  }, [apiUrl, effectiveStartDate, effectiveEndDate]);
+  }, [apiUrl]);
 
+  // Effet séparé pour calculer les tickets réentrants quand les données ou les filtres changent
   useEffect(() => {
-    calculateReentrantTickets(data, effectiveStartDate, effectiveEndDate);
-  }, [data, effectiveStartDate, effectiveEndDate]);
+    if (data.length > 0) {
+      const count = countReentrantTickets(data, effectiveStartDate, effectiveEndDate);
+      setReentrantCount(count);
+    }
+  }, [data, effectiveStartDate, effectiveEndDate, dateField, dateUpdateField, idField]);
 
-  const calculateReentrantTickets = (tickets, startDate, endDate) => {
-    if (!tickets || tickets.length === 0) return setReentrantCount(0);
+  // Logique de comptage EXACTEMENT comme dans VolumeReentrants
+const countReentrantTickets = (tickets, startDate, endDate) => {
+  if (!tickets || tickets.length === 0) return 0;
 
-    const start = startDate ? normalizeDate(startDate) : null;
-    const end = endDate ? normalizeDate(endDate) : null;
+  const ticketGroups = {};
+  const reentrantTicketIds = new Set();
 
-    const isReentrant = (ticket) =>
-      ticket[tagField] && ticket[tagField].trim() !== "";
+  tickets.forEach(ticket => {
+    const id = ticket[idField];
+    if (!id) return;
+    if (!ticketGroups[id]) ticketGroups[id] = [];
+    ticketGroups[id].push(ticket);
+  });
 
-    const inRange = (ticketDate) =>
-      ticketDate && start && end && ticketDate >= start && ticketDate <= end;
+  Object.entries(ticketGroups).forEach(([id, occurrences]) => {
+    if (occurrences.length < 2) return; // Pas réentrant globalement
 
-    const total = tickets.filter(ticket => {
-      const rawDate = ticket[dateField];
-      const ticketDate = normalizeDate(rawDate);
-      return isReentrant(ticket) && (!start || !end || inRange(ticketDate));
+    // Trier par date de mise à jour
+    const sorted = occurrences
+      .map(o => ({ ...o, date: normalizeDate(o[dateUpdateField]) }))
+      .filter(o => o.date)
+      .sort((a, b) => a.date - b.date);
+
+    // Ignorer la première occurrence
+    const rest = sorted.slice(1);
+
+    // Vérifier si une des autres occurrences est dans la période sélectionnée
+    const inPeriod = rest.some(o => {
+      if (!startDate || !endDate) return true;
+      return o.date >= normalizeDate(startDate) && o.date <= normalizeDate(endDate);
     });
 
-    setReentrantCount(total.length);
-  };
+    if (inPeriod) {
+      reentrantTicketIds.add(id);
+    }
+  });
+
+  return reentrantTicketIds.size;
+};
+
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -154,7 +179,7 @@ export default function KpiReentrant({
   return (
     <div className="visualisation relative w-64" data-id={id}>
       <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
-        <div className="flex justify-between items-start w-full mb-2">
+        <div className="no-export flex justify-between items-start w-full mb-2">
           <h3 className="text-gray-800 text-lg font-medium">{title}</h3>
           <button
             className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"

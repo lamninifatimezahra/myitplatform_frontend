@@ -53,6 +53,93 @@ const getSemester = (date) => {
   return month <= 6 ? 1 : 2;
 };
 
+// Nouvelle fonction pour calculer les jours ouvrables, excluant correctement les weekends
+const getBusinessDaysDifference = (dateDerniereMaj, dateSortie, delaiJour = null) => {
+  // Vérifier si les paramètres nécessaires sont présents
+  if (!dateDerniereMaj || !dateSortie) {
+    return 0;
+  }
+  
+  // Convertir les dates en objets Date
+  const dateDebut = new Date(dateDerniereMaj);
+  const dateFin = new Date(dateSortie);
+  
+  // Vérifier la validité des dates
+  if (isNaN(dateDebut.getTime()) || isNaN(dateFin.getTime())) {
+    return 0;
+  }
+  
+  // Si un delaiJour est fourni, l'utiliser comme base
+// Si un delaiJour est fourni, l'utiliser comme base
+if (delaiJour !== null && !isNaN(delaiJour)) {
+  // Calculer le nombre de jours total à examiner (arrondi standard)
+  const totalDays = Math.round(delaiJour);
+  
+  // Compter les weekends pendant cette période
+  let weekendDays = 0;
+  const currentDate = new Date(dateDebut);
+  
+  for (let i = 0; i < totalDays; i++) {
+    const dayOfWeek = currentDate.getDay();
+    
+    // Si c'est un samedi (6) ou un dimanche (0), c'est un weekend
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      weekendDays++;
+    }
+    
+    // Passer au jour suivant
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  // Soustraire les weekends du délai total
+  const businessDays = Math.max(0, delaiJour - weekendDays);
+  
+  // Appliquer l'arrondi selon votre règle:
+  // - Si la partie décimale <= 0.5, arrondir à l'inférieur
+  // - Si la partie décimale > 0.5, arrondir au supérieur
+  const decimalPart = businessDays - Math.floor(businessDays);
+  if (decimalPart <= 0.5) {
+    return Math.floor(businessDays);
+  } else {
+    return Math.ceil(businessDays);
+  }
+}  
+  // Si aucun delaiJour n'est fourni, calculer directement les jours ouvrables
+  // Copier les dates pour ne pas modifier les originales
+  let currentDate = new Date(dateDebut);
+  currentDate.setHours(0, 0, 0, 0);
+  
+  const lastDate = new Date(dateFin);
+  lastDate.setHours(23, 59, 59, 999);
+  
+  let businessDays = 0;
+  
+  // Parcourir chaque jour entre les dates
+  while (currentDate <= lastDate) {
+    const dayOfWeek = currentDate.getDay();
+    
+    // Compter si ce n'est pas un weekend (0 = dimanche, 6 = samedi)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      businessDays++;
+    }
+    
+    // Passer au jour suivant
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return businessDays;
+};
+
+// Fonction pour catégoriser les tickets selon leur délai (en jours ouvrables)
+const categorizeTicket = (businessDays) => {
+  if (businessDays <= 1) return "Jour";
+  if (businessDays <= 2) return "2J";
+  if (businessDays <= 3) return "3J";
+  if (businessDays <= 5) return "Semaine";
+  if (businessDays <= 10) return "2semaines";
+  return "Plus 2S";
+};
+
 export default function SlaAnciennete({
   // Prop obligatoire pour l'URL de l'API
   apiUrl,
@@ -63,15 +150,14 @@ export default function SlaAnciennete({
 }) {
   // Vérification de la présence de l'URL de l'API
   if (!apiUrl) {
-    return (
-      <div className="visualisation relative" data-id={id}>
-        <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
-          <p className="text-red-500 text-sm mt-2">Erreur : L'URL de l'API est requise.</p>
-        </div>
+    return ( 
+      <div className="visualisation relative" data-id={id}> 
+        <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full"> 
+          <p className="text-red-500 text-sm mt-2">Erreur : L'URL de l'API est requise.</p> 
+        </div> 
       </div>
     );
   }
-
 
   // Références
   const initializationCompleted = useRef(false);
@@ -95,7 +181,6 @@ export default function SlaAnciennete({
   // États pour mémoriser les sélections pour chaque vue
   const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
   const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
-  // Ajouter aux états existants
   const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
   const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
 
@@ -223,7 +308,6 @@ export default function SlaAnciennete({
     setMonthViewSelection({ values: monthList, year: globalStartDate.getFullYear() });
     const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
     setQuarterViewSelection({ values: quarterList, year: globalStartDate.getFullYear() });
-
     const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
     setSemesterViewSelection({ values: semesterList, year: globalStartDate.getFullYear() });
 
@@ -233,9 +317,7 @@ export default function SlaAnciennete({
     } else if (viewMode === "month") {
       setSelectedValues(monthList);
       setSelectedYear(globalStartDate.getFullYear());
-    }
-    // Dans la condition if/else, ajouter ces cas
-    else if (viewMode === "quarter") {
+    } else if (viewMode === "quarter") {
       setSelectedValues(quarterList);
       setSelectedYear(globalStartDate.getFullYear());
     } else if (viewMode === "semester") {
@@ -243,7 +325,6 @@ export default function SlaAnciennete({
       setSelectedYear(globalStartDate.getFullYear());
     }
     setHasGlobalFilter(true);
-
   };
 
   // Changement de vue et préservation des sélections précédentes
@@ -256,9 +337,7 @@ export default function SlaAnciennete({
       setWeekViewSelection({ values: selectedValues, year: selectedYear });
     } else if (prevViewMode.current === "month") {
       setMonthViewSelection({ values: selectedValues, year: selectedYear });
-    }
-    // Ajouter dans la condition de sauvegarde
-    else if (prevViewMode.current === "quarter") {
+    } else if (prevViewMode.current === "quarter") {
       setQuarterViewSelection({ values: selectedValues, year: selectedYear });
     } else if (prevViewMode.current === "semester") {
       setSemesterViewSelection({ values: selectedValues, year: selectedYear });
@@ -270,9 +349,7 @@ export default function SlaAnciennete({
     } else if (viewMode === "month" && monthViewSelection.values.length > 0) {
       setSelectedValues(monthViewSelection.values);
       setSelectedYear(monthViewSelection.year || selectedYear);
-    }
-    // Ajouter dans la condition de restauration
-    else if (viewMode === "quarter" && quarterViewSelection.values.length > 0) {
+    } else if (viewMode === "quarter" && quarterViewSelection.values.length > 0) {
       setSelectedValues(quarterViewSelection.values);
       setSelectedYear(quarterViewSelection.year || selectedYear);
     } else if (viewMode === "semester" && semesterViewSelection.values.length > 0) {
@@ -288,22 +365,28 @@ export default function SlaAnciennete({
       try {
         const response = await fetchWithAuth(apiUrl);
         const result = await response.json();
-        setData(result);
+        
+        // Filtrer les tickets qui n'ont pas de date_sortie
+        const filteredResult = result.filter(ticket => 
+          ticket.date_sortie && ticket.date_sortie !== null && ticket.date_sortie !== ""
+        );
+        
+        setData(filteredResult);
 
-        // Extraction des années disponibles depuis la date de mise à jour ("date_derniere_maj")
-        const years = [...new Set(result.map(ticket => new Date(ticket.date_derniere_maj).getFullYear()))].sort();
+        // Extraction des années disponibles depuis la date de mise à jour ("date_sortie")
+        const years = [...new Set(filteredResult.map(ticket => new Date(ticket.date_sortie).getFullYear()))].sort();
         setAvailableYears(years);
         setMultipleYearsExist(years.length > 1);
         const latestYear = years[years.length - 1];
         setSelectedYear(latestYear);
 
         if (!initializationCompleted.current) {
-          const filteredByYear = result.filter(ticket =>
-            new Date(ticket.date_derniere_maj).getFullYear() === latestYear
+          const filteredByYear = filteredResult.filter(ticket =>
+            new Date(ticket.date_sortie).getFullYear() === latestYear
           );
 
           if (viewMode === "week") {
-            const weeks = [...new Set(filteredByYear.map(ticket => ticket.semaine))]
+            const weeks = [...new Set(filteredByYear.map(ticket => ticket.semaine_date_sortant))]
               .filter(week => !isNaN(Number(week)))
               .sort((a, b) => a - b);
             const lastWeeks = weeks.slice(-defaultNumPeriods);
@@ -311,18 +394,18 @@ export default function SlaAnciennete({
             setWeekViewSelection({ values: lastWeeks, year: latestYear });
           }
           else if (viewMode === "quarter") {
-            const quarters = [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket.date_derniere_maj))))].sort((a, b) => a - b);
+            const quarters = [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket.date_sortie))))].sort((a, b) => a - b);
             const lastQuarters = quarters.slice(-defaultNumPeriods);
             setSelectedValues(lastQuarters);
             setQuarterViewSelection({ values: lastQuarters, year: latestYear });
           } else if (viewMode === "semester") {
-            const semesters = [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket.date_derniere_maj))))].sort((a, b) => a - b);
+            const semesters = [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket.date_sortie))))].sort((a, b) => a - b);
             const lastSemesters = semesters.slice(-defaultNumPeriods);
             setSelectedValues(lastSemesters);
             setSemesterViewSelection({ values: lastSemesters, year: latestYear });
           }
           else {
-            const months = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))].sort((a, b) => a - b);
+            const months = [...new Set(filteredByYear.map(ticket => new Date(ticket.date_sortie).getMonth() + 1))].sort((a, b) => a - b);
             const lastMonths = months.slice(-defaultNumPeriods);
             setSelectedValues(lastMonths);
             setMonthViewSelection({ values: lastMonths, year: latestYear });
@@ -356,22 +439,21 @@ export default function SlaAnciennete({
 
   // Obtention des périodes disponibles pour l'année sélectionnée
   const getAvailablePeriodsForYear = (year) => {
-    const filteredByYear = data.filter(ticket => new Date(ticket.date_derniere_maj).getFullYear() === year);
+    const filteredByYear = data.filter(ticket => new Date(ticket.date_sortie).getFullYear() === year);
     if (viewMode === "week") {
-      return [...new Set(filteredByYear.map(ticket => ticket.semaine))]
+      return [...new Set(filteredByYear.map(ticket => ticket.semaine_date_sortant))]
         .filter(week => !isNaN(Number(week)))
         .sort((a, b) => a - b);
     }
-    // Ajouter ces conditions
     else if (viewMode === "quarter") {
-      return [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket.date_derniere_maj))))]
+      return [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket.date_sortie))))]
         .sort((a, b) => a - b);
     } else if (viewMode === "semester") {
-      return [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket.date_derniere_maj))))]
+      return [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket.date_sortie))))]
         .sort((a, b) => a - b);
     }
     else {
-      return [...new Set(filteredByYear.map(ticket => new Date(ticket.date_derniere_maj).getMonth() + 1))]
+      return [...new Set(filteredByYear.map(ticket => new Date(ticket.date_sortie).getMonth() + 1))]
         .sort((a, b) => a - b);
     }
   };
@@ -388,7 +470,6 @@ export default function SlaAnciennete({
       setWeekViewSelection({ values: newSelectedValues, year: selectedYear });
       setWeekSelectionModifiedAt(Date.now());
     }
-    // Ajouter ces conditions
     else if (viewMode === "quarter") {
       setQuarterViewSelection({ values: newSelectedValues, year: selectedYear });
       setQuarterSelectionModifiedAt(Date.now());
@@ -412,7 +493,6 @@ export default function SlaAnciennete({
       setWeekViewSelection({ values: newSelectedValues, year: selectedYear });
       setWeekSelectionModifiedAt(Date.now());
     }
-    // Ajouter ces conditions
     else if (viewMode === "quarter") {
       setQuarterViewSelection({ values: newSelectedValues, year: selectedYear });
       setQuarterSelectionModifiedAt(Date.now());
@@ -448,7 +528,6 @@ export default function SlaAnciennete({
         }
       }
     }
-    // Ajouter ces conditions
     else if (viewMode === "quarter") {
       if (hasGlobalFilter && globalStartDate && globalEndDate) {
         const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate)
@@ -512,7 +591,6 @@ export default function SlaAnciennete({
   const selectedValuesWithYear = selectedValues.map(value => ({ value, year: selectedYear }));
   const labels = selectedValuesWithYear.map(item => {
     let periodLabel;
-    // Remplacer la condition existante par
     if (viewMode === "week") {
       periodLabel = `S${item.value}`;
     } else if (viewMode === "month") {
@@ -529,22 +607,38 @@ export default function SlaAnciennete({
     label: category,
     data: selectedValuesWithYear.map(item => {
       return data.filter(ticket => {
-        const ticketYear = new Date(ticket.date_derniere_maj).getFullYear();
+        // Ignorer les tickets sans date_sortie ou sans delai_jour
+        if (!ticket.date_sortie || ticket.delai_jour === undefined || ticket.delai_jour === null) {
+          return false;
+        }
+        
+        const ticketYear = new Date(ticket.date_sortie).getFullYear();
         let ticketPeriod;
 
         if (viewMode === "week") {
-          ticketPeriod = ticket.semaine;
+          ticketPeriod = ticket.semaine_date_sortant;
         } else if (viewMode === "month") {
-          ticketPeriod = new Date(ticket.date_derniere_maj).getMonth() + 1;
+          ticketPeriod = new Date(ticket.date_sortie).getMonth() + 1;
         } else if (viewMode === "quarter") {
-          ticketPeriod = getQuarter(new Date(ticket.date_derniere_maj));
+          ticketPeriod = getQuarter(new Date(ticket.date_sortie));
         } else if (viewMode === "semester") {
-          ticketPeriod = getSemester(new Date(ticket.date_derniere_maj));
+          ticketPeriod = getSemester(new Date(ticket.date_sortie));
         }
+
+        // Calcul des jours ouvrables entre date_derniere_maj et date_sortie
+        // Utiliser delai_jour comme base si disponible
+        const businessDays = getBusinessDaysDifference(
+          ticket.date_derniere_maj, 
+          ticket.date_sortie, 
+          ticket.delai_jour
+        );
+        
+        // Obtention de la catégorie SLA en fonction des jours ouvrables
+        const slaCategory = categorizeTicket(businessDays);
 
         return ticketYear === item.year &&
           ticketPeriod === item.value &&
-          ticket.age1 === category;
+          slaCategory === category;
       }).length;
     }),
     backgroundColor: getColorForSlaCategory(category),
@@ -568,10 +662,10 @@ export default function SlaAnciennete({
     ? viewMode === "week"
       ? `Semaine(s) : ${selectedValues.join(", ")}`
       : viewMode === "month"
-        ? `Mois : ${selectedValues.map(m => monthNames[m - 1]).join(", ")}`
-        : viewMode === "quarter"
-          ? `Trimestre(s) : ${selectedValues.map(q => quarterNames[q - 1]).join(", ")}`
-          : `Semestre(s) : ${selectedValues.map(s => semesterNames[s - 1]).join(", ")}`
+      ? `Mois : ${selectedValues.map(m => monthNames[m - 1]).join(", ")}`
+      : viewMode === "quarter"
+      ? `Trimestre(s) : ${selectedValues.map(q => quarterNames[q - 1]).join(", ")}`
+      : `Semestre(s) : ${selectedValues.map(s => semesterNames[s - 1]).join(", ")}`
     : "Aucune période sélectionnée";
 
   const chartOptions = {
@@ -594,164 +688,168 @@ export default function SlaAnciennete({
   };
 
 
-  return (
-    <div className="visualisation relative" data-id={id}>
-      <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
-        {/* Header avec titre, sous-titre et boutons */}
-        <div className="flex justify-between items-start mb-4 relative">
+return (
+  <div className="visualisation relative" data-id={id}>
+    <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
+      {/* Header avec titre, sous-titre et boutons */}
+      <div className="flex justify-between items-start mb-4 relative">
+        <div>
+          <h3 className="no-export text-lg font-semibold text-gray-800">SLA d'ancienneté</h3>
+          <p className="text-sm text-gray-500">
+            {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText}
+          </p>
+        </div>
+        <div className="flex gap-2 no-export">
+          <button
+            className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+            onClick={() => setIsOpen(!isOpen)}
+            data-filter-toggle="true"
+          >
+            <AiOutlineFilter size={20} className="text-gray-600" />
+          </button>
+          <CommentButton
+            containerRef={chartContainerRef}
+            comments={annotations}
+            onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
+            onUpdateComment={(updatedComment) =>
+              setAnnotations(annotations.map(a => a.id === updatedComment.id ? updatedComment : a))
+            }
+            onDeleteComment={(commentId) =>
+              setAnnotations(annotations.filter(a => a.id !== commentId))
+            }
+          />
+          <button
+            className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
+            onClick={() => setModalIsOpen(true)}
+          >
+            <FaExpand size={18} className="text-gray-600" />
+          </button>
+        </div>
+
+        {isOpen && (
+          <div ref={filterPanelRef} className="no-export absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
+            <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
+            <div className="flex space-x-2 mb-2 mt-2 flex-wrap">
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("week")}
+              >
+                Semaine
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("month")}
+              >
+                Mois
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("quarter")}
+              >
+                Trimestre
+              </button>
+              <button
+                className={`px-3 py-1 rounded-md mb-2 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                onClick={() => handleViewModeChange("semester")}
+              >
+                Semestre
+              </button>
+            </div>
+            {multipleYearsExist && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                <div className="flex flex-wrap gap-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => handleYearChange(year)}
+                      className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="mb-2">
+              <button
+                onClick={toggleSelectAll}
+                className={`text-xs px-2 py-1 rounded-md w-full ${allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
+              >
+                {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
+            <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
+              {availablePeriods.map(value => (
+                <div key={value} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedValues.includes(value)}
+                    onChange={() => handleSelectionChange(value)}
+                  />
+                  <span className="text-gray-500">
+                    {viewMode === "week"
+                      ? `Semaine ${value}`
+                      : viewMode === "month"
+                      ? monthNames[value - 1]
+                      : viewMode === "quarter"
+                      ? quarterNames[value - 1]
+                      : semesterNames[value - 1]
+                    }
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-grow flex justify-center items-center h-[350px]" ref={chartContainerRef}>
+        <Bar
+          data={{ labels, datasets }}
+          options={chartOptions}
+          plugins={[ChartDataLabels]}
+        />
+      </div>
+    </div>
+
+    <Modal
+      isOpen={modalIsOpen}
+      onRequestClose={() => setModalIsOpen(false)}
+      className="flex items-center justify-center fixed inset-0 z-50"
+      overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
+    >
+      <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">SLA d'ancienneté</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-2xl font-semibold text-gray-800">SLA d'ancienneté</h3>
+            <p className="text-sm text-gray-500 mt-1">
               {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText}
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
-              onClick={() => setIsOpen(!isOpen)}
-              data-filter-toggle="true">
-              <AiOutlineFilter size={20} className="text-gray-600" />
-            </button>
-            <CommentButton
-              containerRef={chartContainerRef}
-              comments={annotations}
-              onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
-              onUpdateComment={(updatedComment) =>
-                setAnnotations(annotations.map(a => a.id === updatedComment.id ? updatedComment : a))
-              }
-              onDeleteComment={(commentId) =>
-                setAnnotations(annotations.filter(a => a.id !== commentId))
-              }
-            />              <button
-              className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
-              onClick={() => setModalIsOpen(true)}>
-              <FaExpand size={18} className="text-gray-600" />
-            </button>
-          </div>
-          {isOpen && (
-            <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
-              <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-              <div className="flex space-x-2 mb-2 mt-2 flex-wrap">
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("week")}
-                >
-                  Semaine
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("month")}
-                >
-                  Mois
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("quarter")}
-                >
-                  Trimestre
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-md mb-2 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                  onClick={() => handleViewModeChange("semester")}
-                >
-                  Semestre
-                </button>
-              </div>
-              {multipleYearsExist && (
-                <div className="mb-3">
-                  <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
-                  <div className="flex flex-wrap gap-1">
-                    {availableYears.map(year => (
-                      <button
-                        key={year}
-                        onClick={() => handleYearChange(year)}
-                        className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="mb-2">
-                <button
-                  onClick={toggleSelectAll}
-                  className={`text-xs px-2 py-1 rounded-md w-full ${allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
-                >
-                  {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
-                </button>
-              </div>
-              <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
-                {availablePeriods.map(value => (
-                  <div key={value} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedValues.includes(value)}
-                      onChange={() => handleSelectionChange(value)}
-                    />
-                    <span className="text-gray-500">
-                      {viewMode === "week"
-                        ? `Semaine ${value}`
-                        : viewMode === "month"
-                          ? monthNames[value - 1]
-                          : viewMode === "quarter"
-                            ? quarterNames[value - 1]
-                            : semesterNames[value - 1]
-                      }
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
         </div>
-
-        <div className="flex-grow flex justify-center items-center h-[350px]" ref={chartContainerRef}>
+        <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
           <Bar
             data={{ labels, datasets }}
             options={chartOptions}
             plugins={[ChartDataLabels]}
           />
+          <CommentButton
+            containerRef={modalChartContainerRef}
+            hideButton={true}
+            comments={annotations}
+            onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
+            onUpdateComment={(updatedComment) =>
+              setAnnotations(annotations.map(a => a.id === updatedComment.id ? updatedComment : a))
+            }
+            onDeleteComment={(commentId) =>
+              setAnnotations(annotations.filter(a => a.id !== commentId))
+            }
+          />
         </div>
       </div>
-
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={() => setModalIsOpen(false)}
-        className="flex items-center justify-center fixed inset-0 z-50"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-      >
-        <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-800">SLA d'ancienneté</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText}
-              </p>
-            </div>
-            <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
-          </div>
-          <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
-            <Bar
-              data={{ labels, datasets }}
-              options={chartOptions}
-              plugins={[ChartDataLabels]}
-            />
-            <CommentButton
-              containerRef={modalChartContainerRef}
-              hideButton={true}
-              comments={annotations}
-              onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
-              onUpdateComment={(updatedComment) =>
-                setAnnotations(annotations.map(a => a.id === updatedComment.id ? updatedComment : a))
-              }
-              onDeleteComment={(commentId) =>
-                setAnnotations(annotations.filter(a => a.id !== commentId))
-              }
-            />
-          </div>
-        </div>
-      </Modal>
-    </div>
-  );
+    </Modal>
+  </div>
+);
 }

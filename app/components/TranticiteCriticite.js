@@ -631,12 +631,12 @@ export default function TranticiteCriticité({
         {/* Header */}
         <div className="flex justify-between items-start mb-4 relative">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+            <h3 className="no-export text-lg font-semibold text-gray-800">{title}</h3>
             <p className="text-sm text-gray-500">
               {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="no-export flex gap-2">
              {/* Bouton Filtre */}
             <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setIsOpen(!isOpen)} data-filter-toggle="true">
               <AiOutlineFilter size={20} className="text-gray-600" />
