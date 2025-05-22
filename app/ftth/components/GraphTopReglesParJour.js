@@ -8,6 +8,7 @@ import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import fetchWithAuth from "@/utils/fetchWithAuth";
+import holidaysData from "@/app/ftth/utils/holidays.json";
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
@@ -61,6 +62,17 @@ export default function GraphTopReglesParJour({
     if (globalStartDate && globalEndDate) setLastFilterSource("global");
   }, [globalStartDate, globalEndDate]);
 
+  const isWorkingDay = (dateStr) => {
+  const date = new Date(dateStr);
+  const day = date.getDay(); // 0 = dimanche, 6 = samedi
+  const formattedDate = date.toISOString().split("T")[0];
+  const holidays = [
+    ...Object.keys(holidaysData.france),
+    ...Object.keys(holidaysData.morocco),
+  ];
+  return day !== 0 && day !== 6 && !holidays.includes(formattedDate);
+};
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -86,9 +98,7 @@ export default function GraphTopReglesParJour({
         const grouped = {};
         json.forEach(item => {
           const itemDate = normalizeDate(item.date);
-          const day = new Date(item.date).getDay();
-          const isWeekday = day !== 0 && day !== 6;
-          if (itemDate >= normalizeDate(start) && itemDate <= normalizeDate(end) && isWeekday) {
+          if (itemDate >= normalizeDate(start) && itemDate <= normalizeDate(end) && isWorkingDay(item.date)) {
             if (!grouped[item.date]) grouped[item.date] = [];
             grouped[item.date].push(item);
           }

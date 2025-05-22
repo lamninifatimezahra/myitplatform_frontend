@@ -9,6 +9,7 @@ import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import fetchWithAuth from "@/utils/fetchWithAuth";
+import holidaysData from "@/app/ftth/utils/holidays.json";
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
@@ -94,6 +95,19 @@ export default function GraphVueEnsemble({
     }
   }, [globalStartDate, globalEndDate]);
 
+  const isWorkingDay = (dateStr) => {
+  const date = new Date(dateStr);
+  const day = date.getDay(); // 0 = dimanche, 6 = samedi
+  const formattedDate = date.toISOString().split("T")[0];
+
+  const holidays = [
+    ...Object.keys(holidaysData.france),
+    ...Object.keys(holidaysData.morocco),
+  ];
+
+  return day !== 0 && day !== 6 && !holidays.includes(formattedDate);
+};
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -126,13 +140,13 @@ export default function GraphVueEnsemble({
         [start, end] = getPeriodRange(latestDate);
       }
 
-      const filtered = json
-        .map((item) => ({ ...item, dateObj: new Date(item.date) }))
-        .filter((item) => {
-          const d = normalizeDate(item.dateObj);
-          const day = d.getDay();
-          return d >= start && d <= end && day !== 0 && day !== 6;
-        })
+const filtered = json
+  .map((item) => ({ ...item, dateObj: new Date(item.date) }))
+  .filter((item) => {
+    const d = normalizeDate(item.dateObj);
+    return d >= start && d <= end && isWorkingDay(item.date);
+  })
+
         .sort((a, b) => a.dateObj - b.dateObj);
 
       const finalData = filtered.map((item) => ({

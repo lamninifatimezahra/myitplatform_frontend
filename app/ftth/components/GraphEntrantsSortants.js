@@ -9,6 +9,7 @@ import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import fetchWithAuth from "@/utils/fetchWithAuth";
+import holidaysData from "@/app/ftth/utils/holidays.json";
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
@@ -47,6 +48,17 @@ export default function GraphEntrantsSortants({
     d.setHours(0, 0, 0, 0);
     return d;
   };
+
+  const isWorkingDay = (dateStr) => {
+  const date = new Date(dateStr);
+  const day = date.getDay(); // 0 = dimanche, 6 = samedi
+  const formattedDate = date.toISOString().split("T")[0];
+  const holidays = [
+    ...Object.keys(holidaysData.france),
+    ...Object.keys(holidaysData.morocco),
+  ];
+  return day !== 0 && day !== 6 && !holidays.includes(formattedDate);
+};
 
   const getDynamicTitle = () => {
     if (visibleKeys.length === 1) {
@@ -136,11 +148,11 @@ export default function GraphEntrantsSortants({
           [start, end] = getPeriodRange(getLatestDate(rawData));
         }
 
-        const filteredDates = sortedDates.filter((date) => {
-          const dateObj = normalizeDate(date);
-          const day = dateObj.getDay();
-          return dateObj >= start && dateObj <= end && day !== 0 && day !== 6;
-        });
+const filteredDates = sortedDates.filter((date) => {
+  const dateObj = new Date(date);
+  return dateObj >= start && dateObj <= end && isWorkingDay(date);
+});
+
 
         const finalData = filteredDates.map((date) => ({
           date: new Date(date).toLocaleDateString("fr-FR"),
