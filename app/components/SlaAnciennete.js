@@ -144,7 +144,7 @@ export default function SlaAnciennete({
   // Prop obligatoire pour l'URL de l'API
   apiUrl,
   // Props personnalisables avec des valeurs par défaut
-  id = "SLA d'ancienneté",
+  id = "Ancienneté des tickets traités",
   defaultViewMode = "week", // "week" ou "month"
   defaultNumPeriods = 5
 }) {
