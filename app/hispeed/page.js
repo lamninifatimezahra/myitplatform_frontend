@@ -25,6 +25,7 @@ import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 
 const API_BASE_URL = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api";
 const API_HISPEED_DATA = `${API_BASE_URL}/hispeed/data/`;
+const API_COMMENT_UPDATE = `${API_BASE_URL}/update-ticket-comment/`;
 
 export default function HispeedDashboard() {
   const { user, loading, authorized, hydrated } = useAuth(null, "HISPEED");
@@ -116,8 +117,12 @@ export default function HispeedDashboard() {
             </div>
 
             {/* Tableaux */}
-            <TicketsReentrantsTable apiUrl={API_HISPEED_DATA} />
-            <TicketsEnCoursTable apiUrl={API_HISPEED_DATA} />
+              <TicketsReentrantsTable
+                apiUrl={API_HISPEED_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}/>
+              <TicketsEnCoursTable
+                apiUrl={API_HISPEED_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}/>
           </main>
         </div>
       </div>

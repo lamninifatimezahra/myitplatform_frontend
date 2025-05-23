@@ -103,46 +103,53 @@ export default function KpiReentrant({
     }
   }, [data, effectiveStartDate, effectiveEndDate, dateField, dateUpdateField, idField]);
 
-  // Logique de comptage EXACTEMENT comme dans VolumeReentrants
-const countReentrantTickets = (tickets, startDate, endDate) => {
-  if (!tickets || tickets.length === 0) return 0;
+  // NOUVELLE LOGIQUE DE COMPTAGE - identique à TauxReentrants
+  const countReentrantTickets = (tickets, startDate, endDate) => {
+    if (!tickets || tickets.length === 0) return 0;
 
-  const ticketGroups = {};
-  const reentrantTicketIds = new Set();
-
-  tickets.forEach(ticket => {
-    const id = ticket[idField];
-    if (!id) return;
-    if (!ticketGroups[id]) ticketGroups[id] = [];
-    ticketGroups[id].push(ticket);
-  });
-
-  Object.entries(ticketGroups).forEach(([id, occurrences]) => {
-    if (occurrences.length < 2) return; // Pas réentrant globalement
-
-    // Trier par date de mise à jour
-    const sorted = occurrences
-      .map(o => ({ ...o, date: normalizeDate(o[dateUpdateField]) }))
-      .filter(o => o.date)
-      .sort((a, b) => a.date - b.date);
-
-    // Ignorer la première occurrence
-    const rest = sorted.slice(1);
-
-    // Vérifier si une des autres occurrences est dans la période sélectionnée
-    const inPeriod = rest.some(o => {
-      if (!startDate || !endDate) return true;
-      return o.date >= normalizeDate(startDate) && o.date <= normalizeDate(endDate);
+    // Étape 1 — Calculer le nombre global d'itérations par ticket
+    const ticketIterationsMap = {};
+    tickets.forEach((t) => {
+      const id = t[idField];
+      if (!id) return;
+      if (!ticketIterationsMap[id]) ticketIterationsMap[id] = [];
+      ticketIterationsMap[id].push(t);
     });
 
-    if (inPeriod) {
-      reentrantTicketIds.add(id);
+    // Étape 2 — Trier les itérations de chaque ticket par date
+    Object.keys(ticketIterationsMap).forEach((id) => {
+      ticketIterationsMap[id].sort((a, b) =>
+        new Date(a[dateUpdateField]) - new Date(b[dateUpdateField])
+      );
+    });
+
+    // Étape 3 — Analyser les itérations pour ne compter que les 2e+ dans la période sélectionnée
+    let reentrantCount = 0;
+
+    for (const [ticketId, iterations] of Object.entries(ticketIterationsMap)) {
+      iterations.forEach((t, idx) => {
+        const date = new Date(t[dateField]);
+        
+        // Vérifier si l'occurrence est dans la période de dates (comme dans KpiReentrant original)
+        let inPeriod = true;
+        if (startDate && endDate) {
+          const normalizedDate = normalizeDate(date);
+          const normalizedStart = normalizeDate(startDate);
+          const normalizedEnd = normalizeDate(endDate);
+          inPeriod = normalizedDate >= normalizedStart && normalizedDate <= normalizedEnd;
+        }
+
+        if (!inPeriod) return;
+
+        // Si c'est une itération ≥ 2 (réentrante) et qu'elle est dans la période
+        if (iterations.length > 1 && idx > 0) {
+          reentrantCount += 1;
+        }
+      });
     }
-  });
 
-  return reentrantTicketIds.size;
-};
-
+    return reentrantCount;
+  };
 
   const formatDate = (date) => {
     if (!date) return "";

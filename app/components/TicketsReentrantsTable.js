@@ -49,6 +49,8 @@ const getAllWeeksBetween = (startDate, endDate) => {
 
 export default function TicketsReentrantsTable({
   apiUrl,
+  commentApiUrl,
+  tableType = "hispeed",
   id = "Détail des Réitérations des Tickets",
   chartTitle = "Détail des Réitérations des Tickets"
 }) {
@@ -308,7 +310,7 @@ const processIterationData = (tickets) => {
 const saveComment = async (ticketId, commentText) => {
   setCommentSaving(true);
   try {
-    const response = await fetchWithAuth('https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/update-ticket-comment/', {
+    const response = await fetchWithAuth( commentApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -317,7 +319,7 @@ const saveComment = async (ticketId, commentText) => {
         id_ticket: ticketId,
         comment_type: 'reentrant',
         comment_text: commentText,
-        table_type: 'hispeed'  // Spécifier explicitement la table
+        table_type: tableType    // Spécifier explicitement la table
       }),
     });
 

@@ -27,6 +27,7 @@ import { ExportProvider } from "../components/ExportContext";
 // ✅ API spécifique à FTTB
 const API_BASE_URL = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api";
 const API_FTTB_DATA = `${API_BASE_URL}/fttb/data/`;
+const API_COMMENT_UPDATE = `${API_BASE_URL}/update-ticket-comment/`;
 
 export default function FTTBDashboard() {
   const { user, loading, authorized, hydrated } = useAuth(null, "FTTB");
@@ -89,11 +90,11 @@ export default function FTTBDashboard() {
 
               {/* 🔢 KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              <KpiTicketsEntrants apiUrl={API_HISPEED_DATA} dateFilterField="date_derniere_maj" />
-              <KpiTicketTraite apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" />
-              <KpiReentrant apiUrl={API_HISPEED_DATA} tagField="tag_reentrant" dateField="date_sortie" />
-              <KpiTicketsEnCours apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
-              <KpiTicketsEnCoursPlus2S apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
+              <KpiTicketsEntrants apiUrl={API_FTTB_DATA} dateFilterField="date_derniere_maj" />
+              <KpiTicketTraite apiUrl={API_FTTB_DATA} dateSortieField="date_sortie" />
+              <KpiReentrant apiUrl={API_FTTB_DATA} tagField="tag_reentrant" dateField="date_sortie" />
+              <KpiTicketsEnCours apiUrl={API_FTTB_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
+              <KpiTicketsEnCoursPlus2S apiUrl={API_FTTB_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
             </div>
 
               {/* 📊 Graphiques – ligne 1 */}
@@ -120,8 +121,14 @@ export default function FTTBDashboard() {
               </div>
 
               {/* 🧾 Tableaux */}
-              <TicketsReentrantsTable apiUrl={API_FTTB_DATA} />
-              <TicketsEnCoursTable apiUrl={API_FTTB_DATA} />
+              <TicketsReentrantsTable
+                apiUrl={API_FTTB_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="fttb"/>
+              <TicketsEnCoursTable
+                apiUrl={API_FTTB_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="fttb"/>
             </main>
           </div>
         </div>

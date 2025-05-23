@@ -12,6 +12,8 @@ if (typeof window !== "undefined") Modal.setAppElement(document.body);
 export default function TicketsEnCoursTable({
   // Prop obligatoire pour l'URL de l'API
   apiUrl,
+  commentApiUrl,
+  tableType = "hispeed",
   // Props de personnalisation avec valeurs par défaut
   id = "Tickets en cours - Plus de 2 semaines",
   dateSortieField = "date_sortie",
@@ -183,7 +185,7 @@ export default function TicketsEnCoursTable({
   const saveComment = async (ticketId, commentText) => {
     setCommentSaving(true);
     try {
-      const response = await fetchWithAuth('https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/update-ticket-comment/', {
+      const response = await fetchWithAuth(commentApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +193,8 @@ export default function TicketsEnCoursTable({
         body: JSON.stringify({
           id_ticket: ticketId,
           comment_type: 'en_cours',
-          comment_text: commentText
+          comment_text: commentText,
+          table_type: tableType
         }),
       });
 

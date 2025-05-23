@@ -26,6 +26,8 @@ import { ExportProvider } from "../components/ExportContext";
 
 const API_BASE_URL = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api";
 const API_DSL_DATA = `${API_BASE_URL}/dsl/data/`;
+const API_COMMENT_UPDATE = `${API_BASE_URL}/update-ticket-comment/`;
+
 
 export default function DSLDashboard() {
   const { user, loading, authorized, hydrated } = useAuth(null, "DSL");
@@ -88,11 +90,11 @@ export default function DSLDashboard() {
 
               {/* 🔢 KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              <KpiTicketsEntrants apiUrl={API_HISPEED_DATA} dateFilterField="date_derniere_maj" />
-              <KpiTicketTraite apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" />
-              <KpiReentrant apiUrl={API_HISPEED_DATA} tagField="tag_reentrant" dateField="date_sortie" />
-              <KpiTicketsEnCours apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
-              <KpiTicketsEnCoursPlus2S apiUrl={API_HISPEED_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
+              <KpiTicketsEntrants apiUrl={API_DSL_DATA} dateFilterField="date_derniere_maj" />
+              <KpiTicketTraite apiUrl={API_DSL_DATA} dateSortieField="date_sortie" />
+              <KpiReentrant apiUrl={API_DSL_DATA} tagField="tag_reentrant" dateField="date_sortie" />
+              <KpiTicketsEnCours apiUrl={API_DSL_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
+              <KpiTicketsEnCoursPlus2S apiUrl={API_DSL_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
             </div>
 
               {/* 📊 Graphiques – ligne 1 */}
@@ -119,8 +121,15 @@ export default function DSLDashboard() {
               </div>
 
               {/* 🧾 Tableaux */}
-              <TicketsReentrantsTable apiUrl={API_DSL_DATA} />
-              <TicketsEnCoursTable apiUrl={API_DSL_DATA} />
+              <TicketsReentrantsTable
+                apiUrl={API_DSL_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="dsl"/>
+                
+              <TicketsEnCoursTable
+                apiUrl={API_DSL_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="dsl"/>
             </main>
           </div>
         </div>

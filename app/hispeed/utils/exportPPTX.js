@@ -266,23 +266,19 @@ nonKpiImages.forEach(img => {
           slide.addText(periodText.split(': ')[1] || periodText, { x: 6.5, y: titleY_kpi + 0.1, w: 3, h: 0.25, fontSize: 9, color: "4B5563", align: "right" }); 
       }
 
-      // Zone de contenu
+      // Zone de contenu centrée pour les KPIs
       const contentStartY_kpi = titleY_kpi + 0.6; 
       const contentEndY_kpi = 5.2;
-      const contentStartX_kpi = 0.3; 
-      const contentEndX_kpi = 9.7;
+      const contentStartX_kpi = 0.5; // Centré horizontalement
+      const contentEndX_kpi = 9.5;
       const availableWidth_kpi = Math.max(0.1, contentEndX_kpi - contentStartX_kpi);
       const availableHeight_kpi = Math.max(0.1, contentEndY_kpi - contentStartY_kpi);
 
-      // Layout 2/3 - 1/3
-      const kpiContainerWidth = (availableWidth_kpi * 2 / 3) - 0.3;
+      // Zone KPI centrée (plus besoin de layout 2/3 - 1/3)
+      const kpiContainerWidth = availableWidth_kpi;
       const kpiContainerHeight = availableHeight_kpi - 0.2;
       const kpiContainerX = contentStartX_kpi;
       const kpiContainerY = contentStartY_kpi;
-      const commentWidth = (availableWidth_kpi * 1 / 3) - 0.2;
-      const commentHeight = kpiContainerHeight;
-      const commentX = kpiContainerX + kpiContainerWidth + 0.2;
-      const commentY = contentStartY_kpi;
       const kpiStartX = kpiContainerX + 0.2;
       const kpiStartY = kpiContainerY + 0.15;
 
@@ -346,31 +342,27 @@ nonKpiImages.forEach(img => {
         }
       };
 
-      // Disposition des KPIs
+      // Disposition des KPIs centrée
       const kpiWidth = 1.6; 
       const kpiHeight = 1.2;
-      const kpiMarginX = 0.08; // Marge horizontale réduite
-      const kpiMarginY = 0.1;  // Marge verticale
+      const kpiMarginX = 0.1;
+      const kpiMarginY = 0.1;
 
-      // Positions des 5 KPIs 
-      // 2 KPIs sur la première ligne, 3 KPIs sur la deuxième (avec le 5ème à droite)
+      // Calcul pour centrer les KPIs
+      const totalKpiWidth = 3 * kpiWidth + 2 * kpiMarginX; // Largeur totale pour 3 KPIs
+      const centerOffsetX = (kpiContainerWidth - totalKpiWidth) / 2;
+
+      // Positions des 5 KPIs centrées
       const kpiPositions = [
-          // Première ligne - 2 KPIs
-          { index: 0, x: kpiStartX, y: kpiStartY },
-          { index: 1, x: kpiStartX + kpiWidth + kpiMarginX, y: kpiStartY },
+          // Première ligne - 2 KPIs centrés
+          { index: 0, x: kpiStartX + centerOffsetX + (kpiWidth + kpiMarginX) / 2, y: kpiStartY },
+          { index: 1, x: kpiStartX + centerOffsetX + (kpiWidth + kpiMarginX) / 2 + kpiWidth + kpiMarginX, y: kpiStartY },
           
-          // Deuxième ligne - 3 KPIs
-          { index: 2, x: kpiStartX, y: kpiStartY + kpiHeight + kpiMarginY },
-          { index: 3, x: kpiStartX + kpiWidth + kpiMarginX, y: kpiStartY + kpiHeight + kpiMarginY },
-          { index: 4, x: kpiStartX + 2 * (kpiWidth + kpiMarginX), y: kpiStartY + kpiHeight + kpiMarginY }
+          // Deuxième ligne - 3 KPIs centrés
+          { index: 2, x: kpiStartX + centerOffsetX, y: kpiStartY + kpiHeight + kpiMarginY },
+          { index: 3, x: kpiStartX + centerOffsetX + kpiWidth + kpiMarginX, y: kpiStartY + kpiHeight + kpiMarginY },
+          { index: 4, x: kpiStartX + centerOffsetX + 2 * (kpiWidth + kpiMarginX), y: kpiStartY + kpiHeight + kpiMarginY }
       ];
-
-      // Vérifier si la largeur est suffisante
-      const thirdColumnX = kpiStartX + 2 * (kpiWidth + kpiMarginX);
-      const thirdColumnRightEdge = thirdColumnX + kpiWidth;
-      if (thirdColumnRightEdge > kpiContainerX + kpiContainerWidth) {
-          console.warn(`La disposition des KPIs pourrait dépasser le conteneur horizontalement: ${thirdColumnRightEdge.toFixed(2)} > ${(kpiContainerX + kpiContainerWidth).toFixed(2)}`);
-      }
 
       // Créer chaque KPI en utilisant directement l'index dans le tableau kpiImages
       kpiPositions.forEach(pos => {
@@ -389,7 +381,7 @@ nonKpiImages.forEach(img => {
        console.log("Aucun KPI trouvé.");
   }
 
-  // --- Génération des slides Graphiques standards (Fond statique + Contenu) ---
+  // --- Génération des slides Graphiques standards (Centrage des images) ---
   if (standardGraphImages.length > 0) {
     console.log(`Génération de ${standardGraphImages.length} slides de graphiques standards.`);
     for (const item of standardGraphImages) {
@@ -404,36 +396,32 @@ nonKpiImages.forEach(img => {
             console.warn("Fond de contenu non chargé, utilisation d'un fond blanc par défaut");
         }
         
-        const titleY = 0.7; // Titre descendu
+        const titleY = 0.7;
         slide.addText(graphLabel, { x: 0.5, y: titleY, w: 9.0, h: 0.4, fontSize: 18, bold: true, color: "0B2F5A" });
         if (periodText) { slide.addText(periodText.split(': ')[1] || periodText, { x: 6.5, y: titleY + 0.1, w: 3, h: 0.25, fontSize: 9, color: "4B5563", align: "right" }); }
   
-        // Zone de contenu
+        // Zone de contenu centrée
         const contentStartY = titleY + 0.6; 
         const contentEndY = 5.2; 
-        const contentStartX = 0.3; 
-        const contentEndX = 9.7;
+        const contentStartX = 1.0; // Plus centré
+        const contentEndX = 9.0;   // Plus centré
         const availableWidth = Math.max(0.1, contentEndX - contentStartX); 
         const availableHeight = Math.max(0.1, contentEndY - contentStartY);
   
-        // Layout 2/3 - 1/3
-        const imageWidth = (availableWidth * 2 / 3) - 0.3; 
+        // Image centrée (pas de layout 2/3 - 1/3)
+        const imageWidth = availableWidth - 0.4; // Marge de chaque côté
         const imageHeight = availableHeight - 0.2;
-        const imageX = contentStartX; 
-        const imageY = contentStartY;
-        const commentWidth = (availableWidth * 1 / 3) - 0.2; 
-        const commentHeight = imageHeight;
-        const commentX = imageX + imageWidth + 0.2; 
-        const commentY = contentStartY;
+        const imageX = contentStartX + 0.2; // Centré avec marge
+        const imageY = contentStartY + 0.1;
   
-        // Image
+        // Image centrée
         if (item.image) { 
             slide.addImage({ 
                 data: item.image, 
-                x: imageX + 0.1, 
-                y: imageY + 0.1, 
-                w: imageWidth - 0.2, 
-                h: imageHeight - 0.2 
+                x: imageX, 
+                y: imageY, 
+                w: imageWidth, 
+                h: imageHeight 
             }); 
         } else { 
             slide.addText("⚠️ Image N/D", { 
@@ -448,12 +436,12 @@ nonKpiImages.forEach(img => {
                 fontSize: 12
             }); 
         }
-  
     }
   } else {
     console.log("Aucun graphique standard trouvé.");
   }
-    // --- Fonction pour générer un slide de tableau ---
+
+    // --- Fonction pour générer un slide de tableau (avec centrage) ---
   function generateTableSlide(ppt, item, contentBackgroundBase64, periodText) {
     const tableLabel = item.label || item.id || "Tableau";
     console.log(`Traitement du tableau: ${tableLabel}, présence image: ${!!item.image}`);
@@ -472,25 +460,21 @@ nonKpiImages.forEach(img => {
         slide.addText(periodText.split(': ')[1] || periodText, { x: 6.5, y: titleY + 0.1, w: 3, h: 0.25, fontSize: 9, color: "4B5563", align: "right" }); 
     }
 
-    // Zone de contenu
+    // Zone de contenu centrée
     const contentStartY = titleY + 0.6; 
-    const contentEndY = 5.2;
-    const contentStartX = 0.3; 
-    const contentEndX = 9.7;
+    const contentEndY = 4.8; // Laisser plus d'espace pour les notes
+    const contentStartX = 0.8; // Plus centré
+    const contentEndX = 9.2;   // Plus centré
     const availableWidth = Math.max(0.1, contentEndX - contentStartX);
     const availableHeight = Math.max(0.1, contentEndY - contentStartY);
     
-    // Définir hauteur pour l'image et pour le commentaire (commentaire en dessous)
-    const commentBoxHeight = 1.5; // Hauteur fixe de la boîte commentaire
-    const tableImageHeight = availableHeight - commentBoxHeight - 0.2; // Hauteur restante pour l'image - marge
-
-    // Position de l'image (tableau)
-    const tableContainerX = contentStartX + 0.2;
+    // Image de tableau centrée
+    const tableContainerX = contentStartX;
     const tableContainerY = contentStartY;
-    const tableContainerW = availableWidth - 0.4;
-    const tableContainerH = Math.max(0.5, tableImageHeight); // S'assurer d'une hauteur min
+    const tableContainerW = availableWidth;
+    const tableContainerH = availableHeight;
 
-    // Image (tableau)
+    // Image (tableau) centrée
     if (item.image) {
         const imgPadding = 0.1;
         slide.addImage({ 
@@ -514,30 +498,7 @@ nonKpiImages.forEach(img => {
         }); 
     }
 
-    // SECTION COMMENTAIRE AMÉLIORÉE EN DESSOUS DU TABLEAU
-    const commentBoxY = tableContainerY + tableContainerH + 0.1; // Positionner sous l'image avec marge
-    const commentBoxX = tableContainerX;
-    const commentBoxW = tableContainerW;
-
     
-    
-    // Notes spéciales selon le type de tableau
-    const lowerLabel = tableLabel.toLowerCase();
-    
-    // Ajouter une note spéciale pour les tickets de plus de 2 semaines
-    if (lowerLabel.includes("plus de 2 semaines") || lowerLabel.includes("+14j")) {
-        addSpecialNote(slide, tableContainerX, commentBoxY + commentBoxHeight + 0.1, tableContainerW, 
-          "⚠️ Attention tickets anciens", 
-          "Les tickets de plus de 2 semaines nécessitent une attention urgente et une action prioritaire pour éviter l'impact sur les SLA et la satisfaction client.", 
-          "FFF0F0", "FFB0B0", "8B0000");
-    } 
-    // Ajouter une note spéciale pour les réitérations
-    else if (lowerLabel.includes("réitérations") || lowerLabel.includes("réentrants")) {
-        addSpecialNote(slide, tableContainerX, commentBoxY + commentBoxHeight + 0.1, tableContainerW,
-          "⚠️ Note sur les réentrants", 
-          "Ce tableau indique les tickets qui ont été réouverts, suggérant des problèmes récurrents ou non résolus. Une attention particulière doit être portée à ces cas pour améliorer la qualité du service.",
-          "FFFBF0", "F0E0B0", "7D5700");
-    }
     
     return slide;
   }
@@ -584,31 +545,35 @@ nonKpiImages.forEach(img => {
   
   // --- Ajout du slide de titre pour les réentrants (si nécessaire) ---
   if (reentrantImages.length > 0 || reiterationTableImage.found) {
-    // Slide de titre pour TT Réentrants
-    const slideTitleReentrants = ppt.addSlide();
-    if (titleSlideBase64) {
-      slideTitleReentrants.background = { data: titleSlideBase64 };
-    } else {
-      slideTitleReentrants.background = { color: "2C5C8A" };
-    }
-    
-    slideTitleReentrants.addShape(ppt.ShapeType.ellipse, {
-      x: 1.5, y: 2.6, w: 0.6, h: 0.6,
-      fill: { color: "FFFFFF" },
-      line: { color: "FFFFFF" }
-    });
-    slideTitleReentrants.addText("2", {
-      x: 1.5, y: 2.6, w: 0.6, h: 0.6,
-      align: "center", valign: "middle",
-      fontSize: 20, bold: true, color: "0B2F5A"
-    });
-    slideTitleReentrants.addText("TT Réentrants​", {
-      x: 2.2, y: 2.4, w: 7, h: 1,
-      fontSize: 40, bold: true, color: "FFFFFF"
-    });
+  // --- Slide de titre: KPIs Opérationnels
+  const slideKpiTitle = ppt.addSlide();
+  if (titleSlideBase64) {
+    slideKpiTitle.background = { data: titleSlideBase64 };
+  } else {
+    slideKpiTitle.background = { color: "2C5C8A" };
+  }
+
+  // Cercle avec numéro 1
+  slideKpiTitle.addShape(ppt.ShapeType.ellipse, {
+    x: 1.5, y: 2.6, w: 0.6, h: 0.6,
+    fill: { color: "FFFFFF" },
+    line: { color: "FFFFFF" }
+  });
+  slideKpiTitle.addText("2", {
+    x: 1.5, y: 2.6, w: 0.6, h: 0.6,
+    align: "center", valign: "middle",
+    fontSize: 20, bold: true, color: "0B2F5A"
+  });
+
+  // Titre blanc centré
+  slideKpiTitle.addText("TT Réentrants​​", {
+    x: 2.2, y: 2.4, w: 7, h: 1,
+    fontSize: 40, bold: true, color: "FFFFFF"
+  });
+
   }
   
-  // --- Génération des slides pour les graphiques Réentrants ---
+  // --- Génération des slides pour les graphiques Réentrants (avec centrage) ---
   if (reentrantImages.length > 0) {
     console.log(`Génération de ${reentrantImages.length} slides de graphiques réentrants.`);
     for (const item of reentrantImages) {
@@ -623,37 +588,32 @@ nonKpiImages.forEach(img => {
           console.warn("Fond de contenu non chargé, utilisation d'un fond blanc par défaut");
       }
       
-      // Appliquer même mise en page que pour les graphiques standards
       const titleY = 0.7;
       slide.addText(graphLabel, { x: 0.5, y: titleY, w: 9.0, h: 0.4, fontSize: 18, bold: true, color: "0B2F5A" });
       if (periodText) { slide.addText(periodText.split(': ')[1] || periodText, { x: 6.5, y: titleY + 0.1, w: 3, h: 0.25, fontSize: 9, color: "4B5563", align: "right" }); }
 
-      // Zone de contenu
+      // Zone de contenu centrée
       const contentStartY = titleY + 0.6; 
       const contentEndY = 5.2; 
-      const contentStartX = 0.3; 
-      const contentEndX = 9.7;
+      const contentStartX = 1.0; // Plus centré
+      const contentEndX = 9.0;   // Plus centré
       const availableWidth = Math.max(0.1, contentEndX - contentStartX); 
       const availableHeight = Math.max(0.1, contentEndY - contentStartY);
 
-      // Layout 2/3 - 1/3
-      const imageWidth = (availableWidth * 2 / 3) - 0.3; 
+      // Image centrée (pas de layout 2/3 - 1/3)
+      const imageWidth = availableWidth - 0.4; // Marge de chaque côté
       const imageHeight = availableHeight - 0.2;
-      const imageX = contentStartX; 
-      const imageY = contentStartY;
-      const commentWidth = (availableWidth * 1 / 3) - 0.2; 
-      const commentHeight = imageHeight;
-      const commentX = imageX + imageWidth + 0.2; 
-      const commentY = contentStartY;
+      const imageX = contentStartX + 0.2; // Centré avec marge
+      const imageY = contentStartY + 0.1;
 
-      // Image
+      // Image centrée
       if (item.image) { 
           slide.addImage({ 
               data: item.image, 
-              x: imageX + 0.1, 
-              y: imageY + 0.1, 
-              w: imageWidth - 0.2, 
-              h: imageHeight - 0.2 
+              x: imageX, 
+              y: imageY, 
+              w: imageWidth, 
+              h: imageHeight 
           }); 
       } else { 
           slide.addText("⚠️ Image N/D", { 
@@ -668,7 +628,6 @@ nonKpiImages.forEach(img => {
               fontSize: 12
           }); 
       }
-
     }
   } else {
     console.log("Aucun graphique réentrants trouvé.");
@@ -844,7 +803,6 @@ cards.forEach((card, i) => {
     finalSlide.background = { data: finalImageBase64 };
     console.log("Image de fond du slide final appliquée.");
   } else {
-    console.error("!!! ÉCHEC du chargement de l'image de fond finale !!!");
     
     // Ajouter le texte directement sur le fond bleu en cas d'échec
     finalSlide.addText("INTELCIA IT SOLUTIONS", { 

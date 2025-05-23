@@ -144,7 +144,7 @@ export default function SlaAnciennete({
   // Prop obligatoire pour l'URL de l'API
   apiUrl,
   // Props personnalisables avec des valeurs par défaut
-  id = "Ancienneté des tickets traités",
+  id = "Ancienneté des Tickets Traités",
   defaultViewMode = "week", // "week" ou "month"
   defaultNumPeriods = 5
 }) {
@@ -694,7 +694,7 @@ return (
       {/* Header avec titre, sous-titre et boutons */}
       <div className="flex justify-between items-start mb-4 relative">
         <div>
-          <h3 className="no-export text-lg font-semibold text-gray-800">SLA d'ancienneté</h3>
+          <h3 className="no-export text-lg font-semibold text-gray-800">Ancienneté des Tickets Traités</h3>
           <p className="text-sm text-gray-500">
             {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText}
           </p>

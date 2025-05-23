@@ -45,6 +45,89 @@ const getSemester = (date) => {
   return month <= 6 ? 1 : 2;
 };
 
+// ---- NOUVEAU : Fonction pour calculer les jours ouvrables ----
+const getBusinessDaysDifference = (dateDerniereMaj, dateSortie, delaiJour = null) => {
+  // Vérifier si les paramètres nécessaires sont présents
+  if (!dateDerniereMaj || !dateSortie) {
+    return 0;
+  }
+  
+  // Convertir les dates en objets Date
+  const dateDebut = new Date(dateDerniereMaj);
+  const dateFin = new Date(dateSortie);
+  
+  // Vérifier la validité des dates
+  if (isNaN(dateDebut.getTime()) || isNaN(dateFin.getTime())) {
+    return 0;
+  }
+  
+  // Si un delaiJour est fourni, l'utiliser comme base
+  if (delaiJour !== null && !isNaN(delaiJour)) {
+    // Calculer le nombre de jours total à examiner (arrondi standard)
+    const totalDays = Math.round(delaiJour);
+    
+    // Compter les weekends pendant cette période
+    let weekendDays = 0;
+    const currentDate = new Date(dateDebut);
+    
+    for (let i = 0; i < totalDays; i++) {
+      const dayOfWeek = currentDate.getDay();
+      
+      // Si c'est un samedi (6) ou un dimanche (0), c'est un weekend
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        weekendDays++;
+      }
+      
+      // Passer au jour suivant
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Soustraire les weekends du délai total
+    const businessDays = Math.max(0, delaiJour - weekendDays);
+    
+    // Appliquer l'arrondi selon votre règle:
+    // - Si la partie décimale <= 0.5, arrondir à l'inférieur
+    // - Si la partie décimale > 0.5, arrondir au supérieur
+    const decimalPart = businessDays - Math.floor(businessDays);
+    if (decimalPart <= 0.5) {
+      return Math.floor(businessDays);
+    } else {
+      return Math.ceil(businessDays);
+    }
+  }  
+  
+  // Si aucun delaiJour n'est fourni, calculer directement les jours ouvrables
+  // Copier les dates pour ne pas modifier les originales
+  let currentDate = new Date(dateDebut);
+  currentDate.setHours(0, 0, 0, 0);
+  
+  const lastDate = new Date(dateFin);
+  lastDate.setHours(23, 59, 59, 999);
+  
+  let businessDays = 0;
+  
+  // Parcourir chaque jour entre les dates
+  while (currentDate <= lastDate) {
+    const dayOfWeek = currentDate.getDay();
+    
+    // Compter si ce n'est pas un weekend (0 = dimanche, 6 = samedi)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      businessDays++;
+    }
+    
+    // Passer au jour suivant
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return businessDays;
+};
+
+// ---- NOUVEAU : Fonction pour catégoriser selon SLA ----
+const categorizeBySLA = (businessDays) => {
+  const SLA_LIMIT = 0.0625; // 1.5 heures = 0.0625 jours
+  return businessDays <= SLA_LIMIT ? "Respecte SLA" : "Dépasse SLA";
+};
+
 // Fonction pour générer toutes les semaines entre deux dates (conservée/adaptée)
 function getAllWeeksBetween(startDate, endDate) {
   if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return []; // Added checks
@@ -151,10 +234,8 @@ ChartJS.register(
 export default function ClientCoupeChart({
   apiUrl,
   // Props de personnalisation (conservées)
-  id = "Client Coupé",
-  title = "Client Coupé",
-  barColor = "#2c3e50",
-  barHoverColor = "#1c2c3d",
+  id = "Client Coupé SLA",
+  title = "Client Coupé - Analyse SLA",
   dateField = "date_derniere_maj",
   weekField = "semaine",
   filterField = "client_coupe",
@@ -220,6 +301,9 @@ export default function ClientCoupeChart({
   const quarterNames = ["T1", "T2", "T3", "T4"];
   const semesterNames = ["S1", "S2"];
 
+  // ---- NOUVEAU : Catégories SLA ----
+  const slaCategories = ["Respecte SLA", "Dépasse SLA"];
+
   // Récupération du filtre global (conservée)
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
@@ -252,9 +336,6 @@ export default function ClientCoupeChart({
 
     if (!localAvailableYears.includes(currentGlobalYear)) {
       console.warn(`Année ${currentGlobalYear} du filtre global non trouvée dans les données de ${title}. Filtre global ignoré pour ce composant.`);
-      // On ne change PAS hasGlobalFilter ici, on le laisse tel quel ou on le met à false ?
-      // Plutôt le mettre à false pour éviter des comportements incohérents
-      // setHasGlobalFilter(false); // Optionnel : reset l'état si l'année n'est pas là
       return; // Ne pas appliquer si l'année n'est pas dispo
     }
     setSelectedYear(currentGlobalYear);
@@ -317,10 +398,18 @@ export default function ClientCoupeChart({
       try {
         const response = await fetchWithAuth(apiUrl);
         const result = await response.json();
+        
+        // ---- NOUVEAU : Filtrer les tickets qui ont delai_jour et sont des clients coupés ----
+        const filteredResult = result.filter(ticket => 
+          ticket.delai_jour !== undefined && 
+          ticket.delai_jour !== null && 
+          ticket[filterField] === filterValue
+        );
+        
         if (isMounted) {
-          setData(result); // Mettre à jour data d'abord
+          setData(filteredResult); // Mettre à jour data d'abord
 
-          const years = [...new Set(result.map(t => { const d = new Date(t[dateField]); return !isNaN(d.getTime()) ? d.getFullYear() : null; }).filter(y => y !== null))].sort((a, b) => a - b); // Added checks for date
+          const years = [...new Set(filteredResult.map(t => { const d = new Date(t[dateField]); return !isNaN(d.getTime()) ? d.getFullYear() : null; }).filter(y => y !== null))].sort((a, b) => a - b); // Added checks for date
           const latestYear = years.length > 0 ? years[years.length - 1] : new Date().getFullYear();
           setAvailableYears(years); // Mettre à jour les années disponibles
           setMultipleYearsExist(years.length > 1);
@@ -346,14 +435,8 @@ export default function ClientCoupeChart({
           }
 
           if (applyGlobalOnLoad) {
-            // Note: applyGlobalFilter dépend maintenant de 'data' et 'availableYears' qui sont définis
-            // Appel différé pour s'assurer que data et availableYears sont bien dans l'état
-            // L'effet sur globalModifiedAt s'en chargera aussi, mais on force ici pour l'init.
-            // On met à jour l'année et on laisse l'effet [globalModifiedAt] faire le reste.
             setSelectedYear(yearToUse);
             setHasGlobalFilter(true); // Important pour que le useEffect suivant applique correctement
-            // On ne met PAS à jour selectedValues ici directement, on laisse applyGlobalFilter le faire
-            // pour assurer la cohérence entre toutes les vues.
 
           } else if (performDefaultSetup) {
             // Setup par défaut si pas de filtre global prioritaire
@@ -386,7 +469,7 @@ export default function ClientCoupeChart({
     }
     fetchDataInternal();
     return () => { isMounted = false; };
-  }, [apiUrl, dateField, weekField, defaultNumPeriods, defaultViewMode, title]); // Retiré viewMode, global* car gérés par d'autres effets. Ajout title, defaultViewMode.
+  }, [apiUrl, dateField, weekField, defaultNumPeriods, defaultViewMode, title, filterField, filterValue]); // Ajout filterField, filterValue
 
 
   // Application du filtre global si changé après l'init (Adapté de la référence)
@@ -594,39 +677,46 @@ export default function ClientCoupeChart({
     return multipleYearsExist ? `${periodLabel}, ${selectedYear}` : periodLabel;
   });
 
-  // Comptage des clients coupés pour chaque période sélectionnée et triée (Logique ClientCoupeChart conservée, mais utilise getTicketPeriod)
-  const clientCoupeCounts = sortedSelectedValues.map(periodValue =>
-    filteredDataForSelectedPeriods.filter(ticket =>
-      getTicketPeriod(ticket) === periodValue && ticket[filterField] === filterValue
-    ).length
-  );
+  // ---- NOUVEAU : Création des datasets pour stacked bar chart ----
+  const datasets = slaCategories.map(category => ({
+    label: category,
+    data: sortedSelectedValues.map(periodValue => {
+      return filteredDataForSelectedPeriods.filter(ticket => {
+        const ticketPeriod = getTicketPeriod(ticket);
+        
+        // Vérifier que le ticket correspond à la période
+        if (ticketPeriod !== periodValue) return false;
+        
+        // Calculer les jours ouvrables en utilisant delai_jour
+        const businessDays = getBusinessDaysDifference(
+          ticket.date_derniere_maj, 
+          ticket.date_sortie, 
+          ticket.delai_jour
+        );
+        
+        // Catégoriser selon SLA
+        const slaCategory = categorizeBySLA(businessDays);
+        
+        return slaCategory === category;
+      }).length;
+    }),
+    backgroundColor: category === "Respecte SLA" ? "#2c3e50" : "#87CEEB", // Bleu foncé pour "Respecte SLA", bleu ciel pour "Dépasse SLA"
+    borderRadius: 5,
+    stack: "stack1", // Même stack pour empiler
+    // Configuration des datalabels pour chaque dataset
+    datalabels: {
+      anchor: 'center',
+      align: 'center',
+      color: "white",
+      font: { size: 14, weight: 'bold' },
+      formatter: value => value > 0 ? value : "",
+    }
+  }));
 
-  // Données du graphique (Structure ClientCoupeChart conservée : 1 dataset)
+  // Données du graphique (Structure stacked bar chart)
   const chartData = {
     labels,
-    datasets: [
-      {
-        label: title,
-        data: clientCoupeCounts,
-        backgroundColor: barColor,
-        borderRadius: 5,
-        hoverBackgroundColor: barHoverColor,
-        hoverBorderWidth: 1,
-        hoverBorderColor: "#333",
-        barPercentage: 0.6,
-        categoryPercentage: 0.7,
-        // Modified datalabels configuration
-        datalabels: {
-          anchor: 'end',
-          align: 'top',
-          color: "black",
-          font: { size: 11, weight: 'bold' },
-          formatter: value => value > 0 ? value : "",
-          offset: 4,        // Reduced offset
-          padding: { top: 0, bottom: 0 }
-        }
-      },
-    ],
+    datasets,
   };
 
   // Texte descriptif de la période sélectionnée (Adapté pour Q/S)
@@ -640,8 +730,7 @@ export default function ClientCoupeChart({
           : `Semestre(s) : ${sortedSelectedValues.map(s => semesterNames[s - 1] || s).join(", ")}`
     : "Aucune période sélectionnée";
 
-  // Options du graphique (Adaptées légèrement de la référence/ClientCoupe)
-  // Options du graphique (Adaptées légèrement de la référence/ClientCoupe)
+  // ---- NOUVEAU : Options du graphique pour stacked bar chart ----
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false, // Important pour le modal et le flex container
@@ -650,16 +739,20 @@ export default function ClientCoupeChart({
       easing: "easeOutQuart"
     },
     plugins: {
-      legend: { display: false }, // Légende désactivée car un seul dataset
+      legend: { 
+        display: true,
+        position: 'top'
+      }, // Légende activée pour montrer les deux catégories
       // Désactiver les datalabels globaux car configurés par dataset
       datalabels: { display: true },
       tooltip: {
-        // Callbacks tooltip si nécessaire
+        mode: 'index',
+        intersect: false,
       }
     },
     scales: {
       x: {
-        stacked: false, // Assurez-vous que ce n'est pas stacké si un seul dataset
+        stacked: true, // ---- NOUVEAU : Empilage activé ----
         ticks: { color: "black" },
         title: {
           display: true,
@@ -668,7 +761,7 @@ export default function ClientCoupeChart({
         }
       },
       y: {
-        stacked: false, // Assurez-vous que ce n'est pas stacké si un seul dataset
+        stacked: true, // ---- NOUVEAU : Empilage activé ----
         beginAtZero: true,
         ticks: { color: "black" },
         title: {
@@ -678,11 +771,10 @@ export default function ClientCoupeChart({
         },
         // ---- NOUVEAU : Ajouter de l'espace en haut de l'axe Y ----
         grace: '10%' // Ajoute 10% d'espace au-dessus de la valeur max
-        // Vous pouvez ajuster ce pourcentage (ex: '5%', '15%')
-        // Ou utiliser un nombre fixe de pixels (ex: grace: 10) si les valeurs sont petites
       },
     }
   };
+
   // --- Rendu JSX ---
   if (loading) {
     return (<div className="visualisation relative" data-id={id}><div className="relative bg-white p-5 shadow-md rounded-lg w-full h-[450px] flex justify-center items-center"><p className="text-center text-gray-500">Chargement des données...</p></div></div>);
@@ -691,6 +783,9 @@ export default function ClientCoupeChart({
   // Périodes disponibles pour l'affichage dans le filtre
   const availablePeriodsForFilter = getAvailablePeriodsForYear(selectedYear, viewMode);
   const allPeriodsForFilterSelected = availablePeriodsForFilter.length > 0 && availablePeriodsForFilter.every((p) => selectedValues.includes(p));
+
+  // ---- NOUVEAU : Vérifier s'il y a des données à afficher ----
+  const hasDataToDisplay = datasets.some(dataset => dataset.data.some(value => value > 0));
 
   return (
     <div className="visualisation relative" data-id={id}>
@@ -784,7 +879,7 @@ export default function ClientCoupeChart({
         {/* Conteneur Graphique Principal */}
         {/* ---- MODIFIÉ : Ajout ref et hauteur flexible ---- */}
         <div className="flex-grow flex justify-center items-center w-full min-h-[300px] h-[350px]" ref={chartContainerRef}>
-          {clientCoupeCounts.length > 0 && clientCoupeCounts.some(c => c > 0) ? ( // Vérifier s'il y a des données > 0
+          {hasDataToDisplay ? ( // ---- NOUVEAU : Vérifier s'il y a des données ----
             <Bar
               data={chartData}
               options={chartOptions}
@@ -818,7 +913,7 @@ export default function ClientCoupeChart({
           {/* Conteneur Graphique Modal */}
           {/* ---- MODIFIÉ : Ajout ref, CommentButton caché et taille min/flexible ---- */}
           <div className="relative flex-grow min-h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
-            {clientCoupeCounts.length > 0 && clientCoupeCounts.some(c => c > 0) ? (
+            {hasDataToDisplay ? (
               <Bar
                 data={chartData}
                 // Passer les options, mais s'assurer que maintainAspectRatio est false pour le modal
