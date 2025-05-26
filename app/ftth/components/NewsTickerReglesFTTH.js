@@ -14,7 +14,7 @@ export default function NewsTickerReglesFTTH() {
   const tickerRef = useRef(null);
   const containerRef = useRef(null);
 
-  const apiUrl = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/regle/";
+  const apiUrl = "https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/regle/";
 
   useEffect(() => {
     async function fetchData() {

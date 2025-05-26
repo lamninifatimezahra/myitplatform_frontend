@@ -40,7 +40,7 @@ export default function CreatePostForm() {
         formData.append('image', form.file); // 👈 actual binary file
       }
 
-      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/", {
+      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/myforum/posts/", {
         method: "POST",
         body: formData,
         // ❌ DO NOT set Content-Type here (browser will set correct boundaries)

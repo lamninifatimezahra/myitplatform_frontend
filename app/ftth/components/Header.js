@@ -65,7 +65,7 @@ export default function Header({ onGlobalFilter, setSidebarOpen }) {
     const fetchLastUploadDate = async () => {
       setIsLoadingUploadDate(true);
       try {
-        const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/ftth/files/");
+        const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/files/");
         const data = await res.json();
         const sorted = data.sort((a, b) => parseCustomDate(b.uploaded_at) - parseCustomDate(a.uploaded_at));
         const latest = parseCustomDate(sorted[0]?.uploaded_at);

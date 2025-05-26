@@ -25,7 +25,7 @@ import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 import { ExportProvider } from "../components/ExportContext";
 
 // ✅ API spécifique à FTTB
-const API_BASE_URL = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api";
+const API_BASE_URL = "https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api";
 const API_FTTB_DATA = `${API_BASE_URL}/fttb/data/`;
 const API_COMMENT_UPDATE = `${API_BASE_URL}/update-ticket-comment/`;
 

@@ -14,7 +14,7 @@ import { ExportProvider } from "../components/ExportContext";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 
 // ✅ API pour le dashboard Arthius
-const API_BASE_URL = "https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api";
+const API_BASE_URL = "https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api";
 const API_ARTHIUS_DATA = `${API_BASE_URL}/arthius/data/`;
 
 export default function ArthiusDashboard() {

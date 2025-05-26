@@ -79,7 +79,7 @@ export default function Header({ type = "EARF" }) {
     setIsLoadingUploadDate(true);
     try {
       // Déterminer l'URL en fonction du type de dashboard
-      const apiUrl = `https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/${type.toLowerCase()}/files/`;
+      const apiUrl = `https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/${type.toLowerCase()}/files/`;
       
       const response = await fetchWithAuth(apiUrl);
       

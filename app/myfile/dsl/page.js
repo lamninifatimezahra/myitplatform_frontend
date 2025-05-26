@@ -44,7 +44,7 @@ export default function UploadDSLPage() {
     formData.append("document", dslFile);
 
     try {
-      const res = await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/dsl/upload/", {
+      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/dsl/upload/", {
         method: "POST",
         body: formData,
       });
@@ -67,7 +67,7 @@ export default function UploadDSLPage() {
 
   const handleLogout = async () => {
     try {
-      await fetchWithAuth("https://myit-backend-ed72239b4b8e.herokuapp.com/api/logout/", {
+      await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/logout/", {
         method: "POST",
         credentials: "include",
       });

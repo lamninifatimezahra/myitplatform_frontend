@@ -16,7 +16,7 @@ export default function EditPost() {
   useEffect(() => {
     async function fetchPost() {
       try {
-        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${postId}/`);
+        const res = await fetchWithAuth(`https://myit-backend-its-c20c9354ce42.herokuapp.com/myforum/posts/${postId}/`);
         if (!res.ok) throw new Error('Erreur de chargement');
         const data = await res.json();
         setPost(data);

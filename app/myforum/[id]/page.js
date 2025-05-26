@@ -14,7 +14,7 @@ export default function PostPage() {
   useEffect(() => {
     async function fetchPost() {
       try {
-        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${id}/`);
+        const res = await fetchWithAuth(`https://myit-backend-its-c20c9354ce42.herokuapp.com/myforum/posts/${id}/`);
         if (!res.ok) throw new Error('Erreur lors du chargement du post');
         const data = await res.json();
         setPost(data);

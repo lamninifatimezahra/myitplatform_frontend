@@ -30,7 +30,7 @@ export default function HeaderForum({ setSidebarOpen }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetchWithAuth('https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/');
+        const res = await fetchWithAuth('https://myit-backend-its-c20c9354ce42.herokuapp.com/api/me/');
         const data = await res.json();
         setUser({
           name: `${data.name} ${data.surname}`,

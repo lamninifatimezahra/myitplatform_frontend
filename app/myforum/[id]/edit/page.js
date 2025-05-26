@@ -27,7 +27,7 @@ export default function EditPostPage() {
   useEffect(() => {
     async function fetchPost() {
       try {
-        const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${id}/`);
+        const res = await fetchWithAuth(`https://myit-backend-its-c20c9354ce42.herokuapp.com/myforum/posts/${id}/`);
         if (!res.ok) throw new Error('Not found');
         const data = await res.json();
         setForm({
@@ -95,7 +95,7 @@ export default function EditPostPage() {
         formData.append('image', form.file); // send the actual file, not base64
       }
   
-      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${id}/`, {
+      const res = await fetchWithAuth(`https://myit-backend-its-c20c9354ce42.herokuapp.com/myforum/posts/${id}/`, {
         method: 'PUT',
         body: formData,
       });
@@ -116,7 +116,7 @@ export default function EditPostPage() {
     if (!window.confirm('Supprimer définitivement ce post ?')) return;
 
     try {
-      const res = await fetchWithAuth(`https://myit-backend-ed72239b4b8e.herokuapp.com/myforum/posts/${id}/`, { method: 'DELETE' });
+      const res = await fetchWithAuth(`https://myit-backend-its-c20c9354ce42.herokuapp.com/myforum/posts/${id}/`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Échec de la suppression');
       setMessage('🗑️ Post supprimé avec succès.');
       scrollToMessage();

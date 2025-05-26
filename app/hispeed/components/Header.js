@@ -55,7 +55,7 @@ export default function Header({ type = "HISPEED" }) {
   const fetchLastUploadDate = async () => {
     setIsLoadingUploadDate(true);
     try {
-      const apiUrl = `https://myit-backend-ed72239b4b8e.herokuapp.com/dashboard/api/${type.toLowerCase()}/files/`;
+      const apiUrl = `https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/${type.toLowerCase()}/files/`;
       const response = await fetchWithAuth(apiUrl);
       if (!response.ok) throw new Error("Erreur récupération données");
       const data = await response.json();

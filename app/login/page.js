@@ -82,7 +82,7 @@ export default function LoginPage() {
 
     try {
       const loginRes = await fetchWithAuth(
-        "https://myit-backend-ed72239b4b8e.herokuapp.com/api/login/",
+        "https://myit-backend-its-c20c9354ce42.herokuapp.com/api/login/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -94,7 +94,7 @@ export default function LoginPage() {
       if (!loginRes.ok) throw new Error("Identifiants invalides");
 
       const userRes = await fetchWithAuth(
-        "https://myit-backend-ed72239b4b8e.herokuapp.com/api/me/",
+        "https://myit-backend-its-c20c9354ce42.herokuapp.com/api/me/",
         {
           method: "GET",
           credentials: "include",
@@ -148,7 +148,7 @@ export default function LoginPage() {
 
     try {
       const res = await fetchWithAuth(
-        "https://myit-backend-ed72239b4b8e.herokuapp.com/api/change-password/",
+        "https://myit-backend-its-c20c9354ce42.herokuapp.com/api/change-password/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
