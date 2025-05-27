@@ -17,6 +17,7 @@ import { FaExpand } from "react-icons/fa";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useGlobalFilter } from "./GlobalFilterContext";
 import Modal from "react-modal";
+// ---- NOUVEAU : Import CommentButton ----
 import CommentButton from "./CommentButton";
 
 // Configurer le Modal pour l'accessibilité
@@ -77,6 +78,7 @@ export default function LineChartRates({
   const [error, setError] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  // ---- NOUVEAU : État pour les annotations ----
   const [annotations, setAnnotations] = useState([]);
   
   // États pour les filtres
@@ -444,8 +446,6 @@ export default function LineChartRates({
     );
   }
 
-  // ... (tout le code avant le return : imports, state, effects, functions)
-
   return (
     <div className="visualisation relative h-96 bg-white rounded-xl shadow-md" data-id={id}>
       {/* Header avec titre et boutons */}
@@ -456,7 +456,7 @@ export default function LineChartRates({
             {getPeriodeLabel()}
           </p>
         </div>
-        <div className="flex gap-2 items-center"> {/* Conteneur flex pour les boutons */}
+        <div className="flex gap-2 items-center">
           {/* Bouton Filtre */}
           <button
             className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition"
@@ -466,6 +466,14 @@ export default function LineChartRates({
             <AiOutlineFilter size={20} className="text-gray-800" />
           </button>
 
+          {/* ---- NOUVEAU : Bouton Commentaires ---- */}
+          <CommentButton
+            containerRef={chartContainerRef}
+            comments={annotations}
+            onAddComment={(c) => setAnnotations([...annotations, c])}
+            onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+            onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+          />
 
           {/* Bouton Agrandir */}
           <button
@@ -477,7 +485,7 @@ export default function LineChartRates({
         </div>
       </div>
 
-      {/* Panneau de filtre (inchangé) */}
+      {/* Panneau de filtre */}
       {isFilterOpen && (
         <div
           ref={filterPanelRef}
@@ -590,7 +598,7 @@ export default function LineChartRates({
         </div>
       )}
 
-      {/* Conteneur du graphique (inchangé) */}
+      {/* Conteneur du graphique */}
       <div
         className="p-4 h-[calc(100%-64px)] flex items-center justify-center"
         ref={chartContainerRef}>
@@ -606,7 +614,7 @@ export default function LineChartRates({
         )}
       </div>
 
-      {/* Modal d'agrandissement (inchangé) */}
+      {/* Modal d'agrandissement */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
@@ -634,8 +642,9 @@ export default function LineChartRates({
             </div>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
+          {/* ---- MODIFIÉ : Ajout de la référence modalChartContainerRef et CommentButton caché ---- */}
           <div
-            className="p-4 h-[calc(100%-64px)] flex items-center justify-center"
+            className="relative p-4 h-[calc(100%-64px)] flex items-center justify-center"
             ref={modalChartContainerRef}>
             {chartData.labels.length > 0 ? (
               <Line
@@ -647,6 +656,14 @@ export default function LineChartRates({
                 Aucune donnée à afficher pour les filtres sélectionnés
               </div>
             )}
+            <CommentButton
+              containerRef={modalChartContainerRef}
+              hideButton={true}
+              comments={annotations}
+              onAddComment={(c) => setAnnotations([...annotations, c])}
+              onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+              onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+            />
           </div>
         </div>
       </Modal>

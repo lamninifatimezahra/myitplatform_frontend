@@ -20,6 +20,8 @@ import { FaExpand } from "react-icons/fa";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useGlobalFilter } from "./GlobalFilterContext"; 
 import Modal from "react-modal";
+// ---- NOUVEAU : Import CommentButton ----
+import CommentButton from "./CommentButton";
 
 // Configurer le Modal pour l'accessibilité
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
@@ -49,6 +51,10 @@ const moisFrancais = {
   11: "Novembre",
   12: "Décembre"
 };
+
+// ---- NOUVEAU : Noms pour trimestres et semestres ----
+const quarterNames = ["T1", "T2", "T3", "T4"];
+const semesterNames = ["S1", "S2"];
 
 // Fonctions utilitaires pour les dates
 function parseLocalDate(dateStr) {
@@ -95,6 +101,19 @@ const getWeekNumber = (date) => {
     console.error("Error calculating week number:", e);
     return null;
   }
+};
+
+// ---- NOUVEAU : Fonctions utilitaires pour trimestres et semestres ----
+const getQuarter = (date) => {
+  if (!date || isNaN(date.getTime())) return null;
+  const month = date.getMonth() + 1;
+  return Math.ceil(month / 3);
+};
+
+const getSemester = (date) => {
+  if (!date || isNaN(date.getTime())) return null;
+  const month = date.getMonth() + 1;
+  return month <= 6 ? 1 : 2;
 };
 
 // Fonctions d'aide pour obtenir toutes les périodes entre deux dates
@@ -158,6 +177,46 @@ function getAllMonthsBetween(startDate, endDate) {
   return monthsArray;
 }
 
+function getAllQuartersBetween(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const quartersArray = [];
+  const startQuarter = getQuarter(startDate);
+  const endQuarter = getQuarter(endDate);
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startQuarter === null || endQuarter === null) return [];
+  if (startYear === endYear) {
+    for (let quarter = startQuarter; quarter <= endQuarter; quarter++) quartersArray.push(quarter);
+  } else {
+    for (let year = startYear; year <= endYear; year++) {
+      const maxQuarter = year === endYear ? endQuarter : 4;
+      const minQuarter = year === startYear ? startQuarter : 1;
+      for (let quarter = minQuarter; quarter <= maxQuarter; quarter++) quartersArray.push(quarter);
+    }
+  }
+  return [...new Set(quartersArray)].sort((a,b) => a-b);
+}
+
+function getAllSemestersBetween(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const semestersArray = [];
+  const startSemester = getSemester(startDate);
+  const endSemester = getSemester(endDate);
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+  if (startSemester === null || endSemester === null) return [];
+  if (startYear === endYear) {
+    for (let semester = startSemester; semester <= endSemester; semester++) semestersArray.push(semester);
+  } else {
+    for (let year = startYear; year <= endYear; year++) {
+      const maxSemester = year === endYear ? endSemester : 2;
+      const minSemester = year === startYear ? startSemester : 1;
+      for (let semester = minSemester; semester <= maxSemester; semester++) semestersArray.push(semester);
+    }
+  }
+  return [...new Set(semestersArray)].sort((a,b) => a-b);
+}
+
 function getLastNWorkingDays(days, n = 10) {
   const filteredDays = days
     .map(dateStr => ({ str: dateStr, date: parseLocalDate(dateStr) }))
@@ -212,6 +271,8 @@ export default function RapportSortantsEntrants({
   const prevViewMode = useRef(null);
   const filterPanelRef = useRef(null);
   const chartContainerRef = useRef(null);
+  // ---- NOUVEAU : Référence pour la modal ----
+  const modalChartContainerRef = useRef(null);
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -225,6 +286,8 @@ export default function RapportSortantsEntrants({
   const [multipleYearsExist, setMultipleYearsExist] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
+  // ---- NOUVEAU : État pour les annotations ----
+  const [annotations, setAnnotations] = useState([]);
 
   // États pour mémoriser les sélections pour chaque vue
   const [dayViewSelection, setDayViewSelection] = useState({
@@ -239,11 +302,23 @@ export default function RapportSortantsEntrants({
     values: [],
     year: null
   });
+  // ---- NOUVEAU : États pour trimestres et semestres ----
+  const [quarterViewSelection, setQuarterViewSelection] = useState({
+    values: [],
+    year: null
+  });
+  const [semesterViewSelection, setSemesterViewSelection] = useState({
+    values: [],
+    year: null
+  });
 
   // États pour gérer la priorisation du filtre global
   const [weekSelectionModifiedAt, setWeekSelectionModifiedAt] = useState(0);
   const [monthSelectionModifiedAt, setMonthSelectionModifiedAt] = useState(0);
   const [daySelectionModifiedAt, setDaySelectionModifiedAt] = useState(0);
+  // ---- NOUVEAU : États priorisation pour trimestres et semestres ----
+  const [quarterSelectionModifiedAt, setQuarterSelectionModifiedAt] = useState(0);
+  const [semesterSelectionModifiedAt, setSemesterSelectionModifiedAt] = useState(0);
 
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
@@ -286,11 +361,18 @@ export default function RapportSortantsEntrants({
         aggregatedData[closedDateStr].sortants += 1;
       });
     } else {
-      // Traitement pour vues semaine/mois
+      // Traitement pour vues semaine/mois/trimestre/semestre
       tickets.forEach(ticket => {
-        let key = mode === "week" 
-          ? ticket[weekField] 
-          : new Date(ticket[dateCreationField]).getMonth() + 1;
+        let key;
+        if (mode === "week") {
+          key = ticket[weekField];
+        } else if (mode === "month") {
+          key = new Date(ticket[dateCreationField]).getMonth() + 1;
+        } else if (mode === "quarter") {
+          key = getQuarter(new Date(ticket[dateCreationField]));
+        } else if (mode === "semester") {
+          key = getSemester(new Date(ticket[dateCreationField]));
+        }
         
         if (!aggregatedData[key]) aggregatedData[key] = { entrants: 0, sortants: 0 };
         aggregatedData[key].entrants += 1;
@@ -298,9 +380,16 @@ export default function RapportSortantsEntrants({
       
       tickets.forEach(ticket => {
         if (ticket[dateClosedField]) {
-          let sortantKey = mode === "week" 
-            ? ticket[weekClosedField] 
-            : new Date(ticket[dateClosedField]).getMonth() + 1;
+          let sortantKey;
+          if (mode === "week") {
+            sortantKey = ticket[weekClosedField];
+          } else if (mode === "month") {
+            sortantKey = new Date(ticket[dateClosedField]).getMonth() + 1;
+          } else if (mode === "quarter") {
+            sortantKey = getQuarter(new Date(ticket[dateClosedField]));
+          } else if (mode === "semester") {
+            sortantKey = getSemester(new Date(ticket[dateClosedField]));
+          }
           
           if (!aggregatedData[sortantKey]) aggregatedData[sortantKey] = { entrants: 0, sortants: 0 };
           aggregatedData[sortantKey].sortants += 1;
@@ -355,7 +444,7 @@ export default function RapportSortantsEntrants({
         .filter(week => !isNaN(Number(week)))
         .map(week => Number(week))
         .sort((a, b) => a - b);
-    } else {
+    } else if (mode === "month") {
       // Pour la vue mois
       return [...new Set(data
         .filter(ticket => 
@@ -374,7 +463,49 @@ export default function RapportSortantsEntrants({
         })
         .flat())]
         .sort((a, b) => a - b);
+    } else if (mode === "quarter") {
+      // ---- NOUVEAU : Pour la vue trimestre ----
+      return [...new Set(data
+        .filter(ticket => 
+          (new Date(ticket[dateCreationField]).getFullYear() === year) || 
+          (ticket[dateClosedField] && new Date(ticket[dateClosedField]).getFullYear() === year)
+        )
+        .map(ticket => {
+          const quarterValues = [];
+          if (new Date(ticket[dateCreationField]).getFullYear() === year) {
+            quarterValues.push(getQuarter(new Date(ticket[dateCreationField])));
+          }
+          if (ticket[dateClosedField] && new Date(ticket[dateClosedField]).getFullYear() === year) {
+            quarterValues.push(getQuarter(new Date(ticket[dateClosedField])));
+          }
+          return quarterValues;
+        })
+        .flat())]
+        .filter(quarter => quarter !== null)
+        .sort((a, b) => a - b);
+    } else if (mode === "semester") {
+      // ---- NOUVEAU : Pour la vue semestre ----
+      return [...new Set(data
+        .filter(ticket => 
+          (new Date(ticket[dateCreationField]).getFullYear() === year) || 
+          (ticket[dateClosedField] && new Date(ticket[dateClosedField]).getFullYear() === year)
+        )
+        .map(ticket => {
+          const semesterValues = [];
+          if (new Date(ticket[dateCreationField]).getFullYear() === year) {
+            semesterValues.push(getSemester(new Date(ticket[dateCreationField])));
+          }
+          if (ticket[dateClosedField] && new Date(ticket[dateClosedField]).getFullYear() === year) {
+            semesterValues.push(getSemester(new Date(ticket[dateClosedField])));
+          }
+          return semesterValues;
+        })
+        .flat())]
+        .filter(semester => semester !== null)
+        .sort((a, b) => a - b);
     }
+    
+    return [];
   }, [data, dateCreationField, dateClosedField, weekField, weekClosedField]);
 
   // Application du filtre global aux différentes vues
@@ -407,6 +538,21 @@ export default function RapportSortantsEntrants({
     });
     setMonthSelectionModifiedAt(Date.now());
     
+    // ---- NOUVEAU : Pour les vues trimestre et semestre ----
+    const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
+    setQuarterViewSelection({
+      values: quarterList,
+      year: startYear
+    });
+    setQuarterSelectionModifiedAt(Date.now());
+    
+    const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
+    setSemesterViewSelection({
+      values: semesterList,
+      year: startYear
+    });
+    setSemesterSelectionModifiedAt(Date.now());
+    
     // Appliquer la sélection correspondant à la vue active
     if (viewMode === "day") {
       setSelectedDates([globalStartDate, globalEndDate]);
@@ -416,6 +562,12 @@ export default function RapportSortantsEntrants({
       setSelectedYear(startYear);
     } else if (viewMode === "month") {
       setSelectedValues(monthList);
+      setSelectedYear(startYear);
+    } else if (viewMode === "quarter") {
+      setSelectedValues(quarterList);
+      setSelectedYear(startYear);
+    } else if (viewMode === "semester") {
+      setSelectedValues(semesterList);
       setSelectedYear(startYear);
     }
     
@@ -527,32 +679,51 @@ export default function RapportSortantsEntrants({
                 });
               }
             }
-} else {
-  const yearToUse = selectedYear || latestYear;
+          } else {
+            const yearToUse = selectedYear || latestYear;
 
-  // Initialiser les dernières semaines
-  const availableWeekPeriods = getAvailablePeriodsForYear(yearToUse, "week");
-  const last5Weeks = availableWeekPeriods.slice(-defaultNumPeriods);
-  setWeekViewSelection({
-    values: last5Weeks,
-    year: yearToUse
-  });
+            // Initialiser les dernières semaines
+            const availableWeekPeriods = getAvailablePeriodsForYear(yearToUse, "week");
+            const last5Weeks = availableWeekPeriods.slice(-defaultNumPeriods);
+            setWeekViewSelection({
+              values: last5Weeks,
+              year: yearToUse
+            });
 
-  // Initialiser les derniers mois
-  const availableMonthPeriods = getAvailablePeriodsForYear(yearToUse, "month");
-  const last5Months = availableMonthPeriods.slice(-defaultNumPeriods);
-  setMonthViewSelection({
-    values: last5Months,
-    year: yearToUse
-  });
+            // Initialiser les derniers mois
+            const availableMonthPeriods = getAvailablePeriodsForYear(yearToUse, "month");
+            const last5Months = availableMonthPeriods.slice(-defaultNumPeriods);
+            setMonthViewSelection({
+              values: last5Months,
+              year: yearToUse
+            });
 
-  // Initialiser les selectedValues uniquement si la vue actuelle est week ou month
-  if (viewMode === "week") {
-    setSelectedValues(last5Weeks);
-  } else if (viewMode === "month") {
-    setSelectedValues(last5Months);
-  }
-}
+            // ---- NOUVEAU : Initialiser les derniers trimestres et semestres ----
+            const availableQuarterPeriods = getAvailablePeriodsForYear(yearToUse, "quarter");
+            const last5Quarters = availableQuarterPeriods.slice(-defaultNumPeriods);
+            setQuarterViewSelection({
+              values: last5Quarters,
+              year: yearToUse
+            });
+
+            const availableSemesterPeriods = getAvailablePeriodsForYear(yearToUse, "semester");
+            const last5Semesters = availableSemesterPeriods.slice(-defaultNumPeriods);
+            setSemesterViewSelection({
+              values: last5Semesters,
+              year: yearToUse
+            });
+
+            // Initialiser les selectedValues uniquement selon la vue actuelle
+            if (viewMode === "week") {
+              setSelectedValues(last5Weeks);
+            } else if (viewMode === "month") {
+              setSelectedValues(last5Months);
+            } else if (viewMode === "quarter") {
+              setSelectedValues(last5Quarters);
+            } else if (viewMode === "semester") {
+              setSelectedValues(last5Semesters);
+            }
+          }
           // Marquer l'initialisation comme terminée
           if (isMounted) {
             initializationCompleted.current = true;
@@ -583,7 +754,7 @@ export default function RapportSortantsEntrants({
     };
   }, [apiUrl]);
 
-  // Gestion du changement de vue (jour/semaine/mois) et préservation des sélections
+  // Gestion du changement de vue (jour/semaine/mois/trimestre/semestre) et préservation des sélections
   useEffect(() => {
     if (!prevViewMode.current || !initializationCompleted.current) {
       prevViewMode.current = viewMode;
@@ -605,6 +776,16 @@ export default function RapportSortantsEntrants({
       });
     } else if (previousMode === "month") {
       setMonthViewSelection({
+        values: selectedValues,
+        year: selectedYear
+      });
+    } else if (previousMode === "quarter") {
+      setQuarterViewSelection({
+        values: selectedValues,
+        year: selectedYear
+      });
+    } else if (previousMode === "semester") {
+      setSemesterViewSelection({
         values: selectedValues,
         year: selectedYear
       });
@@ -647,8 +828,18 @@ export default function RapportSortantsEntrants({
         processData(data, "day");
       }
     } else {
-      // Pour les vues semaine et mois
-      let selectionToRestore = viewMode === "week" ? weekViewSelection : monthViewSelection;
+      // Pour les vues semaine, mois, trimestre et semestre
+      let selectionToRestore;
+      if (viewMode === "week") {
+        selectionToRestore = weekViewSelection;
+      } else if (viewMode === "month") {
+        selectionToRestore = monthViewSelection;
+      } else if (viewMode === "quarter") {
+        selectionToRestore = quarterViewSelection;
+      } else if (viewMode === "semester") {
+        selectionToRestore = semesterViewSelection;
+      }
+      
       const yearToUse = selectionToRestore.year || selectedYear;
       
       if (yearToUse) {
@@ -693,6 +884,16 @@ export default function RapportSortantsEntrants({
                 values: lastPeriods,
                 year: yearToUse
               });
+            } else if (viewMode === "quarter") {
+              setQuarterViewSelection({
+                values: lastPeriods,
+                year: yearToUse
+              });
+            } else if (viewMode === "semester") {
+              setSemesterViewSelection({
+                values: lastPeriods,
+                year: yearToUse
+              });
             }
           }
         }
@@ -723,20 +924,23 @@ export default function RapportSortantsEntrants({
       const shouldApplyGlobal = (
         viewMode === "day" && globalModifiedAt > daySelectionModifiedAt ||
         viewMode === "week" && globalModifiedAt > weekSelectionModifiedAt ||
-        viewMode === "month" && globalModifiedAt > monthSelectionModifiedAt
+        viewMode === "month" && globalModifiedAt > monthSelectionModifiedAt ||
+        viewMode === "quarter" && globalModifiedAt > quarterSelectionModifiedAt ||
+        viewMode === "semester" && globalModifiedAt > semesterSelectionModifiedAt
       );
       
       if (shouldApplyGlobal) {
         applyGlobalFilter();
       }
     }
-  }, [globalStartDate, globalEndDate, globalModifiedAt, viewMode, daySelectionModifiedAt, weekSelectionModifiedAt, monthSelectionModifiedAt, applyGlobalFilter]);
-// Désactiver le filtre global si l'utilisateur modifie une sélection manuellement
-useEffect(() => {
-  if (!hasGlobalFilter) {
-    globalFilterApplied.current = false;
-  }
-}, [selectedValues, selectedDates]);
+  }, [globalStartDate, globalEndDate, globalModifiedAt, viewMode, daySelectionModifiedAt, weekSelectionModifiedAt, monthSelectionModifiedAt, quarterSelectionModifiedAt, semesterSelectionModifiedAt, applyGlobalFilter]);
+
+  // Désactiver le filtre global si l'utilisateur modifie une sélection manuellement
+  useEffect(() => {
+    if (!hasGlobalFilter) {
+      globalFilterApplied.current = false;
+    }
+  }, [selectedValues, selectedDates]);
 
   // Fonctions et événements de l'interface utilisateur
   const handleViewModeChange = (newMode) => {
@@ -766,7 +970,7 @@ useEffect(() => {
         ? getAllWorkingDaysBetween(selectedDates[0], selectedDates[1])
         : [];
     } else {
-      // Pour semaine et mois, utiliser getAvailablePeriodsForYear
+      // Pour semaine, mois, trimestre et semestre, utiliser getAvailablePeriodsForYear
       return selectedYear ? getAvailablePeriodsForYear(selectedYear, viewMode) : [];
     }
   };
@@ -794,6 +998,18 @@ useEffect(() => {
         year: selectedYear
       });
       setMonthSelectionModifiedAt(Date.now());
+    } else if (viewMode === "quarter") {
+      setQuarterViewSelection({
+        values: newSelectedValues,
+        year: selectedYear
+      });
+      setQuarterSelectionModifiedAt(Date.now());
+    } else if (viewMode === "semester") {
+      setSemesterViewSelection({
+        values: newSelectedValues,
+        year: selectedYear
+      });
+      setSemesterSelectionModifiedAt(Date.now());
     }
     
     setHasGlobalFilter(false);
@@ -815,6 +1031,10 @@ useEffect(() => {
         globalPeriods = getAllWeeksBetween(globalStartDate, globalEndDate);
       } else if (viewMode === "month") {
         globalPeriods = getAllMonthsBetween(globalStartDate, globalEndDate);
+      } else if (viewMode === "quarter") {
+        globalPeriods = getAllQuartersBetween(globalStartDate, globalEndDate);
+      } else if (viewMode === "semester") {
+        globalPeriods = getAllSemestersBetween(globalStartDate, globalEndDate);
       }
       
       const validValues = globalPeriods.filter(p => availablePeriods.includes(p));
@@ -831,10 +1051,29 @@ useEffect(() => {
           values: validValues,
           year
         });
+      } else if (viewMode === "quarter") {
+        setQuarterViewSelection({
+          values: validValues,
+          year
+        });
+      } else if (viewMode === "semester") {
+        setSemesterViewSelection({
+          values: validValues,
+          year
+        });
       }
     } else {
       // Sinon, vérifier s'il existe une sélection mémorisée pour cette année
-      let selectionToRestore = viewMode === "week" ? weekViewSelection : monthViewSelection;
+      let selectionToRestore;
+      if (viewMode === "week") {
+        selectionToRestore = weekViewSelection;
+      } else if (viewMode === "month") {
+        selectionToRestore = monthViewSelection;
+      } else if (viewMode === "quarter") {
+        selectionToRestore = quarterViewSelection;
+      } else if (viewMode === "semester") {
+        selectionToRestore = semesterViewSelection;
+      }
       
       if (selectionToRestore.year === year && selectionToRestore.values.length > 0) {
         const validValues = selectionToRestore.values.filter(v => availablePeriods.includes(v));
@@ -856,6 +1095,16 @@ useEffect(() => {
               values: lastPeriods,
               year
             });
+          } else if (viewMode === "quarter") {
+            setQuarterViewSelection({
+              values: lastPeriods,
+              year
+            });
+          } else if (viewMode === "semester") {
+            setSemesterViewSelection({
+              values: lastPeriods,
+              year
+            });
           }
         }
       } else {
@@ -870,6 +1119,16 @@ useEffect(() => {
           });
         } else if (viewMode === "month") {
           setMonthViewSelection({
+            values: lastPeriods,
+            year
+          });
+        } else if (viewMode === "quarter") {
+          setQuarterViewSelection({
+            values: lastPeriods,
+            year
+          });
+        } else if (viewMode === "semester") {
+          setSemesterViewSelection({
             values: lastPeriods,
             year
           });
@@ -888,7 +1147,7 @@ useEffect(() => {
         .filter(Boolean)
         .sort();
     } else {
-      // Pour semaine et mois, filtrer les périodes disponibles dans groupedData
+      // Pour semaine, mois, trimestre et semestre, filtrer les périodes disponibles dans groupedData
       return Object.keys(groupedData)
         .map(key => Number(key))
         .filter(key => selectedValues.includes(key))
@@ -905,6 +1164,10 @@ useEffect(() => {
         return `Semaine ${p}`;
       } else if (viewMode === "month") {
         return moisFrancais[p] || `Mois ${p}`;
+      } else if (viewMode === "quarter") {
+        return quarterNames[p - 1] || `Trim. ${p}`;
+      } else if (viewMode === "semester") {
+        return semesterNames[p - 1] || `Sem. ${p}`;
       }
       return p.toString();
     });
@@ -940,10 +1203,14 @@ useEffect(() => {
       return `Semaine(s) : ${selectedValues.join(", ")}`;
     } else if (viewMode === "month") {
       return `Mois : ${selectedValues.map(m => moisFrancais[m]).join(", ")}`;
+    } else if (viewMode === "quarter") {
+      return `Trimestre(s) : ${selectedValues.map(q => quarterNames[q - 1] || q).join(", ")}`;
+    } else if (viewMode === "semester") {
+      return `Semestre(s) : ${selectedValues.map(s => semesterNames[s - 1] || s).join(", ")}`;
     }
     
     return "Période inconnue";
-  }, [selectedValues, viewMode, selectedDates, moisFrancais]);
+  }, [selectedValues, viewMode, selectedDates]);
 
   // Configuration des options du graphique
   const chartOptions = useMemo(() => {
@@ -996,31 +1263,42 @@ useEffect(() => {
   }
 
   const handleSelectionChange = (value) => {
-  setSelectedValues(prev => {
-    const newSelection = prev.includes(value)
-      ? prev.filter(v => v !== value)
-      : [...prev, value];
+    setSelectedValues(prev => {
+      const newSelection = prev.includes(value)
+        ? prev.filter(v => v !== value)
+        : [...prev, value];
 
-    if (viewMode === "week") {
-      setWeekViewSelection({
-        values: newSelection,
-        year: selectedYear
-      });
-      setWeekSelectionModifiedAt(Date.now());
-    } else if (viewMode === "month") {
-      setMonthViewSelection({
-        values: newSelection,
-        year: selectedYear
-      });
-      setMonthSelectionModifiedAt(Date.now());
-    }
+      if (viewMode === "week") {
+        setWeekViewSelection({
+          values: newSelection,
+          year: selectedYear
+        });
+        setWeekSelectionModifiedAt(Date.now());
+      } else if (viewMode === "month") {
+        setMonthViewSelection({
+          values: newSelection,
+          year: selectedYear
+        });
+        setMonthSelectionModifiedAt(Date.now());
+      } else if (viewMode === "quarter") {
+        setQuarterViewSelection({
+          values: newSelection,
+          year: selectedYear
+        });
+        setQuarterSelectionModifiedAt(Date.now());
+      } else if (viewMode === "semester") {
+        setSemesterViewSelection({
+          values: newSelection,
+          year: selectedYear
+        });
+        setSemesterSelectionModifiedAt(Date.now());
+      }
 
-    setHasGlobalFilter(false);
-    globalFilterApplied.current = false;
-    return newSelection;
-  });
-};
- 
+      setHasGlobalFilter(false);
+      globalFilterApplied.current = false;
+      return newSelection;
+    });
+  };
 
   return (
     <div className="visualisation relative" data-id={id}>
@@ -1041,6 +1319,14 @@ useEffect(() => {
             >
               <AiOutlineFilter size={20} className="text-gray-600" />
             </button>
+            {/* ---- NOUVEAU : Bouton Commentaires ---- */}
+            <CommentButton
+              containerRef={chartContainerRef}
+              comments={annotations}
+              onAddComment={(c) => setAnnotations([...annotations, c])}
+              onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+              onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+            />
             <button
               className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
               onClick={() => setModalIsOpen(true)}
@@ -1052,24 +1338,36 @@ useEffect(() => {
           {isOpen && (
             <div ref={filterPanelRef} className="no-export absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-72 z-50">
               <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-              <div className="flex space-x-2 mb-2 mt-2">
+              <div className="flex space-x-1 mb-2 mt-2 flex-wrap">
                 <button
-                  className={`px-2 py-1 rounded text-sm ${viewMode === "day" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  className={`px-2 py-1 rounded text-sm mb-1 ${viewMode === "day" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
                   onClick={() => handleViewModeChange("day")}
                 >
                   Jour
                 </button>
                 <button
-                  className={`px-2 py-1 rounded text-sm ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  className={`px-2 py-1 rounded text-sm mb-1 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
                   onClick={() => handleViewModeChange("week")}
                 >
                   Semaine
                 </button>
                 <button
-                  className={`px-2 py-1 rounded text-sm ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  className={`px-2 py-1 rounded text-sm mb-1 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
                   onClick={() => handleViewModeChange("month")}
                 >
                   Mois
+                </button>
+                <button
+                  className={`px-2 py-1 rounded text-sm mb-1 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  onClick={() => handleViewModeChange("quarter")}
+                >
+                  Trimestre
+                </button>
+                <button
+                  className={`px-2 py-1 rounded text-sm mb-1 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                  onClick={() => handleViewModeChange("semester")}
+                >
+                  Semestre
                 </button>
               </div>
               
@@ -1137,7 +1435,11 @@ useEffect(() => {
                             onChange={() => handleSelectionChange(value)}
                           />
                           <label htmlFor={`period-${value}`} className="text-gray-500 text-sm">
-                            {viewMode === "week" ? `Semaine ${value}` : moisFrancais[value]}
+                            {viewMode === "week" ? `Semaine ${value}` : 
+                             viewMode === "month" ? moisFrancais[value] :
+                             viewMode === "quarter" ? quarterNames[value - 1] || `Trim. ${value}` :
+                             viewMode === "semester" ? semesterNames[value - 1] || `Sem. ${value}` :
+                             value}
                           </label>
                         </div>
                       ))
@@ -1151,6 +1453,7 @@ useEffect(() => {
           )}
         </div>
 
+        {/* ---- MODIFIÉ : Ajout de la référence chartContainerRef ---- */}
         <div className="flex-grow flex justify-center items-center h-[350px]" ref={chartContainerRef}>
           {filteredPeriods.length > 0 ? (
             <Line
@@ -1180,7 +1483,8 @@ useEffect(() => {
             </div>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
-          <div className="relative h-[400px] flex items-center justify-center">
+          {/* ---- MODIFIÉ : Ajout de la référence modalChartContainerRef et CommentButton caché ---- */}
+          <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
             {filteredPeriods.length > 0 ? (
               <Line
                 data={chartData}
@@ -1189,6 +1493,14 @@ useEffect(() => {
             ) : (
               <p className="text-center text-gray-500">Aucune donnée à afficher pour la période sélectionnée.</p>
             )}
+            <CommentButton
+              containerRef={modalChartContainerRef}
+              hideButton={true}
+              comments={annotations}
+              onAddComment={(c) => setAnnotations([...annotations, c])}
+              onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+              onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+            />
           </div>
         </div>
       </Modal>

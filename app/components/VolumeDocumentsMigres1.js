@@ -660,7 +660,7 @@ export default function VolumeDocumentsMigres({
               {periodeLabelText}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="no-export flex gap-2">
              {/* Boutons Filtre et Agrandir */}
              <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setIsOpen(!isOpen)} data-filter-toggle="true"><AiOutlineFilter size={20} className="text-gray-600" /></button>
              <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setModalIsOpen(true)}><FaExpand size={18} className="text-gray-600" /></button>

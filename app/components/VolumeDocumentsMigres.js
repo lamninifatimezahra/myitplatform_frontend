@@ -17,6 +17,8 @@ import { FaExpand } from "react-icons/fa";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useGlobalFilter } from "./GlobalFilterContext";
 import Modal from "react-modal";
+// ---- NOUVEAU : Import CommentButton ----
+import CommentButton from "./CommentButton";
 
 // Configurer le Modal pour l'accessibilité
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
@@ -99,6 +101,7 @@ export default function VolumeDocumentsMigres({
   const [groupedData, setGroupedData] = useState({});
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
+  // ---- NOUVEAU : État pour les annotations ----
   const [annotations, setAnnotations] = useState([]);
   const [topOwners, setTopOwners] = useState([]);
 
@@ -674,7 +677,8 @@ export default function VolumeDocumentsMigres({
       tooltip: {
         callbacks: {
           label: (context) => `${context.dataset.label}: ${context.raw} document(s)`,
-          },
+        },
+      },
     },
     scales: {
       x: { 
@@ -698,7 +702,6 @@ export default function VolumeDocumentsMigres({
     animation: {
       duration: 500,
     },
-  },
   };
 
   return (
@@ -721,6 +724,14 @@ export default function VolumeDocumentsMigres({
               data-filter-toggle="true">
               <AiOutlineFilter size={20} className="text-gray-600" />
             </button>
+            {/* ---- NOUVEAU : Bouton Commentaires ---- */}
+            <CommentButton
+              containerRef={chartContainerRef}
+              comments={annotations}
+              onAddComment={(c) => setAnnotations([...annotations, c])}
+              onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+              onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
+            />
             <button
               className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
               onClick={() => setModalIsOpen(true)}>
@@ -821,7 +832,7 @@ export default function VolumeDocumentsMigres({
           )}
         </div>
 
-        {/* Conteneur du graphique */}
+        {/* ---- MODIFIÉ : Ajout de la référence chartContainerRef ---- */}
         <div className="flex-grow flex justify-center items-center h-[350px]" ref={chartContainerRef}>
           <Bar
             data={chartData}
@@ -848,11 +859,20 @@ export default function VolumeDocumentsMigres({
             </div>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
+          {/* ---- MODIFIÉ : Ajout de la référence modalChartContainerRef et CommentButton caché ---- */}
           <div className="relative h-[500px] flex items-center justify-center" ref={modalChartContainerRef}>
             <Bar
               data={chartData}
               options={chartOptions}
               plugins={[ChartDataLabels]}
+            />
+            <CommentButton
+              containerRef={modalChartContainerRef}
+              hideButton={true}
+              comments={annotations}
+              onAddComment={(c) => setAnnotations([...annotations, c])}
+              onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
+              onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
             />
           </div>
         </div>
