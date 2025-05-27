@@ -31,7 +31,7 @@ export default function UploadARTHIUSPage() {
 
   const handleUpload = async () => {
     if (!arthiusFile) {
-      setUploadMessage("Veuillez sélectionner un fichier Arthius.");
+      setUploadMessage("Veuillez sélectionner un fichier Arthuis.");
       setUploadStatus("error");
       return;
     }

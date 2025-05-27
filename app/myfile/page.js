@@ -65,7 +65,7 @@ export default function MyFilePage() {
     );
   }
 
-  const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHUIS"];
+  const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHIUS"];
   const accessibleDashboards = user.role === "admin" ? dashboards : dashboards.filter((d) => user?.dashboards?.includes(d));
 
   const handleLogout = async () => {
