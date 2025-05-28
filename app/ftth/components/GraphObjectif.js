@@ -194,10 +194,7 @@ export default function GraphObjectif({
             <circle cx="120" cy="120" r="7" fill="black" />
           </svg>
 
-          <div className="absolute top-[125px] left-1/2 transform -translate-x-1/2 flex gap-3">
-            <span className="w-14 h-4 rounded-md bg-red-500"></span>
-            <span className="w-14 h-4 rounded-md bg-green-500"></span>
-          </div>
+       
         </div>
 
         <div className="flex flex-col items-start ml-10">
