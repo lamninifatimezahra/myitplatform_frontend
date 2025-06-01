@@ -176,8 +176,27 @@ const filtered = json
     setLastFilterSource("local");
   };
 
-  const maxYValue = Math.max(...data.flatMap((d) => [d.stock, d.non_traite, d.traite]), 0);
-  const maxY = Math.ceil((maxYValue + 100) / 100) * 100;
+ const getVisibleMaxY = () => {
+  if (!data || data.length === 0) return 100;
+
+  const values = data.flatMap((d) =>
+    visibleKeys.map((key) => d[key] || 0)
+  );
+  const max = Math.max(...values, 0);
+
+  // Arrondi intelligent
+  if (max <= 10) return 20;
+  if (max <= 50) return 60;
+  if (max <= 100) return 120;
+  if (max <= 200) return 250;
+  if (max <= 500) return 600;
+  if (max <= 1000) return 1200;
+  return Math.ceil((max + 100) / 100) * 100;
+};
+
+const maxY = getVisibleMaxY();
+
+
 
   const renderAnnotations = (ref) =>
     annotations.map((ann) => {

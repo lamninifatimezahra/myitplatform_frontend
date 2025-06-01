@@ -68,7 +68,7 @@ export default function KPIBacklogJ1({ onComponentReady }) {
       )}
 
       <div className="flex justify-between items-center">
-        <h3 className="text-gray-700 text-sm font-semibold">Backlog FTTH J-1</h3>
+        <h3 className="text-gray-700 text-sm font-semibold">KPI du Jour</h3>
         {isPositive ? (
           <TrendingDown className="text-green-500 w-5 h-5" />
         ) : (

@@ -115,14 +115,30 @@ await createGraphSlide(
   dateRangeText
 );
 
-// ✅ ✅ ✅ Ajout des 4 slides personnalisés :
+// ✅ ✅ ✅ Ajout de 2 slides vides supplémentaires avant SPA : Ticketing & Mailing
 
+const ticketingSlide = pptx.addSlide();
+ticketingSlide.addImage({ path: contentBackground, x: 0, y: 0, w: "100%", h: "100%" });
+ticketingSlide.addText("Ticketing", {
+  x: 0.5, y: 0.7, w: 9.0, h: 0.4, 
+  fontSize: 18, bold: true, color: blue, align: "left"
+});
+
+const mailingSlide = pptx.addSlide();
+mailingSlide.addImage({ path: contentBackground, x: 0, y: 0, w: "100%", h: "100%" });
+mailingSlide.addText("Mailing", {
+  x: 0.5, y: 0.7, w: 9.0, h: 0.4, 
+  fontSize: 18, bold: true, color: blue, align: "left"
+});
+
+// ✅ ✅ ✅ Slides personnalisés après Ticketing & Mailing
 const customSlides = [
   { title: "SPA" },
   { title: "Transition de compétence" },
   { title: "Item : date / Statut / date de fin transition prévue" },
   { title: "Accès" }
 ];
+
 
 customSlides.forEach(({ title }) => {
   const slide = pptx.addSlide();
@@ -308,7 +324,20 @@ async function createGraphSlide(pptx, id, graphList, commentMap, background, blu
       const comment = commentMap[id]?.trim() || "[Aucune observation ajoutée]";
     const slide = pptx.addSlide();
     slide.addImage({ path: background, x: 0, y: 0, w: "100%", h: "100%" });
-    slide.addText(label, { x: 0.5, y: 0.7, w: 9.0, h: 0.4, fontSize: 18, bold: true, color: blue });
+const titleText = id === "graph-objectif"
+  ? (dateRangeText ? `KPI : Moyenne – ${dateRangeText}` : "KPI du jour")
+  : label;
+
+slide.addText(titleText, {
+  x: 0.5,         // ✅ même position que "Objectif"
+  y: 0.7,
+  w: 9.0,
+  h: 0.4,
+  fontSize: 18,
+  bold: true,
+  color: blue,
+  align: "left"   // ✅ comme c’était avant pour "Objectif"
+});
 
     const isObjectif = id === "graph-objectif";
 
@@ -328,17 +357,14 @@ async function createGraphSlide(pptx, id, graphList, commentMap, background, blu
       
       slide.addImage({ data: image, x: 0.8, y: 1.5, w: 5.0, h: 2.9 });
 
-      slide.addShape(pptx.ShapeType.roundRect, {
-        x: 6.0, y: 1.4, w: 3.0, h: 3.2,
-        fill: { color: "#ffffff" }, line: { color: "#DDEEFF", width: 1 },
-        shadow: { type: "outer", blur: 1, offset: 1, angle: 45, color: "E0E0E0" }
-      });
-      slide.addShape(pptx.ShapeType.rect, {
-        x: 6.0, y: 1.4, w: 3.0, h: 0.4, fill: { color: "#F0F5FF" }, line: { color: "#DDEEFF", width: 1 }
-      });
-      slide.addText("Observations clés", {
-        x: 6.1, y: 1.45, w: 2.8, h: 0.3, fontSize: 13, bold: true, color: blue, align: "center"
-      });
+slide.addShape(pptx.ShapeType.roundRect, {
+  x: 6.0, y: 1.4, w: 3.0, h: 3.2,
+  fill: { color: "#f9fafb" }, // ✅ gris clair élégant
+  line: { color: "#DDEEFF", width: 1 },
+  shadow: { type: "outer", blur: 1, offset: 1, angle: 45, color: "E0E0E0" }
+});
+
+
       slide.addText([
         { text: "Observations clés:", options: { fontSize: 11, color: blue, bold: true, breakLine: true } },
         { text: "• ", options: { fontSize: 11, color: "#4B5563" } },
@@ -348,18 +374,19 @@ async function createGraphSlide(pptx, id, graphList, commentMap, background, blu
       });
     }
 
-    // 📆 Affichage de la plage de dates dans tous les cas
-    if (dateRangeText) {
-      slide.addText(dateRangeText, {
-        x: isObjectif ? 2.1 : 0.7,
-        y: 4.7,
-        w: isObjectif ? 6.0 : 5.2,
-        h: 0.4,
-        align: "center",
-        fontSize: 12,
-        color: "#6b7280"
-      });
-    }
+// 📆 Affichage de la plage de dates sous le graphe (SAUF pour graph-objectif)
+if (dateRangeText && id !== "graph-objectif") {
+  slide.addText(dateRangeText, {
+    x: 0.7,
+    y: 4.7,
+    w: 5.2,
+    h: 0.4,
+    align: "center",
+    fontSize: 12,
+    color: "#6b7280"
+  });
+}
+
   } catch (err) {
     console.error("Erreur slide", id, err);
   }
