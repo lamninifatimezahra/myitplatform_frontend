@@ -135,7 +135,6 @@ mailingSlide.addText("Mailing", {
 const customSlides = [
   { title: "SPA" },
   { title: "Transition de compétence" },
-  { title: "Item : date / Statut / date de fin transition prévue" },
   { title: "Accès" }
 ];
 
