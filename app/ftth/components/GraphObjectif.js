@@ -179,8 +179,8 @@ export default function GraphObjectif({
   ref={chartRef}
   className="relative mt-6 flex flex-col items-center justify-center rounded-xl bg-white shadow-inner p-10 overflow-hidden"
 >
-  {/* Jauge demi-cercle agrandie */}
-  <div className="relative w-[420px] h-[240px]">
+  {/* Jauge demi-cercle élégante */}
+  <div className="relative w-[480px] h-[260px]">
     <Doughnut
       data={{
         labels: ["Jauge"],
@@ -189,9 +189,11 @@ export default function GraphObjectif({
             data: [1],
             backgroundColor: (ctx) => {
               const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 420, 0);
-              gradient.addColorStop(0, "#22c55e"); // Vert
-              gradient.addColorStop(0.5, "#eab308"); // Jaune
-              gradient.addColorStop(1, "#ef4444"); // Rouge
+              gradient.addColorStop(0.0, "#22c55e");   // vert
+              gradient.addColorStop(0.79, "#22c55e");
+              gradient.addColorStop(0.80, "#facc15");  // jaune
+              gradient.addColorStop(0.90, "#f59e0b");
+              gradient.addColorStop(1.0, "#ef4444");   // rouge
               return [gradient];
             },
             borderWidth: 0,
@@ -211,7 +213,7 @@ export default function GraphObjectif({
       }}
     />
 
-    {/* Aiguille stylée */}
+    {/* Aiguille élégante */}
     <div
       className="absolute left-1/2 bottom-[45px] origin-bottom"
       style={{
@@ -228,10 +230,10 @@ export default function GraphObjectif({
     </div>
   </div>
 
-  {/* Texte dynamique en grand */}
-  <div className="flex items-center justify-center gap-4 mt-10">
-    <div className="text-[5.5rem] font-black text-gray-900 leading-none">{value}</div>
-    <div className="text-4xl font-bold text-gray-700">commandes</div>
+  {/* Valeur dynamique et label */}
+  <div className="flex items-center justify-center gap-4 mt-12">
+    <div className="text-[6rem] font-black text-slate-900 leading-none">{value}</div>
+    <div className="text-4xl font-semibold text-slate-500">commandes</div>
   </div>
 </div>
 
