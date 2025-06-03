@@ -15,7 +15,7 @@ export default function TicketsEnCoursTable({
   commentApiUrl,
   tableType = "hispeed",
   // Props de personnalisation avec valeurs par défaut
-  id = "Tickets en cours - Plus de 2 semaines",
+  id = "Tickets en cours - Plus de une semaine",
   dateSortieField = "date_sortie",
   idField = "id_ticket",
   titleField = "compl_title",
@@ -128,7 +128,7 @@ export default function TicketsEnCoursTable({
         });
 
         const finalTickets = Object.values(grouped)
-          .filter(t => t.delay > 14)
+          .filter(t => t.delay > 7)
           .map(t => ({
             ...t,
             semainesApparition: Object.entries(t.semaineCounts)
@@ -228,7 +228,7 @@ export default function TicketsEnCoursTable({
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
         {/* Header avec titre et boutons */}
         <div className="no-export flex justify-between items-start mb-4 relative">
-          <h3 className="text-lg font-semibold text-black">Tickets en cours - Plus de 2 semaines</h3>
+          <h3 className="text-lg font-semibold text-black">Tickets en cours - Plus de une semaine</h3>
           <div className="flex gap-2">
             <button
               className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
@@ -384,7 +384,7 @@ export default function TicketsEnCoursTable({
       >
         <div className="bg-white rounded-2xl p-6 w-11/12 md:w-10/12 lg:w-10/12 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-semibold text-black">Tickets en cours - Plus de 2 semaines</h3>
+            <h3 className="text-2xl font-semibold text-black">Tickets en cours - Plus de une semaine</h3>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
           

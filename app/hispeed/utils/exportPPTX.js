@@ -173,7 +173,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   
   const tableLabels = [
     "Détail des Réitérations des Tickets", 
-    "Tickets en cours - Plus de 2 semaines"
+    "Tickets en cours - Plus de une semaine"
   ];
 
 const reentrantImages = [];
@@ -537,7 +537,7 @@ nonKpiImages.forEach(img => {
   }
 
     
-  // --- Générer le slide du tableau "Tickets en cours - Plus de 2 semaines" s'il existe ---
+  // --- Générer le slide du tableau "Tickets en cours - Plus de une semaine" s'il existe ---
   if (ticketsAnciensImage.found) {
     console.log("Génération du slide pour le tableau des tickets anciens");
     generateTableSlide(ppt, ticketsAnciensImage.data, contentBackgroundBase64, periodText);

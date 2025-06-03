@@ -700,7 +700,7 @@ export default function ClientCoupeChart({
         return slaCategory === category;
       }).length;
     }),
-    backgroundColor: category === "Respecte SLA" ? "#2c3e50" : "#87CEEB", // Bleu foncé pour "Respecte SLA", bleu ciel pour "Dépasse SLA"
+    backgroundColor: category === "Respecte SLA" ? "#17e339" : "#f54c4c", // Bleu foncé pour "Respecte SLA", bleu ciel pour "Dépasse SLA"
     borderRadius: 5,
     stack: "stack1", // Même stack pour empiler
     // Configuration des datalabels pour chaque dataset

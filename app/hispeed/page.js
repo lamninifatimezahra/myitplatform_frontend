@@ -74,12 +74,12 @@ export default function HispeedDashboard() {
           <main className="flex-1 p-6 space-y-6 overflow-y-auto relative z-10 bg-gray-50">
             <NewsTickerRetard
               apiUrl={API_HISPEED_DATA}
-              title="Tickets en retard (+14j)"
+              title="Tickets en retard (+ Semaine)"
               dateSortieField="date_sortie"
               dateDerniereMajField="date_derniere_maj"
               idField="id_ticket"
               titreField="compl_title"
-              retardDays={14}
+              retardDays={7}
               animationDuration={40}
             />
 

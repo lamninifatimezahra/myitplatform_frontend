@@ -17,8 +17,7 @@ import { FaExpand } from "react-icons/fa";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import { useGlobalFilter } from "./GlobalFilterContext";
 import Modal from "react-modal";
-// ---- NOUVEAU ----
-import CommentButton from "./CommentButton"; // Assurez-vous que le chemin est correct
+import CommentButton from "./CommentButton"; 
 
 // Configurer le Modal pour l'accessibilité
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
@@ -33,7 +32,6 @@ ChartJS.register(
   ChartDataLabels
 );
 
-// ---- NOUVEAU : Fonctions utilitaires pour Trimestre/Semestre ----
 // Fonction pour obtenir le numéro de semaine ISO (déjà présente)
 const getWeekNumber = (date) => {
   const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

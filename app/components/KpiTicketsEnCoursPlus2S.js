@@ -34,14 +34,14 @@ const renderCustomHeader = ({
 
 export default function KpiTicketsEnCoursPlus2S({
   apiUrl, // URL de l'API requise sans valeur par défaut
-  title = "Tickets +14j",
+  title = "Tickets +Semaine",
   dateSortieField = "date_sortie",
   dateDerniereMajField = "date_derniere_maj",
-  retardDays = 14,
+  retardDays = 7,
   blinkWhenPositive = true,
-  dataIdSuffix = "KPI Tickets en Cours +14j"  // Modifié ici pour correspondre à l'ID
+  dataIdSuffix = "KPI Tickets en Cours +Semaine"  // Modifié ici pour correspondre à l'ID
 }) {
-  const id = "KPI Tickets en Cours +14j";
+  const id = "KPI Tickets en Cours +Semaine";
 
   // Référence pour le composant DatePicker
   const calendarRef = useRef(null);

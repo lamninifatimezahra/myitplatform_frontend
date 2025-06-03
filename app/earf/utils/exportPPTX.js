@@ -165,7 +165,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   const standardGraphImages = [];
 
   // Tableaux spécifiques à rechercher
-  const tableIds = ["Détail des Réitérations des Tickets", "Tickets en cours - Plus de 2 semaines"];
+  const tableIds = ["Détail des Réitérations des Tickets", "Tickets en cours - Plus de une semaine"];
 
   // Parcourir toutes les images graphiques et les classer
   graphImages.forEach(img => {
@@ -196,7 +196,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
 
   // Vérification spécifique pour les éléments problématiques
   const missingGraphId = "Tickets Entrants/Sortants";
-  const missingTableId = "Tickets en cours - Plus de 2 semaines";
+  const missingTableId = "Tickets en cours - Plus de une semaine";
 
   // Recherche explicite dans toutes les images
   const missingGraph = imageList.find(img => 

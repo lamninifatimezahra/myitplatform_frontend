@@ -268,6 +268,24 @@ const processIterationData = (tickets) => {
     searchTicketId === "" || ticket.id_ticket.includes(searchTicketId)
   );
 
+  // ✅ NOUVEAU : Fonction pour déterminer si un filtre est appliqué
+  const isFilterApplied = () => {
+    const hasGlobalFilter = globalStartDate && globalEndDate;
+    const hasLocalFilter = selectedWeeks.length > 0 || searchTicketId.trim() !== "";
+    return hasGlobalFilter || hasLocalFilter;
+  };
+
+  // ✅ NOUVEAU : Effet pour ajuster visibleTickets quand un filtre est appliqué
+  useEffect(() => {
+    if (isFilterApplied()) {
+      // Si un filtre est appliqué, afficher tous les tickets
+      setVisibleTickets(filteredData.length || 5);
+    } else {
+      // Si aucun filtre n'est appliqué, revenir à l'affichage par défaut
+      setVisibleTickets(5);
+    }
+  }, [filteredData.length, selectedWeeks, searchTicketId, globalStartDate, globalEndDate]);
+
   // Bouton "Tout sélectionner / Tout désélectionner" pour les semaines disponibles.
   const allWeeksSelected =
     allWeeks.length > 0 && allWeeks.every(week => selectedWeeks.includes(week));
@@ -456,6 +474,13 @@ const saveComment = async (ticketId, commentText) => {
           </div>
         )}
 
+        {/* ✅ NOUVEAU : Indicateur de filtre actif */}
+        {isFilterApplied() && (
+          <div className="mb-3 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+            📊 Filtre actif - Affichage de tous les tickets correspondants ({filteredData.length} ticket{filteredData.length > 1 ? 's' : ''})
+          </div>
+        )}
+
         {/* Tableau principal */}
         <table className="w-full border-collapse border border-gray-300 mt-4 text-sm">
           <thead>
@@ -535,22 +560,25 @@ const saveComment = async (ticketId, commentText) => {
           </tbody>
         </table>
 
-        <div className="no-export flex justify-center space-x-3 mt-4">
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
-            onClick={() => setVisibleTickets((prev) => prev + 5)}
-            disabled={visibleTickets >= filteredData.length}
-          >
-            Voir Plus
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-gray-300"
-            onClick={() => setVisibleTickets((prev) => Math.max(5, prev - 5))}
-            disabled={visibleTickets <= 5}
-          >
-            Voir Moins
-          </button>
-        </div>
+        {/* ✅ MODIFIÉ : Boutons "Voir Plus/Moins" seulement quand aucun filtre n'est appliqué */}
+        {!isFilterApplied() && (
+          <div className="no-export flex justify-center space-x-3 mt-4">
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+              onClick={() => setVisibleTickets((prev) => prev + 5)}
+              disabled={visibleTickets >= filteredData.length}
+            >
+              Voir Plus
+            </button>
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-gray-300"
+              onClick={() => setVisibleTickets((prev) => Math.max(5, prev - 5))}
+              disabled={visibleTickets <= 5}
+            >
+              Voir Moins
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal d'agrandissement */}
