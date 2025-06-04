@@ -130,7 +130,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   
   intro.addText(`Édité le : ${formattedDate}`, { x: 7.0, y: 5.2, w: 2.8, h: 0.3, align: "right", fontFace: "Segoe UI", fontSize: 10, color: "D0D0D0" });
 
-  // --- Catégorisation des Images ---
+ 
   // Tableau fixe des KPI à inclure
   const fixedKpiLabels = [
     "KPI Tickets Entrants",
