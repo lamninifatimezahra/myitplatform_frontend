@@ -62,7 +62,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     "KPI Tickets Traités",
     "KPI Tickets Réentrants",
     "KPI Tickets en Cours",
-    "KPI Tickets en Cours +14j"
+    "KPI Tickets en Cours +Semaine"
   ];
 
   // Création d'une version normalisée des labels (trim + lowercase)
