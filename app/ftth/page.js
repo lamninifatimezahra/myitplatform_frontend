@@ -16,9 +16,11 @@ import GraphTopRegles from "./components/GraphTopRegles";
 import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
 import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
+import GraphTraitementEmails from "./components/GraphTraitementEmails";         // 🆕 ajouté
+import GraphTraitementTickets from "./components/GraphTraitementTickets";       // 🆕 ajouté
 
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
-import Image from "next/image"; // N'oublie pas l'import pour Image
+import Image from "next/image";
 
 export default function DashboardFTTH() {
   const { user, loading, authorized, hydrated } = useAuth(null, "FTTH");
@@ -35,9 +37,7 @@ export default function DashboardFTTH() {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
         <div className="relative w-24 h-24">
-          {/* Cercle du spinner */}
           <div className="absolute inset-0 border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent rounded-full animate-spin-custom" />
-          {/* Logo MyIT au centre */}
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
               src="/logo-myit.png"
@@ -67,7 +67,6 @@ export default function DashboardFTTH() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden relative">
-      {/* ☰ Sidebar mobile toggle */}
       <button
         onClick={() => setIsSidebarOpen(true)}
         className="sm:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white shadow p-2 rounded-md"
@@ -78,13 +77,11 @@ export default function DashboardFTTH() {
       <Sidebar sidebarOpen={isSidebarOpen} setSidebarOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col relative">
-        {/* Background header */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
           style={{ backgroundImage: "url('/background-office.jpg')" }}
         ></div>
 
-        {/* Header reçoit setSidebarOpen */}
         <Header
           onGlobalFilter={handleGlobalFilter}
           setSidebarOpen={setIsSidebarOpen}
@@ -93,6 +90,7 @@ export default function DashboardFTTH() {
         <NewsTickerReglesFTTH />
 
         <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
+          {/* KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <KPIBacklogJ1 />
             <KPIBacklogJ />
@@ -100,19 +98,28 @@ export default function DashboardFTTH() {
             <KPIDossiersTraites />
           </div>
 
+          {/* Graphs - ligne 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphObjectif globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphVueEnsemble globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
           </div>
 
+          {/* Graphs - ligne 2 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphTopRegles globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphTopReglesParJour globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
           </div>
 
+          {/* Graphs - ligne 3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphRepartitionManuelle globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
             <GraphEntrantsSortants globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+          </div>
+
+          {/* Graphs - ligne 4 - 🆕 nouveaux composants */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <GraphTraitementEmails globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+            <GraphTraitementTickets globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
           </div>
         </div>
       </div>

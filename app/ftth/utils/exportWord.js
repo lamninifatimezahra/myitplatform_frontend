@@ -10,7 +10,7 @@ function getWeekNumber(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
-// 📸 Capture image avec tailles standardisées (KPI = 280x100, Objectif = 400x280, autres = 550x350)
+// 📸 Capture image avec redimensionnement
 async function captureAndResize(id, width = 550, height = 350) {
   const el = document.getElementById(id);
   if (!el) return "<p style='color:red;'>Graphique indisponible</p>";
@@ -48,7 +48,7 @@ async function captureAndResize(id, width = 550, height = 350) {
   }
 }
 
-// 📝 Génération Word
+// 📝 Fonction principale
 export async function generateWordFromGraphs(selectedGraphIds = [], graphList = [], commentMap = {}, globalStartDate, globalEndDate) {
   const today = new Date();
   const todayStr = today.toLocaleDateString("fr-FR");
@@ -78,9 +78,10 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
       </p>`;
   }
 
-  // 🎯 Graphiques exclus (Objectif déjà inclus page 1)
+  // 🎯 Exclusions
   selectedGraphIds = selectedGraphIds.filter(id => id !== "graph-objectif");
 
+  // 📌 Mapping ID → DOM
   const idToDomId = {
     "graph-objectif": "canvas-graph-objectif",
     "graph-vue-ensemble": "canvas-graph-vue-ensemble",
@@ -88,8 +89,10 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     "graph-top-regles-par-jour": "canvas-graph-top-regles-par-jour",
     "graph-entrants-sortants": "canvas-graph-entrants-sortants",
     "graph-repartition-manuelle": "canvas-graph-repartition-manuelle",
+    "graph-traitement-emails": "canvas-graph-traitement-emails", // ✅ Nouveau
   };
 
+  // 💬 Commentaires par défaut
   const defaultCommentMap = {
     "graph-objectif": `“Performance satisfaisante, aucun backlog critique signalé.”<br/>“Rien à signaler cette semaine, bon équilibre global.”`,
     "graph-vue-ensemble": `“Tendance stable, aucune alerte détectée.”<br/>“Visualisation claire de l’évolution des indicateurs.”`,
@@ -97,12 +100,15 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     "graph-top-regles-par-jour": `“Suivi quotidien très utile.”<br/>“Permet une meilleure identification des pics d’activité.”`,
     "graph-entrants-sortants": `“Indicateurs bien structurés.”<br/>“Volume traité visible et comparé efficacement.”`,
     "graph-repartition-manuelle": `“Visualisation claire des répartitions.”<br/>“Bonne compréhension du volume traité par acteur.”`,
+    "graph-traitement-emails": `“Graphique des types d’e-mails reçus sur la période sélectionnée.”<br/>“Utile pour analyser les tendances de traitement.”`, // ✅ Nouveau
   };
 
+  // 📸 Captures spéciales
   const kpi1 = await captureAndResize("kpi-backlog-j1", 280, 100);
   const kpi2 = await captureAndResize("kpi-backlog-j", 280, 100);
-const objectif = await captureAndResize("canvas-graph-objectif", 550, 280);
+  const objectif = await captureAndResize("canvas-graph-objectif", 550, 280);
 
+  // 🧱 Structure de la première page
   let bodyHtml = `
   <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;">
     <tr><td style="padding:14pt 24pt;">
@@ -127,7 +133,7 @@ const objectif = await captureAndResize("canvas-graph-objectif", 550, 280);
     </td></tr>
   </table>`;
 
-  // 🔄 Autres pages
+  // 🔁 Pages suivantes
   for (const graphId of selectedGraphIds) {
     const label = graphList.find(g => g.id === graphId)?.label || graphId;
     const domId = idToDomId[graphId] || graphId;

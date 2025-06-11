@@ -127,7 +127,16 @@ const filtered = json.filter(item => {
     };
     fetchData();
   }, [selectedPeriod, startDate, endDate, globalStartDate, globalEndDate, lastFilterSource]);
-  const maxY = Math.ceil((Math.max(...data.map(d => d.value || 0)) + 100) / 100) * 100;
+const computeYAxisMax = (max) => {
+  if (max <= 5) return 10;
+  if (max <= 10) return 20;
+  if (max <= 20) return 30;
+  if (max <= 30) return 50;
+  if (max <= 50) return 70;
+  if (max <= 100) return 150;
+  return Math.ceil((max + 100) / 10) * 10;
+};
+const maxY = computeYAxisMax(Math.max(...data.map(d => d.value || 0)));
 
   const renderAnnotations = (ref) => annotations.map((ann) => {
     const isEditing = editingComment === ann.id;
