@@ -118,7 +118,7 @@ const processIterationData = (tickets) => {
           iterations: {},
           totalIterations: 0,
           semaineCounts: {},
-          // ✅ On prend le commentaire de la première ligne seulement
+          weeksOrder: [], // ✅ NOUVEAU : pour maintenir l'ordre des semaines
           comment_reentrant: ticket.comment_reentrant || ""
         };
         cumulativeIterations[ticketId] = 0;
@@ -130,26 +130,38 @@ const processIterationData = (tickets) => {
       processed[ticketId].semaineCounts[week] =
         (processed[ticketId].semaineCounts[week] || 0) + 1;
 
-      // ❌ Supprimé : ne plus écraser comment_reentrant à chaque ligne
-      // if (ticket.comment_reentrant) {
-      //   processed[ticketId].comment_reentrant = ticket.comment_reentrant;
-      // }
+      // ✅ NOUVEAU : Ajouter la semaine à l'ordre si elle n'existe pas déjà
+      if (!processed[ticketId].weeksOrder.includes(week)) {
+        processed[ticketId].weeksOrder.push(week);
+      }
     });
 
   return Object.entries(processed)
     .map(([id, ticket]) => {
-      const semainesApparition = Object.entries(ticket.semaineCounts)
-        .map(([week, count]) =>
-          count > 1 ? `S${week}(${count} itérations)` : `S${week}`
-        )
+      // ✅ MODIFIÉ : Utiliser weeksOrder pour maintenir l'ordre chronologique
+      const semainesApparition = ticket.weeksOrder
+        .map((week, index) => {
+          const count = ticket.semaineCounts[week];
+          let weekText = count > 1 ? `S${week}(${count} itérations)` : `S${week}`;
+          
+          // ✅ NOUVEAU : Ajouter "(1ère itération)" à la première semaine
+          if (index === 0) {
+            weekText += " (1ère itération)";
+          }
+          
+          return weekText;
+        })
         .join(", ");
+
       return {
         id_ticket: id,
         ...ticket,
         semainesApparition,
+        // ✅ MODIFIÉ : Soustraire 1 du total des réitérations
+        totalIterations: ticket.totalIterations - 1,
       };
     })
-    .filter(ticket => ticket.totalIterations >= 2)
+    .filter(ticket => ticket.totalIterations >= 1) // ✅ MODIFIÉ : Changé de >= 2 à >= 1
     .sort((a, b) => b.totalIterations - a.totalIterations);
 };
 
@@ -261,7 +273,8 @@ const processIterationData = (tickets) => {
       .filter(count => count !== undefined);
 
     if (validCounts.length === 0) return false;
-    // Exclure le ticket s'il apparaît pour une semaine avec une itération unique.
+    // ✅ MODIFIÉ : Exclure le ticket s'il apparaît pour une semaine avec une itération unique (maintenant count === 1 au lieu de count === 1)
+    // Note: Garder la même logique mais adapter aux nouvelles valeurs
     if (validCounts.some(count => count === 1)) return false;
     return true;
   }).filter(ticket =>

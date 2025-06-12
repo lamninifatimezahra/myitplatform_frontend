@@ -103,11 +103,11 @@ export default function KpiReentrant({
     }
   }, [data, effectiveStartDate, effectiveEndDate, dateField, dateUpdateField, idField]);
 
-  // NOUVELLE LOGIQUE DE COMPTAGE - identique à TauxReentrants
+  // NOUVELLE LOGIQUE DE COMPTAGE
   const countReentrantTickets = (tickets, startDate, endDate) => {
     if (!tickets || tickets.length === 0) return 0;
 
-    // Étape 1 — Calculer le nombre global d'itérations par ticket
+    // Étape 1 — Regrouper toutes les itérations par ticket
     const ticketIterationsMap = {};
     tickets.forEach((t) => {
       const id = t[idField];
@@ -123,14 +123,24 @@ export default function KpiReentrant({
       );
     });
 
-    // Étape 3 — Analyser les itérations pour ne compter que les 2e+ dans la période sélectionnée
-    let reentrantCount = 0;
+    // Étape 3 — Pour chaque ticket, vérifier s'il a des réentrants dans la période
+    let reentrantTicketsCount = 0;
 
     for (const [ticketId, iterations] of Object.entries(ticketIterationsMap)) {
-      iterations.forEach((t, idx) => {
-        const date = new Date(t[dateField]);
+      // Si le ticket n'a qu'une seule itération, il ne peut pas être réentrant
+      if (iterations.length <= 1) continue;
+
+      // Identifier la première itération globale (sans filtre)
+      const firstGlobalIteration = iterations[0]; // Déjà trié par date
+
+      // Vérifier s'il y a au moins une itération réentrante dans la période filtrée
+      let hasReentrantInPeriod = false;
+
+      for (let i = 0; i < iterations.length; i++) {
+        const iteration = iterations[i];
+        const date = new Date(iteration[dateField]);
         
-        // Vérifier si l'occurrence est dans la période de dates (comme dans KpiReentrant original)
+        // Vérifier si cette itération est dans la période de dates
         let inPeriod = true;
         if (startDate && endDate) {
           const normalizedDate = normalizeDate(date);
@@ -139,16 +149,20 @@ export default function KpiReentrant({
           inPeriod = normalizedDate >= normalizedStart && normalizedDate <= normalizedEnd;
         }
 
-        if (!inPeriod) return;
-
-        // Si c'est une itération ≥ 2 (réentrante) et qu'elle est dans la période
-        if (iterations.length > 1 && idx > 0) {
-          reentrantCount += 1;
+        // Si cette itération est dans la période ET que ce n'est pas la première globale
+        if (inPeriod && iteration !== firstGlobalIteration) {
+          hasReentrantInPeriod = true;
+          break; // Pas besoin de continuer, on a trouvé au moins un réentrant
         }
-      });
+      }
+
+      // Si ce ticket a au moins un réentrant dans la période, on l'ajoute au compteur
+      if (hasReentrantInPeriod) {
+        reentrantTicketsCount += 1;
+      }
     }
 
-    return reentrantCount;
+    return reentrantTicketsCount;
   };
 
   const formatDate = (date) => {
