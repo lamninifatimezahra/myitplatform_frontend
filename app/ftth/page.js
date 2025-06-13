@@ -16,8 +16,8 @@ import GraphTopRegles from "./components/GraphTopRegles";
 import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
 import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
-import GraphTraitementEmails from "./components/GraphTraitementEmails";         // 🆕 ajouté
-import GraphTraitementTickets from "./components/GraphTraitementTickets";       // 🆕 ajouté
+import GraphTraitementEmails from "./components/GraphTraitementEmails";
+import GraphTraitementTickets from "./components/GraphTraitementTickets";
 
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
 import Image from "next/image";
@@ -33,6 +33,7 @@ export default function DashboardFTTH() {
     setGlobalEndDate(new Date(end));
   };
 
+  // 🌀 Chargement global (authentification + données utilisateur)
   if (!hydrated || loading || !authorized) {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
@@ -67,6 +68,7 @@ export default function DashboardFTTH() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden relative">
+      {/* Bouton menu mobile */}
       <button
         onClick={() => setIsSidebarOpen(true)}
         className="sm:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white shadow p-2 rounded-md"
@@ -74,23 +76,29 @@ export default function DashboardFTTH() {
         ☰
       </button>
 
+      {/* Barre latérale */}
       <Sidebar sidebarOpen={isSidebarOpen} setSidebarOpen={setIsSidebarOpen} />
 
+      {/* Contenu principal */}
       <div className="flex-1 flex flex-col relative">
+        {/* Fond d’écran flouté */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
           style={{ backgroundImage: "url('/background-office.jpg')" }}
         ></div>
 
+        {/* Header avec filtre global */}
         <Header
           onGlobalFilter={handleGlobalFilter}
           setSidebarOpen={setIsSidebarOpen}
         />
 
+        {/* Fil d’actualité en haut */}
         <NewsTickerReglesFTTH />
 
+        {/* Contenu dashboard */}
         <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
-          {/* KPIs */}
+          {/* 🔷 KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <KPIBacklogJ1 />
             <KPIBacklogJ />
@@ -98,28 +106,52 @@ export default function DashboardFTTH() {
             <KPIDossiersTraites />
           </div>
 
-          {/* Graphs - ligne 1 */}
+          {/* 🔷 Graphiques - ligne 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphObjectif globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
-            <GraphVueEnsemble globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+            <GraphObjectif
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
+            <GraphVueEnsemble
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
           </div>
 
-          {/* Graphs - ligne 2 */}
+          {/* 🔷 Graphiques - ligne 2 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphTopRegles globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
-            <GraphTopReglesParJour globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+            <GraphTopRegles
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
+            <GraphTopReglesParJour
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
           </div>
 
-          {/* Graphs - ligne 3 */}
+          {/* 🔷 Graphiques - ligne 3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphRepartitionManuelle globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
-            <GraphEntrantsSortants globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+            <GraphRepartitionManuelle
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
+            <GraphEntrantsSortants
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
           </div>
 
-          {/* Graphs - ligne 4 - 🆕 nouveaux composants */}
+          {/* 🔷 Graphiques - ligne 4 (nouveaux) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphTraitementEmails globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
-            <GraphTraitementTickets globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+            <GraphTraitementEmails
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
+            <GraphTraitementTickets
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
           </div>
         </div>
       </div>

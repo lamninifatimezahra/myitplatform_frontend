@@ -12,9 +12,9 @@ const COLORS = {
   "Finalisation commande": "#6366f1",
   "Intervention": "#111827",
   "MAJ CR STOC": "#4b5563",
-  "Rattrapage B57": "#68bddd", // bleu ciel
+  "Rattrapage B57": "#68bddd",
   "REF PMT": "#f59e0b",
-  "Renonciation": "#3b82f6",  // bleu standard
+  "Renonciation": "#3b82f6",
 };
 
 const rawData = [
@@ -57,7 +57,6 @@ const rawData = [
   { type: "Renonciation", date: "12/06/2025" },
 ];
 
-
 const aggregateByDateAndType = (data) => {
   const grouped = {};
   data.forEach(({ type, date }) => {
@@ -73,14 +72,14 @@ export default function GraphTraitementEmails() {
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const [loading, setLoading] = useState(true);
 
-  const chartRef = useRef(null); // 🔁 utile pour les annotations ou debug futurs
+  const chartRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
     setTimeout(() => {
       setData(aggregateByDateAndType(rawData));
       setLoading(false);
-    }, 200); // délai simulé
+    }, 2000); // ⏳ Durée du spinner augmentée à 2s
   }, []);
 
   const getYAxisMax = () => {
@@ -117,7 +116,19 @@ export default function GraphTraitementEmails() {
       data-graph-label="Traitement des e-mails"
       className="bg-white shadow-xl rounded-2xl p-6 relative"
     >
-      {/* 🔘 Header */}
+      {/* Spinner stylisé MyIT */}
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-60 backdrop-blur-sm rounded-2xl">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            <p className="mt-3 text-blue-800 font-semibold text-sm">
+              Chargement <span className="text-blue-500">MyIT</span>…
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-2xl font-semibold text-slate-800">Traitement des e-mails</h3>
         <div className="flex gap-2">
@@ -127,7 +138,7 @@ export default function GraphTraitementEmails() {
         </div>
       </div>
 
-      {/* 📅 Dropdown */}
+      {/* Période */}
       <div className="mb-4">
         <select
           className="p-2 rounded-xl border border-gray-300 bg-white shadow text-sm"
@@ -142,24 +153,13 @@ export default function GraphTraitementEmails() {
         </select>
       </div>
 
-      {/* 📊 Graphique */}
+      {/* Graphique */}
       <div
         id="canvas-graph-traitement-emails"
         ref={chartRef}
         className="relative rounded-xl bg-white shadow-inner p-4"
         style={{ height: 480 }}
       >
-        {loading && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-60 backdrop-blur-sm rounded-2xl">
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-              <p className="mt-2 text-blue-800 font-semibold text-sm">
-                Chargement <span className="text-blue-500">MyIT</span>…
-              </p>
-            </div>
-          </div>
-        )}
-
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} barSize={72}>
             <XAxis
@@ -177,7 +177,7 @@ export default function GraphTraitementEmails() {
         </ResponsiveContainer>
       </div>
 
-      {/* 🔍 Modal plein écran */}
+      {/* Modal */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
