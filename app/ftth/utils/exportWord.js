@@ -78,10 +78,8 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
       </p>`;
   }
 
-  // 🎯 Exclusions
   selectedGraphIds = selectedGraphIds.filter(id => id !== "graph-objectif");
 
-  // 📌 Mapping ID → DOM
   const idToDomId = {
     "graph-objectif": "canvas-graph-objectif",
     "graph-vue-ensemble": "canvas-graph-vue-ensemble",
@@ -89,10 +87,9 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     "graph-top-regles-par-jour": "canvas-graph-top-regles-par-jour",
     "graph-entrants-sortants": "canvas-graph-entrants-sortants",
     "graph-repartition-manuelle": "canvas-graph-repartition-manuelle",
-    "graph-traitement-emails": "canvas-graph-traitement-emails", // ✅ Nouveau
+    "graph-traitement-emails": "canvas-graph-traitement-emails"
   };
 
-  // 💬 Commentaires par défaut
   const defaultCommentMap = {
     "graph-objectif": `“Performance satisfaisante, aucun backlog critique signalé.”<br/>“Rien à signaler cette semaine, bon équilibre global.”`,
     "graph-vue-ensemble": `“Tendance stable, aucune alerte détectée.”<br/>“Visualisation claire de l’évolution des indicateurs.”`,
@@ -100,15 +97,13 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     "graph-top-regles-par-jour": `“Suivi quotidien très utile.”<br/>“Permet une meilleure identification des pics d’activité.”`,
     "graph-entrants-sortants": `“Indicateurs bien structurés.”<br/>“Volume traité visible et comparé efficacement.”`,
     "graph-repartition-manuelle": `“Visualisation claire des répartitions.”<br/>“Bonne compréhension du volume traité par acteur.”`,
-    "graph-traitement-emails": `“Graphique des types d’e-mails reçus sur la période sélectionnée.”<br/>“Utile pour analyser les tendances de traitement.”`, // ✅ Nouveau
+    "graph-traitement-emails": `“Graphique des types d’e-mails reçus sur la période sélectionnée.”<br/>“Utile pour analyser les tendances de traitement.”`
   };
 
-  // 📸 Captures spéciales
   const kpi1 = await captureAndResize("kpi-backlog-j1", 280, 100);
   const kpi2 = await captureAndResize("kpi-backlog-j", 280, 100);
   const objectif = await captureAndResize("canvas-graph-objectif", 550, 280);
 
-  // 🧱 Structure de la première page
   let bodyHtml = `
   <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt;">
     <tr><td style="padding:14pt 24pt;">
@@ -133,7 +128,6 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     </td></tr>
   </table>`;
 
-  // 🔁 Pages suivantes
   for (const graphId of selectedGraphIds) {
     const label = graphList.find(g => g.id === graphId)?.label || graphId;
     const domId = idToDomId[graphId] || graphId;
@@ -157,7 +151,6 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     </td></tr></table>`;
   }
 
-  // ✅ Footer
   bodyHtml += `
   <div class="page-break"></div>
   <div style="width: 96%; margin: 20pt auto 0 auto; padding: 10pt 16pt; background: #eef2f7; border-radius: 10pt;
@@ -184,8 +177,14 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
   .date-row { width: 100%; }
   .date-cell { text-align: right; font-size: 9pt; color: #6b7280; padding: 1pt 24pt 1pt 0; }
   .comment-block {
-    margin-top: 6pt; width: 92%; margin-left: auto; margin-right: auto;
-    border: 1.5pt dashed #69b3d4; border-radius: 10pt; padding: 12pt; background: #f9fafb; text-align: center;
+    margin-top: 6pt;
+    width: 92%;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 10pt;
+    padding: 12pt;
+    background: #f9fafb;
+    text-align: center;
   }
   .comment-block-title { font-size: 11pt; font-weight: bold; color: #1f2937; margin-bottom: 5pt; }
   .comment-text { font-style: italic; color: #4b5563; font-size: 9.8pt; line-height: 1.4; }
