@@ -17,7 +17,7 @@ import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
 import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 import GraphTraitementEmails from "./components/GraphTraitementEmails";
-import GraphTraitementTickets from "./components/GraphTraitementTickets";
+import GraphRepartitionEmails from "./components/GraphRepartitionEmails";
 
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
 import Image from "next/image";
@@ -148,10 +148,11 @@ export default function DashboardFTTH() {
               globalStartDate={globalStartDate}
               globalEndDate={globalEndDate}
             />
-            <GraphTraitementTickets
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
+<GraphRepartitionEmails
+  globalStartDate={globalStartDate}
+  globalEndDate={globalEndDate}
+/>
+
           </div>
         </div>
       </div>

@@ -87,7 +87,8 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     "graph-top-regles-par-jour": "canvas-graph-top-regles-par-jour",
     "graph-entrants-sortants": "canvas-graph-entrants-sortants",
     "graph-repartition-manuelle": "canvas-graph-repartition-manuelle",
-    "graph-traitement-emails": "canvas-graph-traitement-emails"
+    "graph-traitement-emails": "canvas-graph-traitement-emails",
+    "graph-repartition-emails": "canvas-graph-repartition-emails" // ✅ Ajouté
   };
 
   const defaultCommentMap = {
@@ -97,7 +98,8 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
     "graph-top-regles-par-jour": `“Suivi quotidien très utile.”<br/>“Permet une meilleure identification des pics d’activité.”`,
     "graph-entrants-sortants": `“Indicateurs bien structurés.”<br/>“Volume traité visible et comparé efficacement.”`,
     "graph-repartition-manuelle": `“Visualisation claire des répartitions.”<br/>“Bonne compréhension du volume traité par acteur.”`,
-    "graph-traitement-emails": `“Graphique des types d’e-mails reçus sur la période sélectionnée.”<br/>“Utile pour analyser les tendances de traitement.”`
+    "graph-traitement-emails": `“Graphique des types d’e-mails reçus sur la période sélectionnée.”<br/>“Utile pour analyser les tendances de traitement.”`,
+    "graph-repartition-emails": `“Répartition claire des types d’e-mails.”<br/>“Permet d’identifier les motifs récurrents.”` // ✅ Ajouté
   };
 
   const kpi1 = await captureAndResize("kpi-backlog-j1", 280, 100);
