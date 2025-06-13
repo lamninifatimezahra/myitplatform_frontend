@@ -263,23 +263,27 @@ const processIterationData = (tickets) => {
   }, [rawData, selectedYear, globalStartDate, globalEndDate, selectedWeeks]);
 
   // Filtrage des données affichées en fonction de la sélection des semaines et de la recherche sur l'ID.
-  const filteredData = data.filter(ticket => {
-    // Si aucune semaine n'est sélectionnée, pas de filtrage sur les semaines.
-    if (selectedWeeks.length === 0) return true;
+const filteredData = data.filter(ticket => {
+  // Si aucune semaine n'est sélectionnée, pas de filtrage sur les semaines.
+  if (selectedWeeks.length === 0) return true;
 
-    // Récupère pour chaque ticket les itérations correspondant aux semaines sélectionnées.
-    const validCounts = selectedWeeks
-      .map(week => ticket.iterations[week])
-      .filter(count => count !== undefined);
+  // Récupère pour chaque ticket les itérations correspondant aux semaines sélectionnées.
+  const validCounts = selectedWeeks
+    .map(week => ticket.iterations[week])
+    .filter(count => count !== undefined);
 
-    if (validCounts.length === 0) return false;
-    // ✅ MODIFIÉ : Exclure le ticket s'il apparaît pour une semaine avec une itération unique (maintenant count === 1 au lieu de count === 1)
-    // Note: Garder la même logique mais adapter aux nouvelles valeurs
-    if (validCounts.some(count => count === 1)) return false;
-    return true;
-  }).filter(ticket =>
-    searchTicketId === "" || ticket.id_ticket.includes(searchTicketId)
-  );
+  // Si le ticket n'apparaît dans aucune des semaines sélectionnées
+  if (validCounts.length === 0) return false;
+  
+  // ✅ NOUVELLE LOGIQUE : 
+  // Afficher le ticket SEULEMENT s'il y a au moins une semaine sélectionnée 
+  // où le ticket a une itération > 1 (donc pas sa première apparition)
+  const hasReiterationInSelectedWeeks = validCounts.some(count => count > 1);
+  
+  return hasReiterationInSelectedWeeks;
+}).filter(ticket =>
+  searchTicketId === "" || ticket.id_ticket.includes(searchTicketId)
+);
 
   // ✅ NOUVEAU : Fonction pour déterminer si un filtre est appliqué
   const isFilterApplied = () => {
