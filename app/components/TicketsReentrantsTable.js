@@ -142,7 +142,7 @@ const processIterationData = (tickets) => {
       const semainesApparition = ticket.weeksOrder
         .map((week, index) => {
           const count = ticket.semaineCounts[week];
-          let weekText = count > 1 ? `S${week}(${count} itérations)` : `S${week}`;
+          let weekText = count > 1 ? `S${week}(${count}ème itération)` : `S${week}`;
           
           // ✅ NOUVEAU : Ajouter "(1ère itération)" à la première semaine
           if (index === 0) {
