@@ -343,7 +343,7 @@ const captureScreenshots = async () => {
   <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
     <div>
       <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-        <span className="text-blue-600">Dashboard {type}</span>
+        <span className="text-blue-600">Dashboard EARF-T</span>
       </h1>
       <div className="flex items-center text-gray-500 text-sm">
         <span>Bienvenue !</span>
