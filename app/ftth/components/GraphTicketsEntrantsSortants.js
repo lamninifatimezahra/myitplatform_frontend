@@ -146,10 +146,10 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
         )}
       </div>
 
-      <div
-        id="graph-tickets-entrants-sortants"
-        data-graph-id="graph-tickets-entrants-sortants"
-        data-graph-label="Tickets Entrants / Sortants"
+<div
+  id="canvas-graph-tickets-entrants-sortants"
+  data-graph-id="graph-tickets-entrants-sortants"
+  data-graph-label="Tickets Entrants / Sortants"
         ref={chartRef}
         className="relative rounded-xl bg-white shadow-inner p-4"
         style={{ height: 480 }}
