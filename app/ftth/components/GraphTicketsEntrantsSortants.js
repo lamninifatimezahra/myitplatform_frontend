@@ -38,7 +38,7 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
     const today = new Date();
     let start = new Date(today);
     switch (selectedPeriod) {
-      case "week": start.setDate(today.getDate() - 6); break;
+      case "week": start.setDate(today.getDate() - 6); break; // 🔄 pour inclure plus de jours, mets -7
       case "month": start.setDate(today.getDate() - 29); break;
       case "quarter": start.setMonth(today.getMonth() - 3); break;
       case "year": start.setFullYear(today.getFullYear() - 1); break;
@@ -78,11 +78,8 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
           entrants[key] = (entrants[key] || 0) + 1;
         }
 
-        // ✅ Sortants : tickets dont sortie ET création le même jour, dans la période
-        if (
-          sortieDate && sortieDate >= start && sortieDate <= end &&
-          createDate && sortieDate.getTime() === createDate.getTime()
-        ) {
+        // ✅ Sortants : tickets SORTIS (non null) dans la période
+        if (sortieDate && sortieDate >= start && sortieDate <= end) {
           const key = sortieDate.toLocaleDateString("fr-FR");
           sortants[key] = (sortants[key] || 0) + 1;
         }
@@ -149,7 +146,14 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
         )}
       </div>
 
-      <div id="canvas-graph-tickets-entrants-sortants" ref={chartRef} className="relative rounded-xl bg-white shadow-inner p-4" style={{ height: 480 }}>
+      <div
+        id="graph-tickets-entrants-sortants"
+        data-graph-id="graph-tickets-entrants-sortants"
+        data-graph-label="Tickets Entrants / Sortants"
+        ref={chartRef}
+        className="relative rounded-xl bg-white shadow-inner p-4"
+        style={{ height: 480 }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <XAxis dataKey="date" />
