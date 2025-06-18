@@ -80,16 +80,19 @@ export async function generateWordFromGraphs(selectedGraphIds = [], graphList = 
 
   selectedGraphIds = selectedGraphIds.filter(id => id !== "graph-objectif");
 
-  const idToDomId = {
-    "graph-objectif": "canvas-graph-objectif",
-    "graph-vue-ensemble": "canvas-graph-vue-ensemble",
-    "graph-top-regles": "canvas-graph-top-regles",
-    "graph-top-regles-par-jour": "canvas-graph-top-regles-par-jour",
-    "graph-entrants-sortants": "canvas-graph-entrants-sortants",
-    "graph-repartition-manuelle": "canvas-graph-repartition-manuelle",
-    "graph-traitement-emails": "canvas-graph-traitement-emails",
-    "graph-repartition-emails": "canvas-graph-repartition-emails" // ✅ Ajouté
-  };
+const idToDomId = {
+  "graph-objectif": "canvas-graph-objectif",
+  "graph-vue-ensemble": "canvas-graph-vue-ensemble",
+  "graph-top-regles": "canvas-graph-top-regles",
+  "graph-top-regles-par-jour": "canvas-graph-top-regles-par-jour",
+  "graph-entrants-sortants": "canvas-graph-entrants-sortants",
+  "graph-repartition-manuelle": "canvas-graph-repartition-manuelle",
+  "graph-traitement-emails": "canvas-graph-traitement-emails",
+  "graph-repartition-emails": "canvas-graph-repartition-emails",
+  "graph-tickets-entrants-sortants": "canvas-graph-tickets-entrants-sortants", // 🆕 Ajouté
+  "graph-anciennete-tickets-traites": "canvas-graph-anciennete-tickets-traites" // 🆕 Ajouté
+};
+
 
   const defaultCommentMap = {
     "graph-objectif": `“Performance satisfaisante, aucun backlog critique signalé.”<br/>“Rien à signaler cette semaine, bon équilibre global.”`,

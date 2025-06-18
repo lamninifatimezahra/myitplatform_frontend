@@ -19,6 +19,10 @@ import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 import GraphTraitementEmails from "./components/GraphTraitementEmails";
 import GraphRepartitionEmails from "./components/GraphRepartitionEmails";
 
+// Importation des nouveaux graphiques
+import GraphTicketsEntrantsSortants from "./components/GraphTicketsEntrantsSortants"; // Nouveau graphique
+import GraphAncienneteTicketsTraites from "./components/GraphAncienneteTicketsTraites"; // Nouveau graphique
+
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
 import Image from "next/image";
 
@@ -144,15 +148,26 @@ export default function DashboardFTTH() {
 
           {/* 🔷 Graphiques - ligne 4 (nouveaux) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <GraphTicketsEntrantsSortants
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
+            <GraphAncienneteTicketsTraites
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
+          </div>
+
+          {/* 🔷 Graphiques - ligne 5 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <GraphTraitementEmails
               globalStartDate={globalStartDate}
               globalEndDate={globalEndDate}
             />
-<GraphRepartitionEmails
-  globalStartDate={globalStartDate}
-  globalEndDate={globalEndDate}
-/>
-
+            <GraphRepartitionEmails
+              globalStartDate={globalStartDate}
+              globalEndDate={globalEndDate}
+            />
           </div>
         </div>
       </div>
