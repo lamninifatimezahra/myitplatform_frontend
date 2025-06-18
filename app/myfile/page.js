@@ -25,7 +25,7 @@ export default function MyFilePage() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-
+    
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const scrollBottom = window.innerHeight + scrollTop;
@@ -65,8 +65,16 @@ export default function MyFilePage() {
     );
   }
 
-  const dashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHIUS"];
-  const accessibleDashboards = user.role === "admin" ? dashboards : dashboards.filter((d) => user?.dashboards?.includes(d));
+  // Configuration des dashboards avec leur affichage et leur route
+  const dashboardsConfig = [
+    { id: "HISPEED", display: "HISPEED", route: "hispeed" },
+    { id: "FTTH", display: "FTTH", route: "ftth" },
+    { id: "DSL", display: "DSL", route: "dsl" },
+    { id: "FTTB", display: "FTTB", route: "fttb" },
+    { id: "EARF", display: "Migration Docs", route: "earf" },
+    { id: "EARFT", display: "EARF-T", route: "earft" },
+    { id: "ARTHIUS", display: "ARTHIUS", route: "arthius" }
+  ];
 
   const handleLogout = async () => {
     try {
@@ -208,25 +216,25 @@ export default function MyFilePage() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
-            {dashboards.map((dept, index) => {
-              const hasAccess = user.role === "admin" || user.dashboards?.includes(dept);
+            {dashboardsConfig.map((dashboard, index) => {
+              const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
               return (
                 <motion.div
-                  key={dept}
+                  key={dashboard.id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
                   className="w-full max-w-sm"
                 >
                   {hasAccess ? (
-                    <Link href={`/myfile/${dept.toLowerCase()}`}>
+                    <Link href={`/myfile/${dashboard.route}`}>
                       <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl">
-                        {dept}
+                        {dashboard.display}
                       </div>
                     </Link>
                   ) : (
                     <div className="w-full py-6 px-6 border border-gray-300 text-gray-400 text-lg font-semibold rounded-2xl bg-gray-100 cursor-not-allowed shadow-inner">
-                      {dept}
+                      {dashboard.display}
                     </div>
                   )}
                 </motion.div>

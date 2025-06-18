@@ -19,10 +19,11 @@ export default function UserSection() {
     FTTH: false,
     DSL: false,
     FTTB: false,
-    EARF: false,
+    EARF: false,      // Migration Docs
+    EARFT: false,     // EARF-T
     ARTHUIS: false,
-    MYFILE: false,   // non coché par défaut
-    MYFORUM: true,   // coché par défaut
+    MYFILE: false,    // non coché par défaut
+    MYFORUM: true,    // coché par défaut
   });
   const [createdUser, setCreatedUser] = useState({
     email: "",
@@ -37,6 +38,17 @@ export default function UserSection() {
   const [showCredentials, setShowCredentials] = useState(false);
   const [copyMessage, setCopyMessage] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
+
+  // Configuration des dashboards avec leur affichage
+  const dashboardConfig = {
+    HISPEED: "HISPEED",
+    FTTH: "FTTH",
+    DSL: "DSL",
+    FTTB: "FTTB",
+    EARF: "Migration Docs",
+    EARFT: "EARF-T",
+    ARTHUIS: "ARTHUIS"
+  };
 
   const generatePassword = () => {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*-_=+";
@@ -101,7 +113,7 @@ export default function UserSection() {
       // reset form
       setEmail(""); setPassword(""); setName(""); setSurname("");
       setPosition(""); setDepartment(""); setActivity("");
-      setAccess({ HISPEED:false, FTTH:false, DSL:false, FTTB:false, EARF:false, ARTHUIS:false, MYFILE:false, MYFORUM:true });
+      setAccess({ HISPEED:false, FTTH:false, DSL:false, FTTB:false, EARF:false, EARFT:false, ARTHUIS:false, MYFILE:false, MYFORUM:true });
     } catch (err) {
       showMessage("Erreur lors de l'ajout : " + err.message, "error");
     }
@@ -128,8 +140,9 @@ export default function UserSection() {
   };
 
   const copyToClipboard = () => {
-    const acc = createdUser.access.join(", ")||"Aucun";
-    const txt = `Identifiants utilisateur :\nEmail : ${createdUser.email}\nMot de passe : ${createdUser.password}\nAccès : ${acc}`;
+    // Utiliser les noms d'affichage pour la copie
+    const accessDisplay = createdUser.access.map(key => dashboardConfig[key] || key).join(", ") || "Aucun";
+    const txt = `Identifiants utilisateur :\nEmail : ${createdUser.email}\nMot de passe : ${createdUser.password}\nAccès : ${accessDisplay}`;
     navigator.clipboard.writeText(txt);
     setCopyMessage("✅ Identifiants copiés !");
     setTimeout(()=>setCopyMessage(""),2000);
@@ -291,9 +304,9 @@ export default function UserSection() {
                   <Shield size={16}/> Tout désélectionner
                 </button>
               </div>
-              {/* grille pour HISPEED, FTTH, DSL, FTTB, EARF, ARTHUIS */}
+              {/* grille pour les dashboards */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 border border-gray-100 rounded-md p-3 bg-gray-50">
-                {["HISPEED","FTTH","DSL","FTTB","EARF","ARTHUIS"].map(key => (
+                {Object.entries(dashboardConfig).map(([key, displayName]) => (
                   <label key={key} className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded">
                     <input
                       type="checkbox"
@@ -301,7 +314,7 @@ export default function UserSection() {
                       onChange={()=>handleAccessChange(key)}
                       className="rounded text-blue-500 focus:ring-blue-200"
                     />
-                    <span className="text-gray-700">{key}</span>
+                    <span className="text-gray-700">{displayName}</span>
                   </label>
                 ))}
               </div>
@@ -362,7 +375,7 @@ export default function UserSection() {
           <div className="bg-white p-3 rounded border border-gray-200">
             <p><strong>Email :</strong> {createdUser.email}</p>
             <p><strong>Mot de passe :</strong> {createdUser.password}</p>
-            <p><strong>Accès :</strong> {createdUser.access.join(", ")||"Aucun"}</p>
+            <p><strong>Accès :</strong> {createdUser.access.map(key => dashboardConfig[key] || key).join(", ") || "Aucun"}</p>
           </div>
           <div className="flex items-center justify-between">
             <button

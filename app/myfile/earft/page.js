@@ -8,30 +8,30 @@ import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
-export default function UploadEARFPage() {
+export default function UploadEARFTPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const popupRef = useRef(null);
 
   const [showUserPopup, setShowUserPopup] = useState(false);
-  const [earfFile, setEarfFile] = useState(null);
+  const [earftFile, setEarftFile] = useState(null);
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadStatus, setUploadStatus] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
-  const earfInputRef = useRef(null);
+  const earftInputRef = useRef(null);
 
-  const handleBrowseEARF = () => earfInputRef.current?.click();
+  const handleBrowseEARFT = () => earftInputRef.current?.click();
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setEarfFile(e.target.files[0]);
+      setEarftFile(e.target.files[0]);
     }
   };
 
   const handleUpload = async () => {
-    if (!earfFile) {
-      setUploadMessage("Veuillez sélectionner un fichier Migration Docs.");
+    if (!earftFile) {
+      setUploadMessage("Veuillez sélectionner un fichier EARF-T.");
       setUploadStatus("error");
       return;
     }
@@ -41,18 +41,18 @@ export default function UploadEARFPage() {
     setUploadStatus("");
 
     const formData = new FormData();
-    formData.append("document", earfFile);
+    formData.append("document", earftFile);
 
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/earf/upload/", {
+      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/earft/upload/", {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
       if (res.ok) {
-        setUploadMessage(data.message || "Le fichier Migration Docs a été uploadé avec succès.");
+        setUploadMessage(data.message || "Le fichier EARF-T a été uploadé avec succès.");
         setUploadStatus("success");
-        setEarfFile(null);
+        setEarftFile(null);
       } else {
         setUploadMessage(data.error || "Erreur lors de l'upload.");
         setUploadStatus("error");
@@ -206,31 +206,31 @@ export default function UploadEARFPage() {
         >
           <Image src="/logo-myit.png" alt="Logo MyIT" width={150} height={60} className="mb-6" />
 
-          <h1 className="text-3xl font-bold text-[#31327e] mb-6 text-center">Upload Migration Docs</h1>
+          <h1 className="text-3xl font-bold text-[#31327e] mb-6 text-center">Upload EARF-T</h1>
 
           <div className="w-full space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fichier Migration Docs :</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Fichier EARF-T :</label>
               <div className="flex items-center gap-4">
                 <input
                   type="text"
                   readOnly
-                  value={earfFile ? earfFile.name : ""}
+                  value={earftFile ? earftFile.name : ""}
                   placeholder="Aucun fichier sélectionné"
                   className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm"
                 />
                 <button
                   type="button"
-                  onClick={handleBrowseEARF}
+                  onClick={handleBrowseEARFT}
                   className="px-6 py-2 border border-[#31327e] text-[#31327e] font-semibold rounded-2xl hover:bg-[#31327e] hover:text-white transition"
                 >
                   Parcourir
                 </button>
                 <input
                   type="file"
-                  accept=".xlsx"
+                  accept=".xlsx,.xls"
                   onChange={handleFileChange}
-                  ref={earfInputRef}
+                  ref={earftInputRef}
                   className="hidden"
                 />
               </div>

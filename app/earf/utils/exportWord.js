@@ -213,7 +213,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
           <td style="text-align:right;"><img src="https://myit-its.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
         </tr></table>
         <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-        <h1 class="title" style="font-size:20pt;">Compte rendu détaillé de l'activité EARF</h1>
+        <h1 class="title" style="font-size:20pt;">Compte rendu détaillé de l'activité Migration Docs</h1>
         ${periodLine}
         
         <!-- Section des KPI -->
@@ -258,7 +258,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     Rapport généré automatiquement par 
     <strong style="color:#004aad;">MyIT</strong><br/>
     <a href="https://myit-its.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
-      Dashboard EARF, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
+      Dashboard Migration Docs, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
     </a>
   </div>
 
@@ -272,7 +272,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Compte-rendu_EARF_${todayStr.replace(/\//g, "-")}.docx`;
+  a.download = `Compte-rendu_MIGRATION_${todayStr.replace(/\//g, "-")}.docx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

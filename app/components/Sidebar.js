@@ -25,12 +25,23 @@ export default function SidebarFTTHStyled({ sidebarOpen, setSidebarOpen }) {
   const router = useRouter();
   const { user } = useAuth();
 
-  const dashboards = ['hispeed', 'ftth', 'dsl', 'fttb', 'earf', 'arthuis'];
-  const accessibleDashboards = user?.role === 'admin'
-    ? dashboards
-    : dashboards.filter(d => user?.dashboards?.includes(d.toUpperCase()));
+  // Configuration des dashboards
+  const dashboardsConfig = [
+    { id: 'HISPEED', display: 'HISPEED', route: 'hispeed' },
+    { id: 'FTTH', display: 'FTTH', route: 'ftth' },
+    { id: 'DSL', display: 'DSL', route: 'dsl' },
+    { id: 'FTTB', display: 'FTTB', route: 'fttb' },
+    { id: 'EARF', display: 'Migration Docs', route: 'earf' },
+    { id: 'EARFT', display: 'EARF-T', route: 'earft' },
+    { id: 'ARTHUIS', display: 'ARTHUIS', route: 'arthuis' }
+  ];
 
-  const isDashboardPage = dashboards.some(d => pathname.includes(d));
+  const dashboardRoutes = dashboardsConfig.map(d => d.route);
+  const accessibleDashboards = user?.role === 'admin'
+    ? dashboardsConfig
+    : dashboardsConfig.filter(d => user?.dashboards?.includes(d.id));
+
+  const isDashboardPage = dashboardRoutes.some(d => pathname.includes(d));
 
   const handleLogout = async () => {
     try {
@@ -135,16 +146,16 @@ function SidebarContent({
 
         {showDashboards && (
           <ul className="ml-6 mt-1 space-y-1 text-sm">
-            {accessibleDashboards.map((dash) => (
-              <li key={dash}>
+            {accessibleDashboards.map((dashboard) => (
+              <li key={dashboard.id}>
                 <Link
-                  href={`/${dash}`}
+                  href={`/${dashboard.route}`}
                   className={`block px-3 py-1.5 rounded transition ${
-                    pathname === `/${dash}` ? 'bg-[#e0e7ff] text-[#31327e] font-bold' : 'text-gray-700 hover:bg-gray-100'
+                    pathname === `/${dashboard.route}` ? 'bg-[#e0e7ff] text-[#31327e] font-bold' : 'text-gray-700 hover:bg-gray-100'
                   }`}
                   onClick={closeSidebar}
                 >
-                  {dash.toUpperCase()}
+                  {dashboard.display}
                 </Link>
               </li>
             ))}

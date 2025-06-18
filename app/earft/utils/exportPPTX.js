@@ -117,7 +117,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
       intro.addText("ERREUR: Fond d'introduction manquant", { x:0.5, y:0.5, w:9, h:0.5, color:"FF0000", fontSize:18, align:"center" });
   }
 
-  intro.addText("Compte Rendu Migration Docs", { x: 0, y: 2.5, w: "100%", h: 0.7, align: "center", fontFace: "Segoe UI", fontSize: 36, bold: true, color: "FFFFFF" });
+  intro.addText("Compte Rendu EARF-T", { x: 0, y: 2.5, w: "100%", h: 0.7, align: "center", fontFace: "Segoe UI", fontSize: 36, bold: true, color: "FFFFFF" });
   intro.addText("Suivi d'activité et analyse des performances", { x: 0, y: 3.2, w: "100%", h: 0.5, align: "center", fontFace: "Segoe UI Light", fontSize: 20, color: "FFFFFF" });
   
   if (periodText) {
@@ -131,9 +131,11 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   
   // Tableau fixe des KPI à inclure
   const fixedKpiLabels = [
-    "KPI Total Documents",
-    "KPI Total Migration",
-    "KPI Total Création"
+    "KPI Tickets Entrants",
+    "KPI Tickets Traités",
+    "KPI Tickets Réentrants",
+    "KPI Tickets en Cours",
+    "KPI Tickets en Cours +Semaine"
   ];
 
   // Création d'une version normalisée des labels (trim + lowercase)
@@ -345,6 +347,8 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
           
           // Deuxième ligne - 3 KPIs
           { index: 2, x: kpiStartX, y: kpiStartY + kpiHeight + kpiMarginY },
+          { index: 3, x: kpiStartX + kpiWidth + kpiMarginX, y: kpiStartY + kpiHeight + kpiMarginY },
+          { index: 4, x: kpiStartX + 2 * (kpiWidth + kpiMarginX), y: kpiStartY + kpiHeight + kpiMarginY }
       ];
 
       // Vérifier si la largeur est suffisante
@@ -787,7 +791,7 @@ if (standardGraphImages.length > 0) {
   
   
   // --- Génération finale du fichier PPTX ---
-  const fileName = `compte_rendu_MIGRATION_${todayStr}.pptx`;
+  const fileName = `compte_rendu_EARFT_${todayStr}.pptx`;
   try {
     console.log(`Tentative de génération du fichier: ${fileName}`);
     await ppt.writeFile({ fileName: fileName });

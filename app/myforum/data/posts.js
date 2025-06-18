@@ -59,7 +59,7 @@ export const posts = [
       title: "Problème de lenteur sur l'accès MyIT",
       category: "Support",
       author: {
-        name: "Nadia Azizi",
+        name: "Ali TOUMZITE",
         avatar: "/avatar.png",
         role: "User Support - SI3C",
       },
