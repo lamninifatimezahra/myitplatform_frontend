@@ -55,6 +55,9 @@ const rawData = [
   { type: "Intervention", date: "12/06/2025" },
   { type: "Intervention", date: "12/06/2025" },
   { type: "Renonciation", date: "12/06/2025" },
+  { type: "Renonciation", date: "18/06/2025" },
+  { type: "MAJ CR STOC", date: "18/06/2025" },
+  { type: "MAJ CR STOC", date: "18/06/2025" }
 ];
 
 const aggregateByDateAndType = (data) => {
