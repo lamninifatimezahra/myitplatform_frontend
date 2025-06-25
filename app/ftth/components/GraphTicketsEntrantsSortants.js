@@ -38,7 +38,7 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
     const today = new Date();
     let start = new Date(today);
     switch (selectedPeriod) {
-      case "week": start.setDate(today.getDate() - 6); break; // 🔄 pour inclure plus de jours, mets -7
+      case "week": start.setDate(today.getDate() - 6); break;
       case "month": start.setDate(today.getDate() - 29); break;
       case "quarter": start.setMonth(today.getMonth() - 3); break;
       case "year": start.setFullYear(today.getFullYear() - 1); break;
@@ -67,19 +67,18 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
 
       const entrants = {};
       const sortants = {};
+      const today = normalizeDate(new Date());
 
       ticketsData.forEach(ticket => {
         const createDate = ticket.CREATE_DATE ? normalizeDate(ticket.CREATE_DATE) : null;
         const sortieDate = ticket.DATE_SORTIE ? normalizeDate(ticket.DATE_SORTIE) : null;
 
-        // ✅ Entrants : tickets créés dans la période
-        if (createDate && createDate >= start && createDate <= end) {
+        if (createDate && createDate >= start && createDate <= end && createDate.getTime() !== today.getTime()) {
           const key = createDate.toLocaleDateString("fr-FR");
           entrants[key] = (entrants[key] || 0) + 1;
         }
 
-        // ✅ Sortants : tickets SORTIS (non null) dans la période
-        if (sortieDate && sortieDate >= start && sortieDate <= end) {
+        if (sortieDate && sortieDate >= start && sortieDate <= end && sortieDate.getTime() !== today.getTime()) {
           const key = sortieDate.toLocaleDateString("fr-FR");
           sortants[key] = (sortants[key] || 0) + 1;
         }
@@ -119,7 +118,7 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-2">
         <h3 className="text-2xl font-semibold text-slate-800">Tickets Entrants / Sortants</h3>
         <div className="flex gap-2">
           <button onClick={handleReset} className={iconBtnClass}><FaSyncAlt /></button>
@@ -146,15 +145,15 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
         )}
       </div>
 
-<div
-  id="canvas-graph-tickets-entrants-sortants"
-  data-graph-id="graph-tickets-entrants-sortants"
-  data-graph-label="Tickets Entrants / Sortants"
+      <div
+        id="canvas-graph-tickets-entrants-sortants"
+        data-graph-id="graph-tickets-entrants-sortants"
+        data-graph-label="Tickets Entrants / Sortants"
         ref={chartRef}
         className="relative rounded-xl bg-white shadow-inner p-4"
-        style={{ height: 480 }}
+        style={{ height: 520 }}
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={440}>
           <BarChart data={data}>
             <XAxis dataKey="date" />
             <YAxis />
@@ -167,8 +166,21 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+
+        {/* ✅ Légende dans le même conteneur (capturable PNG) */}
+        <div className="mt-4 flex justify-center gap-6 text-sm font-medium text-gray-700">
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-sm" style={{ backgroundColor: colors[0] }}></span>
+            <span>Entrants</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-sm" style={{ backgroundColor: colors[1] }}></span>
+            <span>Sortants</span>
+          </div>
+        </div>
       </div>
 
+      {/* Modal d'agrandissement (optionnel à modifier aussi) */}
       <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)} className="flex items-center justify-center fixed inset-0 z-50"
         overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm">
         <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
