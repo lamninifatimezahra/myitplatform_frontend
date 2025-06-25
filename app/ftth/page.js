@@ -21,7 +21,7 @@ import GraphRepartitionEmails from "./components/GraphRepartitionEmails";
 
 // Importation des nouveaux graphiques
 import GraphTicketsEntrantsSortants from "./components/GraphTicketsEntrantsSortants"; // Nouveau graphique
-import GraphAncienneteTicketsTraites from "./components/GraphAncienneteTicketsTraites"; // Nouveau graphique
+import GraphTicketsItsSfr from "./components/GraphTicketsItsSfr"; // Nouveau graphique
 
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
 import Image from "next/image";
@@ -152,7 +152,7 @@ export default function DashboardFTTH() {
               globalStartDate={globalStartDate}
               globalEndDate={globalEndDate}
             />
-            <GraphAncienneteTicketsTraites
+            <GraphTicketsItsSfr
               globalStartDate={globalStartDate}
               globalEndDate={globalEndDate}
             />

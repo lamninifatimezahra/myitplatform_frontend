@@ -90,7 +90,7 @@ const idToDomId = {
   "graph-traitement-emails": "canvas-graph-traitement-emails",
   "graph-repartition-emails": "canvas-graph-repartition-emails",
   "graph-tickets-entrants-sortants": "canvas-graph-tickets-entrants-sortants", // 🆕 Ajouté
-  "graph-anciennete-tickets-traites": "canvas-graph-anciennete-tickets-traites" // 🆕 Ajouté
+  "graph-traitement-tickets-its-sfr": "canvas-graph-traitement-tickets-its-sfr" // 🆕 Ajouté
 };
 
 
