@@ -17,12 +17,12 @@
   {
     "ID_TICKET": "C34179246",
     "CREATE_DATE": "2025-06-18",
-    "DATE_SORTIE": "2025-06-18"
+    "DATE_SORTIE": "2025-06-23"
   },
   {
     "ID_TICKET": "C34179246",
     "CREATE_DATE": "2025-06-18",
-    "DATE_SORTIE": "2025-06-23"
+    "DATE_SORTIE": "2025-06-18"
   },
   {
     "ID_TICKET": "C34179316",
@@ -197,7 +197,7 @@
   {
     "ID_TICKET": "C34185357",
     "CREATE_DATE": "2025-06-19",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34185398",
@@ -262,7 +262,7 @@
   {
     "ID_TICKET": "C34188106",
     "CREATE_DATE": "2025-06-19",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34188337",
@@ -312,7 +312,7 @@
   {
     "ID_TICKET": "C34189809",
     "CREATE_DATE": "2025-06-20",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34189843",
@@ -347,7 +347,7 @@
   {
     "ID_TICKET": "C34191088",
     "CREATE_DATE": "2025-06-20",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34191130",
@@ -382,7 +382,7 @@
   {
     "ID_TICKET": "C34192045",
     "CREATE_DATE": "2025-06-20",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34192087",
@@ -407,12 +407,12 @@
   {
     "ID_TICKET": "C34192894",
     "CREATE_DATE": "2025-06-20",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34192960",
     "CREATE_DATE": "2025-06-20",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34192996",
@@ -477,7 +477,7 @@
   {
     "ID_TICKET": "C34198058",
     "CREATE_DATE": "2025-06-23",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34198088",
@@ -662,12 +662,12 @@
   {
     "ID_TICKET": "C34204174",
     "CREATE_DATE": "2025-06-24",
-    "DATE_SORTIE": "2025-06-25"
+    "DATE_SORTIE": "2025-06-24"
   },
   {
     "ID_TICKET": "C34204174",
     "CREATE_DATE": "2025-06-24",
-    "DATE_SORTIE": "2025-06-24"
+    "DATE_SORTIE": "2025-06-25"
   },
   {
     "ID_TICKET": "C34204227",
@@ -778,5 +778,195 @@
     "ID_TICKET": "C34208054",
     "CREATE_DATE": "2025-06-24",
     "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34208951",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34209146",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34209425",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34209540",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34209590",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34209732",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34209858",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34210981",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34211047",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34211268",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34211359",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34211688",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34211731",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34211765",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34211972",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34212229",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34212558",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34212565",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34212811",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34212879",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": "2025-06-25"
+  },
+  {
+    "ID_TICKET": "C34213261",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34213715",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34214075",
+    "CREATE_DATE": "2025-06-25",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34215511",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34215725",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34215735",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34215768",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34216150",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34216441",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34216507",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34216763",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34216917",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34216946",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34217418",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34217605",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34217617",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34217811",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34217835",
+    "CREATE_DATE": "2025-06-26",
+    "DATE_SORTIE": null
   }
 ]
