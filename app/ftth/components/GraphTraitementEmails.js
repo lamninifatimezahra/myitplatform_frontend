@@ -50,8 +50,7 @@ const rawData = [
   { type: "Incohérence statuts", date: "25/06/2025" },
   { type: "MAJ CR STOC", date: "25/06/2025" },
   { type: "MAJ CR STOC", date: "25/06/2025" },
-  { type: "Renonciation", date: "26/06/2025" },
-  { type: "REF PMT", date: "26/06/2025" }
+
 ]
 ;
 
