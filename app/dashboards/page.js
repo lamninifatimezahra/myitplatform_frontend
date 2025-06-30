@@ -47,7 +47,6 @@ export default function DashboardsPage() {
     };
   }, []);
 
-  // ✅ Spinner si chargement
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
@@ -81,7 +80,6 @@ export default function DashboardsPage() {
     );
   }
 
-  // Configuration des dashboards
   const dashboardsConfig = [
     { id: "HISPEED", display: "HISPEED", route: "hispeed" },
     { id: "FTTH", display: "FTTH", route: "ftth" },
@@ -230,13 +228,13 @@ export default function DashboardsPage() {
           </motion.h1>
 
           <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Accédez aux dashboards des différents activités en un seul clic.
+            Accédez aux dashboards des différentes activités en un seul clic.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
             {dashboardsConfig.map((dashboard, index) => {
-              const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
-              
+              const hasAccess = ["FTTH", "HISPEED"].includes(dashboard.id);
+
               return (
                 <motion.div
                   key={dashboard.id}
@@ -247,12 +245,15 @@ export default function DashboardsPage() {
                 >
                   {hasAccess ? (
                     <Link href={`/${dashboard.route}`}>
-                      <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl">
+                      <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl text-center">
                         {dashboard.display}
                       </div>
                     </Link>
                   ) : (
-                    <div className="w-full py-6 px-6 border border-gray-300 text-gray-400 text-lg font-semibold rounded-2xl bg-gray-100 cursor-not-allowed shadow-inner">
+                    <div
+                      title="Accès restreint"
+                      className="w-full py-6 px-6 border border-gray-300 text-gray-400 text-lg font-semibold rounded-2xl bg-gray-100 cursor-not-allowed shadow-inner text-center"
+                    >
                       {dashboard.display}
                     </div>
                   )}
