@@ -82,7 +82,7 @@ export default function AccueilPage() {
   }
 
   const modules = [
-    { name: "Dashboard KPIs", path: "/dashboards", roles: ["admin", "user"] },
+    { name: "Dashboards", path: "/dashboards", roles: ["admin", "user"] },
     { name: "MyFile", path: "/myfile", roles: ["admin", "user"] },
     { name: "MyForum", path: "/myforum", roles: ["admin", "user"] },
     { name: "MyPropos", path: "/mypropos", roles: ["admin", "user"] },
