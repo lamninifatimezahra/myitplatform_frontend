@@ -33,7 +33,7 @@ export default function LandingPage() {
           {/* Logo MyIT au centre */}
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src="/logo-myit.png"
+              src="/logo-myit-blanc.png"
               alt="Logo MyIT"
               width={48}
               height={48}

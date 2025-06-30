@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineUser, AiOutlineLogout } from "react-icons/ai";
-import { BsChevronDown } from "react-icons/bs";
 
 export default function MyFilePage() {
   const { user, loading } = useAuth();
@@ -25,7 +24,7 @@ export default function MyFilePage() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    
+
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const scrollBottom = window.innerHeight + scrollTop;
@@ -65,7 +64,6 @@ export default function MyFilePage() {
     );
   }
 
-  // Configuration des dashboards avec leur affichage et leur route
   const dashboardsConfig = [
     { id: "HISPEED", display: "HISPEED", route: "hispeed" },
     { id: "FTTH", display: "FTTH", route: "ftth" },
@@ -107,7 +105,6 @@ export default function MyFilePage() {
 
   return (
     <main className="flex flex-col min-h-screen bg-white text-gray-800 relative overflow-hidden">
-      {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center z-0"
         style={{
@@ -117,7 +114,6 @@ export default function MyFilePage() {
         }}
       />
 
-      {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 sm:px-12 bg-transparent">
         <div className="flex items-center gap-3">
           <button
@@ -134,7 +130,6 @@ export default function MyFilePage() {
           </button>
         </div>
 
-        {/* Utilisateur */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
@@ -189,7 +184,6 @@ export default function MyFilePage() {
         </div>
       </div>
 
-      {/* Contenu principal */}
       <div className="relative z-10 flex-1 flex flex-col justify-start pt-28 px-6 py-12 sm:px-12">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-10">
@@ -217,7 +211,7 @@ export default function MyFilePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
             {dashboardsConfig.map((dashboard, index) => {
-              const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
+              const hasAccess = ["FTTH", "HISPEED"].includes(dashboard.id); // Seuls ces 2 modules sont actifs
               return (
                 <motion.div
                   key={dashboard.id}
@@ -243,6 +237,7 @@ export default function MyFilePage() {
           </div>
         </div>
       </div>
+
       <footer className="relative z-10 text-center text-sm text-gray-400 py-4 mt-10">
         © {new Date().getFullYear()} MyIT – Plateforme interne Intelcia IT Solutions
       </footer>
