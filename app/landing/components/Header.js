@@ -72,19 +72,6 @@ export default function Header() {
             </motion.button>
           </a>
 
-          <a href="/signup">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition border-2 ${
-                scrolled
-                  ? "bg-[#004aad] text-white border-[#004aad] hover:bg-[#5de0e6]"
-                  : "bg-white text-[#004aad] border-white hover:bg-[#5de0e6] hover:text-white"
-              }`}
-            >
-              Inscription
-            </motion.button>
-          </a>
-
           <FiSearch className={`text-xl transition ${scrolled ? "text-[#004aad]" : "text-white"}`} />
           <FiMoon className={`text-xl transition ${scrolled ? "text-[#004aad]" : "text-white"}`} />
           <FiMenu className={`text-2xl md:hidden ${scrolled ? "text-[#004aad]" : "text-white"}`} />
