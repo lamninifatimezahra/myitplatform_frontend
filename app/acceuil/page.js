@@ -51,7 +51,9 @@ export default function AccueilPage() {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
         <div className="relative w-24 h-24">
+          {/* Cercle animé */}
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
+          {/* Logo MyIT centré */}
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
               src="/logo-myit.png"
@@ -82,15 +84,19 @@ export default function AccueilPage() {
   }
 
   const modules = [
-    { name: "Dashboards", path: "/dashboards", roles: ["admin", "user"] },
+    { name: "Dashboard KPIs", path: "/dashboards", roles: ["admin", "user"] },
     { name: "MyFile", path: "/myfile", roles: ["admin", "user"] },
     { name: "MyForum", path: "/myforum", roles: ["admin", "user"] },
     { name: "MyPropos", path: "/mypropos", roles: ["admin", "user"] },
     { name: "MyAI", path: "/myai", roles: ["admin", "user"] },
     { name: "Guide MyIT", path: "/guide", roles: ["admin", "user"] },
-    { name: "MyProfile", path: "/myprofile", roles: ["admin", "user"] },
+    { name: "MyProfile", path: "/myprofile", roles: ["admin", "user"] },  
     { name: "Espace Admin", path: "/admin", roles: ["admin"] },
   ];
+
+  const accessibleModules = modules.filter((mod) =>
+    mod.roles.includes(user.role)
+  );
 
   const handleLogout = async () => {
     try {
@@ -236,34 +242,21 @@ export default function AccueilPage() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
-            {modules.map((mod, index) => {
-              const isDisabled = ["MyAI", "MyPropos", "Guide MyIT"].includes(mod.name);
-
-              return (
-                <motion.div
-                  key={mod.name}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.08 }}
-                  className="w-full max-w-sm"
-                >
-                  {isDisabled ? (
-                    <div
-                      title="Accès restreint"
-                      className="w-full py-6 px-6 border border-gray-300 text-gray-400 text-lg font-semibold rounded-2xl bg-gray-100 cursor-not-allowed shadow-inner text-center"
-                    >
-                      {mod.name}
-                    </div>
-                  ) : (
-                    <Link href={mod.path}>
-                      <div className="w-full py-6 px-6 border border-[#31327e] rounded-2xl font-semibold text-lg text-[#31327e] bg-white transition-all duration-300 cursor-pointer shadow-md hover:bg-[#31327e] hover:text-white hover:shadow-xl text-center">
-                        {mod.name}
-                      </div>
-                    </Link>
-                  )}
-                </motion.div>
-              );
-            })}
+            {accessibleModules.map((mod, index) => (
+              <motion.div
+                key={mod.name}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
+                className="w-full max-w-sm"
+              >
+                <Link href={mod.path}>
+                  <div className="w-full py-6 px-6 border border-[#31327e] rounded-2xl font-semibold text-lg text-[#31327e] bg-white transition-all duration-300 cursor-pointer shadow-md hover:bg-[#31327e] hover:text-white hover:shadow-xl">
+                    {mod.name}
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
