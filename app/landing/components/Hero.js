@@ -1,5 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
+import { MdRocketLaunch } from "react-icons/md";
 
 export default function Hero() {
   return (
@@ -34,9 +35,10 @@ export default function Hero() {
         </p>
         <a
           href="/login"
-          className="inline-block bg-white text-[#004aad] px-8 py-4 rounded-full font-semibold hover:bg-[#5de0e6] hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl"
+          className="inline-flex items-center gap-3 bg-white text-[#004aad] text-lg md:text-xl px-10 py-5 rounded-full font-bold shadow-xl transition-all duration-300 hover:bg-[#5de0e6] hover:text-white hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)] transform hover:-translate-y-1"
         >
-          🚀 Accéder à la plateforme
+          <MdRocketLaunch className="text-2xl text-[#004aad] group-hover:text-white transition-colors duration-300" />
+          Accéder à la plateforme
         </a>
       </motion.div>
     </section>
