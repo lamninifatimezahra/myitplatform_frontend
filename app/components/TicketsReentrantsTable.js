@@ -98,70 +98,97 @@ export default function TicketsReentrantsTable({
   const [editingComment, setEditingComment] = useState(null); // {id: ticketId, text: commentText}
   const [commentSaving, setCommentSaving] = useState(false);
 
-  /**
-   * Fonction de traitement des tickets (calcul des itérations).
-   */
+/**
+ * Fonction de traitement des tickets (calcul des itérations).
+ * Version améliorée avec attribution cohérente des itérations
+ */
 const processIterationData = (tickets) => {
   const processed = {};
-  const cumulativeIterations = {};
 
-  // Tri par semaine pour avoir un ordre cohérent.
-  tickets
-    .sort((a, b) => a.semaine - b.semaine)
-    .forEach(ticket => {
-      const ticketId = ticket.id_ticket;
-      const week = ticket.semaine;
+  // Grouper les tickets par ID
+  const ticketsByIdAndWeek = {};
+  
+  tickets.forEach(ticket => {
+    const ticketId = ticket.id_ticket;
+    const week = ticket.semaine;
+    
+    if (!ticketsByIdAndWeek[ticketId]) {
+      ticketsByIdAndWeek[ticketId] = {};
+    }
+    
+    if (!ticketsByIdAndWeek[ticketId][week]) {
+      ticketsByIdAndWeek[ticketId][week] = [];
+    }
+    
+    ticketsByIdAndWeek[ticketId][week].push(ticket);
+  });
 
-      if (!processed[ticketId]) {
-        processed[ticketId] = {
-          titre_ticket: ticket.compl_title,
-          iterations: {},
-          totalIterations: 0,
-          semaineCounts: {},
-          weeksOrder: [], // ✅ NOUVEAU : pour maintenir l'ordre des semaines
-          comment_reentrant: ticket.comment_reentrant || ""
-        };
-        cumulativeIterations[ticketId] = 0;
-      }
-
-      cumulativeIterations[ticketId] += 1;
-      processed[ticketId].iterations[week] = cumulativeIterations[ticketId];
-      processed[ticketId].totalIterations = cumulativeIterations[ticketId];
-      processed[ticketId].semaineCounts[week] =
-        (processed[ticketId].semaineCounts[week] || 0) + 1;
-
-      // ✅ NOUVEAU : Ajouter la semaine à l'ordre si elle n'existe pas déjà
-      if (!processed[ticketId].weeksOrder.includes(week)) {
-        processed[ticketId].weeksOrder.push(week);
+  // Traiter chaque ticket
+  Object.entries(ticketsByIdAndWeek).forEach(([ticketId, weekData]) => {
+    // Obtenir toutes les semaines pour ce ticket et les trier
+    const weeks = Object.keys(weekData).map(Number).sort((a, b) => a - b);
+    
+    let cumulativeCount = 0;
+    const iterations = {};
+    const weekDetails = [];
+    
+    // Pour chaque semaine, calculer le nombre d'occurrences et l'itération cumulative
+    weeks.forEach((week, index) => {
+      const occurrencesInWeek = weekData[week].length;
+      
+      // Pour chaque occurrence dans cette semaine
+      for (let i = 0; i < occurrencesInWeek; i++) {
+        cumulativeCount++;
+        
+        // Stocker l'itération cumulative pour cette semaine
+        iterations[week] = cumulativeCount;
+        
+        // Préparer le texte pour l'affichage
+        let weekText = `S${week}`;
+        
+        // Si c'est la première fois que le ticket apparaît
+        if (cumulativeCount === 1) {
+          weekText += " (1ère itération)";
+        } else {
+          // Pour les itérations suivantes
+          weekText += ` (${cumulativeCount}ème itération)`;
+        }
+        
+        // Si plusieurs occurrences dans la même semaine, préciser
+        if (occurrencesInWeek > 1 && i > 0) {
+          weekText += ` - occurrence ${i + 1}`;
+        }
+        
+        weekDetails.push({
+          week: week,
+          iteration: cumulativeCount,
+          text: weekText
+        });
       }
     });
+    
+    // Obtenir les infos du premier ticket pour les métadonnées
+    const firstTicket = Object.values(weekData)[0][0];
+    
+    processed[ticketId] = {
+      titre_ticket: firstTicket.compl_title,
+      iterations: iterations,
+      totalIterations: cumulativeCount,
+      weekDetails: weekDetails,
+      comment_reentrant: firstTicket.comment_reentrant || "",
+      // Créer la chaîne d'affichage des semaines
+      semainesApparition: weekDetails.map(wd => wd.text).join(", ")
+    };
+  });
 
   return Object.entries(processed)
-    .map(([id, ticket]) => {
-      // ✅ MODIFIÉ : Utiliser weeksOrder pour maintenir l'ordre chronologique
-      const semainesApparition = ticket.weeksOrder
-        .map((week, index) => {
-          const count = ticket.semaineCounts[week];
-          let weekText = count > 1 ? `S${week}(${count}ème itération)` : `S${week}`;
-          
-          // ✅ NOUVEAU : Ajouter "(1ère itération)" à la première semaine
-          if (index === 0) {
-            weekText += " (1ère itération)";
-          }
-          
-          return weekText;
-        })
-        .join(", ");
-
-      return {
-        id_ticket: id,
-        ...ticket,
-        semainesApparition,
-        // ✅ MODIFIÉ : Soustraire 1 du total des réitérations
-        totalIterations: ticket.totalIterations - 1,
-      };
-    })
-    .filter(ticket => ticket.totalIterations >= 1) // ✅ MODIFIÉ : Changé de >= 2 à >= 1
+    .map(([id, ticket]) => ({
+      id_ticket: id,
+      ...ticket,
+      // Le nombre de réitérations est le total moins la première occurrence
+      totalIterations: ticket.totalIterations - 1,
+    }))
+    .filter(ticket => ticket.totalIterations >= 1) // Garder seulement les tickets qui ont au moins une réitération
     .sort((a, b) => b.totalIterations - a.totalIterations);
 };
 
@@ -243,6 +270,7 @@ const processIterationData = (tickets) => {
    * le filtrage global est appliqué (filtrage par date). Dès qu'une sélection locale est définie,
    * le filtrage se fait sur l'ensemble des données pour l'année sélectionnée, sans tenir compte du filtre global.
    */
+
   useEffect(() => {
     if (rawData.length > 0 && selectedYear) {
       // Filtrage par année (toutes les données de l'année)
@@ -265,6 +293,7 @@ const processIterationData = (tickets) => {
   // Filtrage des données affichées en fonction de la sélection des semaines et de la recherche sur l'ID.
 const filteredData = data.filter(ticket => {
   // Si aucune semaine n'est sélectionnée, pas de filtrage sur les semaines.
+  
   if (selectedWeeks.length === 0) return true;
 
   // Récupère pour chaque ticket les itérations correspondant aux semaines sélectionnées.

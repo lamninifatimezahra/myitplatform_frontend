@@ -16,6 +16,7 @@ import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
 import ProfileMenu from "@/app/ftth/components/ProfileMenu";
 import NotificationMenu from "@/app/ftth/components/NotificationMenu";
 
+
 // Enregistrement de la localisation française
 registerLocale('fr', fr);
 setDefaultLocale('fr');
@@ -90,6 +91,7 @@ export default function Header({ type = "FTTB" }) {
       
       // Si des fichiers existent, prendre la date du plus récent
       if (data && data.length > 0) {
+
         // Trier les fichiers par date d'upload (descendant)
         const sortedFiles = [...data].sort((a, b) => {
           // Convertir les dates au format français (DD/MM/YYYY HH:MM) en objets Date

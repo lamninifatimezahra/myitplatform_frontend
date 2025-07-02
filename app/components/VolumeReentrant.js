@@ -32,7 +32,7 @@ ChartJS.register(
   ChartDataLabels
 );
 
-// Fonction pour obtenir le numéro de semaine ISO (déjà présente)
+// Fonction pour obtenir le numéro de semaine ISO
 const getWeekNumber = (date) => {
   const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = tempDate.getUTCDay() || 7;
@@ -52,38 +52,6 @@ const getSemester = (date) => {
   const month = date.getMonth() + 1;
   return month <= 6 ? 1 : 2;
 };
-const getAvailablePeriodsForYear = (year, mode) => { // Prend le mode en argument
-  if (!year || data.length === 0) return [];
-  const filteredByYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === year);
-
-  if (mode === "week") {
-    return [...new Set(filteredByYear.map((t) => {
-          // Gérer le cas où weekField n'est pas un nombre valide
-          const weekVal = t[weekField];
-          if (!isNaN(Number(weekVal))) {
-              return Number(weekVal);
-          }
-          // Essayer de calculer depuis la date si invalide
-          const date = new Date(t[dateUpdateField]);
-          if (!isNaN(date.getTime())) {
-              return getWeekNumber(date);
-          }
-          return null; // Ignorer si ni l'un ni l'autre n'est valide
-      }))]
-      .filter(week => week !== null) // Filtrer les nulls
-      .sort((a, b) => a - b);
-  } else if (mode === "month") {
-    return [...new Set(filteredByYear.map((t) => new Date(t[dateUpdateField]).getMonth() + 1))]
-      .sort((a, b) => a - b);
-  } else if (mode === "quarter") {
-    return [...new Set(filteredByYear.map((t) => getQuarter(new Date(t[dateUpdateField]))))]
-      .sort((a, b) => a - b);
-  } else if (mode === "semester") {
-    return [...new Set(filteredByYear.map((t) => getSemester(new Date(t[dateUpdateField]))))]
-      .sort((a, b) => a - b);
-  }
-  return []; // Retourner un tableau vide par défaut
-};
 
 export default function VolumeReentrants({
   apiUrl,
@@ -96,7 +64,6 @@ export default function VolumeReentrants({
     2: "#2196f3", 3: "#1b2b6b", 4: "#f36e3b",
     5: "#4caf50", 6: "#9c27b0", 7: "#ff9800", 8: "#009688",
   },
-  // ---- MODIFIÉ : Renommé monthLabels en periodLabels et ajouté Quarter/Semester ----
   periodLabels = {
     month: {
       1: "Janvier", 2: "Février", 3: "Mars", 4: "Avril", 5: "Mai", 6: "Juin",
@@ -106,21 +73,19 @@ export default function VolumeReentrants({
     semester: { 1: "S1", 2: "S2" }
   },
   defaultViewMode = "week",
-  // ---- MODIFIÉ : Renommé showsPerWeek en defaultNumPeriods pour cohérence ----
   defaultNumPeriods = 5,
   enableYearFilter = true,
   enableToggleView = true
 }) {
   if (!apiUrl) {
-    // ... (gestion de l'erreur API URL inchangée)
     return (
-        <div className="visualisation relative" data-id={id}>
-          <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
-            <h3 className="text-lg font-semibold text-black">{title}</h3>
-            <p className="text-red-500 text-sm mt-2">Erreur : L'URL de l'API est requise.</p>
-          </div>
+      <div className="visualisation relative" data-id={id}>
+        <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+          <h3 className="text-lg font-semibold text-black">{title}</h3>
+          <p className="text-red-500 text-sm mt-2">Erreur : L'URL de l'API est requise.</p>
         </div>
-      );
+      </div>
+    );
   }
 
   // Références
@@ -128,7 +93,6 @@ export default function VolumeReentrants({
   const globalFilterApplied = useRef(false);
   const prevViewMode = useRef(null);
   const filterPanelRef = useRef(null);
-  // ---- NOUVEAU : Références pour les conteneurs de graphiques ----
   const chartContainerRef = useRef(null);
   const modalChartContainerRef = useRef(null);
 
@@ -140,18 +104,15 @@ export default function VolumeReentrants({
   const [groupedData, setGroupedData] = useState({});
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
-  // ---- NOUVEAU : État pour les commentaires ----
   const [annotations, setAnnotations] = useState([]);
 
   // États pour mémoriser les sélections pour chaque vue
   const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
   const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
-  // ---- NOUVEAU : États pour Quarter/Semester ----
   const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
   const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
 
-
-  // États pour la gestion des années (inchangés)
+  // États pour la gestion des années
   const [availableYears, setAvailableYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
   const [multipleYearsExist, setMultipleYearsExist] = useState(false);
@@ -159,33 +120,28 @@ export default function VolumeReentrants({
   // États pour gérer la priorisation des filtres
   const [weekSelectionModifiedAt, setWeekSelectionModifiedAt] = useState(0);
   const [monthSelectionModifiedAt, setMonthSelectionModifiedAt] = useState(0);
-  // ---- NOUVEAU : États de priorisation pour Quarter/Semester ----
   const [quarterSelectionModifiedAt, setQuarterSelectionModifiedAt] = useState(0);
   const [semesterSelectionModifiedAt, setSemesterSelectionModifiedAt] = useState(0);
 
-
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
-  // Effet pour gérer les clics extérieurs (inchangé)
+  // Effet pour gérer les clics extérieurs
   useEffect(() => {
-    // ... (code inchangé)
     function handleClickOutside(event) {
-        if (isOpen &&
-          filterPanelRef.current &&
-          !filterPanelRef.current.contains(event.target) &&
-          !event.target.closest('button[data-filter-toggle]')) {
-          setIsOpen(false);
-        }
+      if (isOpen &&
+        filterPanelRef.current &&
+        !filterPanelRef.current.contains(event.target) &&
+        !event.target.closest('button[data-filter-toggle]')) {
+        setIsOpen(false);
       }
+    }
 
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-
-  // ---- NOUVEAU : Fonctions pour générer Quarter/Semester entre deux dates ----
-  // Fonction pour générer toutes les semaines entre deux dates (inchangée)
-  function getAllWeeksBetween(startDate, endDate) { /* ... (code inchangé) ... */
+  // Fonction pour générer toutes les semaines entre deux dates
+  function getAllWeeksBetween(startDate, endDate) {
     if (!startDate || !endDate) return [];
     const weeksArray = [];
     const startWeek = getWeekNumber(startDate);
@@ -196,7 +152,7 @@ export default function VolumeReentrants({
       for (let week = startWeek; week <= endWeek; week++) weeksArray.push(week);
     } else {
       for (let year = startYear; year <= endYear; year++) {
-        const maxWeeks = year === endYear ? endWeek : 52; // Adjust for year end if needed
+        const maxWeeks = year === endYear ? endWeek : 52;
         const minWeeks = year === startYear ? startWeek : 1;
         for (let week = minWeeks; week <= maxWeeks; week++) weeksArray.push(week);
       }
@@ -204,8 +160,8 @@ export default function VolumeReentrants({
     return weeksArray;
   }
 
-  // Fonction pour générer tous les mois entre deux dates (inchangée)
-  function getAllMonthsBetween(startDate, endDate) { /* ... (code inchangé) ... */
+  // Fonction pour générer tous les mois entre deux dates
+  function getAllMonthsBetween(startDate, endDate) {
     if (!startDate || !endDate) return [];
     const monthsArray = [];
     const startMonth = startDate.getMonth() + 1;
@@ -223,7 +179,6 @@ export default function VolumeReentrants({
     }
     return monthsArray;
   }
-
 
   function getAllQuartersBetween(startDate, endDate) {
     if (!startDate || !endDate) return [];
@@ -262,26 +217,24 @@ export default function VolumeReentrants({
     }
     return semestersArray;
   }
-  // ---- FIN NOUVEAU ----
-  const getAvailablePeriodsForYear = (year, mode) => { // Prend le mode en argument
+
+  const getAvailablePeriodsForYear = (year, mode) => {
     if (!year || data.length === 0) return [];
     const filteredByYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === year);
 
     if (mode === "week") {
       return [...new Set(filteredByYear.map((t) => {
-            // Gérer le cas où weekField n'est pas un nombre valide
-            const weekVal = t[weekField];
-            if (!isNaN(Number(weekVal))) {
-                return Number(weekVal);
-            }
-            // Essayer de calculer depuis la date si invalide
-            const date = new Date(t[dateUpdateField]);
-            if (!isNaN(date.getTime())) {
-                return getWeekNumber(date);
-            }
-            return null; // Ignorer si ni l'un ni l'autre n'est valide
-        }))]
-        .filter(week => week !== null) // Filtrer les nulls
+        const weekVal = t[weekField];
+        if (!isNaN(Number(weekVal))) {
+          return Number(weekVal);
+        }
+        const date = new Date(t[dateUpdateField]);
+        if (!isNaN(date.getTime())) {
+          return getWeekNumber(date);
+        }
+        return null;
+      }))]
+        .filter(week => week !== null)
         .sort((a, b) => a - b);
     } else if (mode === "month") {
       return [...new Set(filteredByYear.map((t) => new Date(t[dateUpdateField]).getMonth() + 1))]
@@ -293,16 +246,58 @@ export default function VolumeReentrants({
       return [...new Set(filteredByYear.map((t) => getSemester(new Date(t[dateUpdateField]))))]
         .sort((a, b) => a - b);
     }
-    return []; // Retourner un tableau vide par défaut
+    return [];
   };
 
-  const availablePeriods = getAvailablePeriodsForYear(selectedYear, viewMode); // Passer le mode
+  const availablePeriods = getAvailablePeriodsForYear(selectedYear, viewMode);
+
+// ——————————————
+// Remplace processReentrantData ‹…› par :
+const processReentrantData = (tickets, mode, currentSelectedValues = []) => {
+  // 1) Regrouper les périodes de chaque ticket
+  const byId = {};
+  tickets.forEach(ticket => {
+    const ticketId = ticket[idField];
+    const dt = new Date(ticket[dateUpdateField]);
+    let period;
+    if (mode === "week") {
+      const w = ticket[weekField];
+      period = (!w || isNaN(Number(w)))
+        ? getWeekNumber(dt)
+        : Number(w);
+    } else if (mode === "month") {
+      period = dt.getMonth() + 1;
+    } else if (mode === "quarter") {
+      period = getQuarter(dt);
+    } else {
+      period = getSemester(dt);
+    }
+    if (!byId[ticketId]) byId[ticketId] = [];
+    byId[ticketId].push(period);
+  });
+
+  // 2) Compter une seule fois chaque ticket, à sa dernière itération
+  const result = {};
+  Object.entries(byId).forEach(([ticketId, periods]) => {
+    if (periods.length < 2) return;                  // ignorer non-réentrants
+    const sorted = periods.sort((a, b) => a - b);
+    const lastPeriod = sorted[sorted.length - 1];     // semaine (ou mois, trim., sem.) de la dernière itération
+    if (currentSelectedValues.length && !currentSelectedValues.includes(lastPeriod)) {
+      return;                                        // hors filtre
+    }
+    const totalIter = periods.length;                // nombre total d’itérations
+    if (!result[lastPeriod]) result[lastPeriod] = {};
+    result[lastPeriod][totalIter] = (result[lastPeriod][totalIter] || 0) + 1;
+  });
+
+  setGroupedData(result);
+};
 
 
-  // ---- MODIFIÉ : Appliquer le filtre global à TOUTES les vues ----
+  // Fonction applyGlobalFilter CORRIGÉE
   const applyGlobalFilter = () => {
     if (!globalStartDate || !globalEndDate) return;
-    const currentGlobalYear = globalStartDate.getFullYear(); // Ou gestion multi-année si besoin
+    const currentGlobalYear = globalStartDate.getFullYear();
 
     // Calculer pour toutes les vues
     const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
@@ -317,28 +312,33 @@ export default function VolumeReentrants({
     const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
     setSemesterViewSelection({ values: semesterList, year: currentGlobalYear });
 
-    // Appliquer à la vue actuelle
+    // Déterminer les valeurs à utiliser selon le mode actuel
+    let valuesToUse = [];
     if (viewMode === "week") {
+      valuesToUse = weekList;
       setSelectedValues(weekList);
     } else if (viewMode === "month") {
+      valuesToUse = monthList;
       setSelectedValues(monthList);
     } else if (viewMode === "quarter") {
+      valuesToUse = quarterList;
       setSelectedValues(quarterList);
     } else if (viewMode === "semester") {
+      valuesToUse = semesterList;
       setSelectedValues(semesterList);
     }
-    setSelectedYear(currentGlobalYear); // Assurer que l'année est aussi mise à jour
-
+    
+    setSelectedYear(currentGlobalYear);
     setHasGlobalFilter(true);
-    // Recalculer les données groupées après application du filtre
+
+    // Recalculer avec les bonnes valeurs
     if (data.length > 0) {
-         const ticketsForYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === currentGlobalYear);
-         // Important: passer le viewMode *actuel* à processReentrantData
-         processReentrantData(ticketsForYear, viewMode);
+      const ticketsForYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === currentGlobalYear);
+      processReentrantData(ticketsForYear, viewMode, valuesToUse);
     }
   };
 
-  // ---- MODIFIÉ : Gérer le changement de vue pour TOUTES les vues ----
+  // Effet pour gérer le changement de vue
   useEffect(() => {
     if (!prevViewMode.current) {
       prevViewMode.current = viewMode;
@@ -356,9 +356,9 @@ export default function VolumeReentrants({
       setSemesterViewSelection({ values: selectedValues, year: selectedYear });
     }
 
-    // Restauration de l'état pour la nouvelle vue (si des données existent)
+    // Restauration de l'état pour la nouvelle vue
     let restoredValues = [];
-    let restoredYear = selectedYear; // Garder l'année actuelle par défaut
+    let restoredYear = selectedYear;
 
     if (viewMode === "week" && weekViewSelection.values.length > 0) {
       restoredValues = weekViewSelection.values;
@@ -373,92 +373,32 @@ export default function VolumeReentrants({
       restoredValues = semesterViewSelection.values;
       restoredYear = semesterViewSelection.year || selectedYear;
     } else {
-      // Si aucune sélection n'est mémorisée pour cette vue, on prend les N dernières périodes de l'année
-       if (selectedYear && data.length > 0) {
-         const availablePeriods = getAvailablePeriodsForYear(selectedYear, viewMode); // Passer viewMode
-         restoredValues = availablePeriods.slice(-defaultNumPeriods);
-         // Ne pas changer restoredYear ici, il est déjà = selectedYear
-       }
+      // Si aucune sélection n'est mémorisée pour cette vue
+      if (selectedYear && data.length > 0) {
+        const availablePeriods = getAvailablePeriodsForYear(selectedYear, viewMode);
+        restoredValues = availablePeriods.slice(-defaultNumPeriods);
+      }
     }
 
     setSelectedValues(restoredValues);
-    // Mettre à jour l'année seulement si elle a été restaurée explicitement
     if (restoredYear !== selectedYear) {
       setSelectedYear(restoredYear);
     }
 
-    // Traiter les données pour la nouvelle vue si nous avons des données et une année sélectionnée
+    // Traiter les données pour la nouvelle vue
     if (data.length > 0 && restoredYear) {
-       const ticketsForYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === restoredYear);
-       processReentrantData(ticketsForYear, viewMode);
+      const ticketsForYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === restoredYear);
+      processReentrantData(ticketsForYear, viewMode, restoredValues);
     }
 
     prevViewMode.current = viewMode;
-  }, [viewMode, data]); // data est ajouté comme dépendance pour recalculer si data change
+  }, [viewMode, data]);
 
-  // ---- SUPPRIMÉ : updateSelectedValues (logique intégrée dans le fetch useEffect) ----
-  // const updateSelectedValues = (tickets, mode) => { ... };
-
-  // ---- MODIFIÉ : Traiter les données pour TOUTES les vues ----
-  const processReentrantData = (tickets, mode) => {
-    const ticketCounts = {}; // Compte les occurrences par ticket ID
-    const result = {}; // Stocke { period: { iteration: Set(ticketId) } }
-
-    tickets.forEach((ticket) => {
-      const ticketDate = new Date(ticket[dateUpdateField]);
-      let period;
-
-      // Déterminer la période en fonction du mode de vue
-      if (mode === "week") {
-        period = ticket[weekField]; // Utilise la donnée semaine si disponible
-         // Si weekField n'est pas un nombre valide, on pourrait calculer depuis la date
-         if (isNaN(Number(period))) {
-             period = getWeekNumber(ticketDate);
-         } else {
-             period = Number(period); // Assurer que c'est un nombre
-         }
-      } else if (mode === "month") {
-        period = ticketDate.getMonth() + 1;
-      } else if (mode === "quarter") {
-        period = getQuarter(ticketDate);
-      } else if (mode === "semester") {
-        period = getSemester(ticketDate);
-      } else {
-        return; // Mode inconnu
-      }
-
-      // Ignorer si la période n'est pas valide (e.g., NaN pour semaine)
-      if (isNaN(period)) return;
-
-      const ticketId = ticket[idField];
-      if (!ticketCounts[ticketId]) ticketCounts[ticketId] = 1;
-      else ticketCounts[ticketId] += 1;
-
-      const iteration = ticketCounts[ticketId];
-      // On ne compte que les réitérations (à partir de la 2ème occurrence)
-      if (iteration >= 2 && iteration <= 8) { // Limite à 8 itérations comme dans l'original
-        if (!result[period]) result[period] = {};
-        if (!result[period][iteration]) result[period][iteration] = new Set();
-        result[period][iteration].add(ticketId); // Stocke l'ID unique pour compter les tickets distincts par itération/période
-      }
-    });
-
-    // Convertir les Sets en tailles (nombre de tickets uniques)
-    const cleaned = {};
-    for (const period in result) {
-      cleaned[period] = {};
-      for (const iteration in result[period]) {
-        cleaned[period][iteration] = result[period][iteration].size;
-      }
-    }
-    setGroupedData(cleaned);
-  };
-
-  // ---- MODIFIÉ : Fetch initial et sélection par défaut ----
+  // Fetch initial et sélection par défaut
   useEffect(() => {
     async function fetchData() {
       try {
-        setLoading(true); // Mettre loading à true au début
+        setLoading(true);
         const response = await fetchWithAuth(apiUrl);
         const result = await response.json();
         setData(result);
@@ -467,23 +407,21 @@ export default function VolumeReentrants({
         setAvailableYears(years);
         setMultipleYearsExist(years.length > 1);
         const latestYear = years[years.length - 1];
-        let initialYear = latestYear; // Année par défaut
+        let initialYear = latestYear;
 
         // Appliquer le filtre global immédiatement s'il est déjà défini
         if (globalStartDate && globalEndDate && !initializationCompleted.current && !globalFilterApplied.current) {
-            applyGlobalFilter(); // Applique le filtre et met à jour selectedYear, selectedValues, etc.
-            initialYear = selectedYear; // Utilise l'année du filtre global appliqué
-            globalFilterApplied.current = true; // Marquer comme appliqué
+          applyGlobalFilter();
+          initialYear = selectedYear;
+          globalFilterApplied.current = true;
         } else {
-            // Si pas de filtre global au démarrage, utiliser la dernière année
-             setSelectedYear(latestYear);
+          setSelectedYear(latestYear);
         }
 
-
-        // Ne définir les valeurs par défaut que lors de l'initialisation et si pas de filtre global appliqué
+        // Ne définir les valeurs par défaut que lors de l'initialisation
         if (!initializationCompleted.current && !globalFilterApplied.current) {
           const ticketsForYear = result.filter((t) => new Date(t[dateUpdateField]).getFullYear() === initialYear);
-          const availablePeriods = getAvailablePeriodsForYear(initialYear, viewMode); // Passer le mode actuel
+          const availablePeriods = getAvailablePeriodsForYear(initialYear, viewMode);
           const lastPeriods = availablePeriods.slice(-defaultNumPeriods);
 
           setSelectedValues(lastPeriods);
@@ -500,15 +438,13 @@ export default function VolumeReentrants({
           }
 
           // Traiter les données pour la sélection initiale
-          processReentrantData(ticketsForYear, viewMode);
+          processReentrantData(ticketsForYear, viewMode, lastPeriods);
 
           initializationCompleted.current = true;
         } else if (initializationCompleted.current && selectedYear) {
-           // Si déjà initialisé mais fetch est relancé (e.g. apiUrl change), retraiter les données pour la sélection actuelle
-            const ticketsForYear = result.filter((t) => new Date(t[dateUpdateField]).getFullYear() === selectedYear);
-            processReentrantData(ticketsForYear, viewMode);
+          const ticketsForYear = result.filter((t) => new Date(t[dateUpdateField]).getFullYear() === selectedYear);
+          processReentrantData(ticketsForYear, viewMode, selectedValues);
         }
-
 
         setLoading(false);
       } catch (error) {
@@ -517,55 +453,45 @@ export default function VolumeReentrants({
       }
     }
     fetchData();
-    // globalStartDate/EndDate enlevés ici car gérés par l'effet suivant et applyGlobalFilter
-  }
-  , [apiUrl, dateUpdateField, idField, weekField, defaultNumPeriods]); // viewMode enlevé pour éviter re-fetch juste pour ça
+  }, [apiUrl, dateUpdateField, idField, weekField, defaultNumPeriods]);
 
-  // Mise à jour du traitement quand selectedYear change (ou viewMode après initialisation)
+  // Mise à jour du traitement quand selectedYear ou selectedValues changent
   useEffect(() => {
-    // Ne s'exécute que si l'initialisation est terminée
     if (initializationCompleted.current && data.length > 0 && selectedYear) {
       const ticketsForYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === selectedYear);
-      processReentrantData(ticketsForYear, viewMode);
+      processReentrantData(ticketsForYear, viewMode, selectedValues);
     }
-  }, [selectedYear, viewMode, data, dateUpdateField]); // Ajout de viewMode ici
+  }, [selectedYear, viewMode, data, dateUpdateField, selectedValues]);
 
-  // Effet pour forcer l'utilisation du filtre global quand il change
+  // Effet pour forcer l'utilisation du filtre global
   useEffect(() => {
-    // Ne s'exécute que si l'initialisation est terminée et que le filtre global a changé
     if (initializationCompleted.current && globalStartDate && globalEndDate && globalModifiedAt > 0) {
-        // Vérifier si le filtre global a réellement été appliqué plus récemment que les filtres locaux
-        const lastLocalModification = Math.max(
-            weekSelectionModifiedAt,
-            monthSelectionModifiedAt,
-            quarterSelectionModifiedAt,
-            semesterSelectionModifiedAt
-        );
+      const lastLocalModification = Math.max(
+        weekSelectionModifiedAt,
+        monthSelectionModifiedAt,
+        quarterSelectionModifiedAt,
+        semesterSelectionModifiedAt
+      );
 
-        // Appliquer le filtre global seulement si la modification globale est plus récente
-        // ou si aucune modification locale n'a eu lieu (init)
-        if (globalModifiedAt > lastLocalModification || lastLocalModification === 0) {
-            applyGlobalFilter();
-            globalFilterApplied.current = true; // S'assurer qu'il est marqué comme appliqué
-        }
+      if (globalModifiedAt > lastLocalModification || lastLocalModification === 0) {
+        applyGlobalFilter();
+        globalFilterApplied.current = true;
+      }
     }
-}, [globalStartDate, globalEndDate, globalModifiedAt]); // Ne dépend que du filtre global
+  }, [globalStartDate, globalEndDate, globalModifiedAt]);
 
   if (loading)
     return <p className="text-center text-gray-500">Chargement des données...</p>;
-
-  // ---- MODIFIÉ : Obtenir les périodes disponibles pour TOUTES les vues ----
 
   const allPeriodsSelected =
     availablePeriods.length > 0 &&
     availablePeriods.every((period) => selectedValues.includes(period));
 
-  // ---- MODIFIÉ : Gérer la sélection/désélection pour TOUTES les vues ----
+  // Fonction toggleSelectAll CORRIGÉE
   const toggleSelectAll = () => {
     const newSelectedValues = allPeriodsSelected ? [] : [...availablePeriods];
     setSelectedValues(newSelectedValues);
 
-    // Mise à jour de l'état mémorisé et du timestamp pour la vue actuelle
     const now = Date.now();
     if (viewMode === "week") {
       setWeekViewSelection({ values: newSelectedValues, year: selectedYear });
@@ -581,10 +507,16 @@ export default function VolumeReentrants({
       setSemesterSelectionModifiedAt(now);
     }
 
-    setHasGlobalFilter(false); // Marquer comme filtre local
+    setHasGlobalFilter(false);
+
+    // Retraiter les données immédiatement
+    if (data.length > 0 && selectedYear) {
+      const ticketsForYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === selectedYear);
+      processReentrantData(ticketsForYear, viewMode, newSelectedValues);
+    }
   };
 
-  // ---- MODIFIÉ : Gérer le changement de sélection pour TOUTES les vues ----
+  // Fonction handleSelectionChange CORRIGÉE
   const handleSelectionChange = (value) => {
     const newSelectedValues = selectedValues.includes(value)
       ? selectedValues.filter(v => v !== value)
@@ -592,7 +524,6 @@ export default function VolumeReentrants({
 
     setSelectedValues(newSelectedValues);
 
-    // Mise à jour de l'état mémorisé et du timestamp pour la vue actuelle
     const now = Date.now();
     if (viewMode === "week") {
       setWeekViewSelection({ values: newSelectedValues, year: selectedYear });
@@ -608,69 +539,64 @@ export default function VolumeReentrants({
       setSemesterSelectionModifiedAt(now);
     }
 
-    setHasGlobalFilter(false); // Marquer comme filtre local
+    setHasGlobalFilter(false);
+
+    // Retraiter les données immédiatement
+    if (data.length > 0 && selectedYear) {
+      const ticketsForYear = data.filter((t) => new Date(t[dateUpdateField]).getFullYear() === selectedYear);
+      processReentrantData(ticketsForYear, viewMode, newSelectedValues);
+    }
   };
 
-  // Fonction pour changer de vue (déjà présente, inchangée fonctionnellement)
   const handleViewModeChange = (newMode) => {
     setViewMode(newMode);
-    // Le useEffect sur [viewMode] s'occupera du reste
   };
 
-  // ---- MODIFIÉ : Gérer le changement d'année pour TOUTES les vues ----
   const handleYearChange = (year) => {
     setSelectedYear(year);
-    const newAvailablePeriods = getAvailablePeriodsForYear(year, viewMode); // Obtenir pour la nouvelle année et vue actuelle
+    const newAvailablePeriods = getAvailablePeriodsForYear(year, viewMode);
 
     let newSelectedValues = [];
 
-    // Si le filtre global était actif, essayer de le réappliquer à la nouvelle année
     if (hasGlobalFilter && globalStartDate && globalEndDate) {
-        let globalPeriods = [];
-        if (viewMode === "week") globalPeriods = getAllWeeksBetween(globalStartDate, globalEndDate);
-        else if (viewMode === "month") globalPeriods = getAllMonthsBetween(globalStartDate, globalEndDate);
-        else if (viewMode === "quarter") globalPeriods = getAllQuartersBetween(globalStartDate, globalEndDate);
-        else if (viewMode === "semester") globalPeriods = getAllSemestersBetween(globalStartDate, globalEndDate);
+      let globalPeriods = [];
+      if (viewMode === "week") globalPeriods = getAllWeeksBetween(globalStartDate, globalEndDate);
+      else if (viewMode === "month") globalPeriods = getAllMonthsBetween(globalStartDate, globalEndDate);
+      else if (viewMode === "quarter") globalPeriods = getAllQuartersBetween(globalStartDate, globalEndDate);
+      else if (viewMode === "semester") globalPeriods = getAllSemestersBetween(globalStartDate, globalEndDate);
 
-        // Garder seulement les périodes globales qui existent dans la nouvelle année
-        newSelectedValues = globalPeriods.filter(p => newAvailablePeriods.includes(p));
+      newSelectedValues = globalPeriods.filter(p => newAvailablePeriods.includes(p));
     } else {
-        // Sinon, essayer de garder l'intersection avec la sélection mémorisée pour cette vue
-        let previousSelection = [];
-        if (viewMode === "week") previousSelection = weekViewSelection.values;
-        else if (viewMode === "month") previousSelection = monthViewSelection.values;
-        else if (viewMode === "quarter") previousSelection = quarterViewSelection.values;
-        else if (viewMode === "semester") previousSelection = semesterViewSelection.values;
+      let previousSelection = [];
+      if (viewMode === "week") previousSelection = weekViewSelection.values;
+      else if (viewMode === "month") previousSelection = monthViewSelection.values;
+      else if (viewMode === "quarter") previousSelection = quarterViewSelection.values;
+      else if (viewMode === "semester") previousSelection = semesterViewSelection.values;
 
-        const intersection = previousSelection.filter(p => newAvailablePeriods.includes(p));
-        if (intersection.length > 0) {
-            newSelectedValues = intersection;
-        } else {
-            // Si pas d'intersection (ou pas de sélection mémorisée), prendre les N dernières périodes
-            newSelectedValues = newAvailablePeriods.slice(-defaultNumPeriods);
-        }
+      const intersection = previousSelection.filter(p => newAvailablePeriods.includes(p));
+      if (intersection.length > 0) {
+        newSelectedValues = intersection;
+      } else {
+        newSelectedValues = newAvailablePeriods.slice(-defaultNumPeriods);
+      }
     }
 
     setSelectedValues(newSelectedValues);
 
-    // Mettre à jour l'état mémorisé pour la vue actuelle avec la nouvelle année
     if (viewMode === "week") setWeekViewSelection({ values: newSelectedValues, year: year });
     else if (viewMode === "month") setMonthViewSelection({ values: newSelectedValues, year: year });
     else if (viewMode === "quarter") setQuarterViewSelection({ values: newSelectedValues, year: year });
     else if (viewMode === "semester") setSemesterViewSelection({ values: newSelectedValues, year: year });
-
-    // Le useEffect [selectedYear, viewMode] retraitera les données
   };
 
-  // ---- MODIFIÉ : Préparer les labels et datasets pour TOUTES les vues ----
-  // Filtrer les périodes dans groupedData selon la sélection ET l'année
+  // Préparer les données pour le graphique
   const filteredPeriodsData = Object.entries(groupedData)
     .map(([periodStr, data]) => ({ period: parseInt(periodStr), data }))
     .filter(({ period }) => selectedValues.includes(period))
-    .sort((a, b) => a.period - b.period); // Trier par numéro de période
+    .sort((a, b) => a.period - b.period);
 
   const labels = filteredPeriodsData.map(({ period }) => {
-    let periodLabel = String(period); // Par défaut
+    let periodLabel = String(period);
     if (viewMode === "week") {
       periodLabel = `S${period}`;
     } else if (viewMode === "month" && periodLabels.month[period]) {
@@ -680,34 +606,26 @@ export default function VolumeReentrants({
     } else if (viewMode === "semester" && periodLabels.semester[period]) {
       periodLabel = periodLabels.semester[period];
     }
-    // Ajouter l'année si plusieurs années existent
     return multipleYearsExist ? `${periodLabel}, ${selectedYear}` : periodLabel;
   });
 
-
-  // Trouver toutes les itérations présentes dans les données filtrées
-   const allIterationsInData = new Set();
-   filteredPeriodsData.forEach(({ data }) => {
-       Object.keys(data).forEach(iteration => allIterationsInData.add(parseInt(iteration)));
-   });
-   const iterations = Array.from(allIterationsInData).sort((a, b) => a - b); // Trier les numéros d'itération
-
+  const allIterationsInData = new Set();
+  filteredPeriodsData.forEach(({ data }) => {
+    Object.keys(data).forEach(iteration => allIterationsInData.add(parseInt(iteration)));
+  });
+  const iterations = Array.from(allIterationsInData).sort((a, b) => a - b);
 
   const datasets = iterations.map((it) => ({
     label: `${it} Réitération${it > 1 ? "s" : ""}`,
-    // Aller chercher la donnée pour chaque période filtrée et cette itération
     data: filteredPeriodsData.map(({ data }) => data[it] || 0),
-    backgroundColor: iterationColors[it] || "#ccc", // Utiliser les couleurs fournies
+    backgroundColor: iterationColors[it] || "#ccc",
     borderRadius: 8,
     hoverBackgroundColor: iterationColors[it],
     hoverBorderWidth: 2,
     hoverBorderColor: "#444",
     categoryPercentage: 0.7,
-    // ---- IMPORTANT : Ce graphique n'est PAS stacké, contrairement à SlaAnciennete ----
-    // stack: 'stack1', // NE PAS AJOUTER CECI
   }));
 
-  // ---- MODIFIÉ : Générer le label de période pour TOUTES les vues ----
   const periodeLabelText = selectedValues.length > 0
     ? viewMode === "week"
       ? `Semaine(s) : ${selectedValues.join(", ")}`
@@ -718,31 +636,29 @@ export default function VolumeReentrants({
           : `Semestre(s) : ${selectedValues.map(s => periodLabels.semester[s] || s).join(", ")}`
     : "Aucune période sélectionnée";
 
-
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { /* ... (options inchangées) ... */
+      legend: {
         display: true, position: "top",
         labels: { color: "black", font: { size: 11 }, padding: 10 },
       },
-      datalabels: { /* ... (options inchangées) ... */
+      datalabels: {
         anchor: "end", align: "end", color: "black", font: { size: 10 },
         clamp: true, clip: false, offset: -4,
         formatter: (value) => (value > 0 ? value : ""),
       },
-      tooltip: { /* ... (options inchangées) ... */
+      tooltip: {
         callbacks: { label: (context) => `${context.dataset.label}: ${context.raw}` },
       },
     },
     scales: {
-      // ---- IMPORTANT : PAS de 'stacked: true' ici ----
       x: { stacked: false, title: { display: true, text: multipleYearsExist ? `Période, Année` : 'Période' } },
       y: { beginAtZero: true, stacked: false, ticks: { precision: 0 }, title: { display: true, text: 'Nombre de Tickets Réentrants' }, grace: '5%' },
     },
-     animation: {
-        duration: 500, // Animation plus douce
+    animation: {
+      duration: 500,
     },
   };
 
@@ -760,7 +676,7 @@ export default function VolumeReentrants({
             <h3 className="no-export text-lg font-semibold text-gray-800">{title}</h3>
             <p className="text-sm text-gray-500">
               {selectedYear && `Année : ${selectedYear} - `}
-              {periodeLabelText} {/* Utilisation de la variable mise à jour */}
+              {periodeLabelText}
             </p>
           </div>
 
@@ -771,9 +687,8 @@ export default function VolumeReentrants({
               data-filter-toggle="true">
               <AiOutlineFilter size={20} className="text-gray-600" />
             </button>
-            {/* ---- NOUVEAU : Bouton Commentaire ---- */}
             <CommentButton
-              containerRef={chartContainerRef} // Ref du conteneur principal
+              containerRef={chartContainerRef}
               comments={annotations}
               onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
               onUpdateComment={(updatedComment) =>
@@ -794,9 +709,8 @@ export default function VolumeReentrants({
           {isOpen && (
             <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
               <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
-              {/* ---- MODIFIÉ : Ajouter les boutons Trimestre/Semestre ---- */}
               {enableToggleView && (
-                <div className="flex space-x-2 mb-2 mt-2 flex-wrap"> {/* Ajout de flex-wrap */}
+                <div className="flex space-x-2 mb-2 mt-2 flex-wrap">
                   <button
                     className={`px-3 py-1 rounded-md mb-1 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
                     onClick={() => handleViewModeChange("week")} >
@@ -819,49 +733,44 @@ export default function VolumeReentrants({
                   </button>
                 </div>
               )}
-              {/* Filtre Année (inchangé) */}
               {enableYearFilter && multipleYearsExist && (
                 <div className="mb-3">
-                   {/* ... code inchangé ... */}
-                   <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
-                   <div className="flex flex-wrap gap-1">
-                     {availableYears.map((year) => (
-                       <button
-                         key={year}
-                         onClick={() => handleYearChange(year)}
-                         className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-                       >
-                         {year}
-                       </button>
-                     ))}
-                   </div>
+                  <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {availableYears.map((year) => (
+                      <button
+                        key={year}
+                        onClick={() => handleYearChange(year)}
+                        className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-              {/* Bouton Tout Sélectionner (inchangé) */}
               <div className="mb-2">
-                 {/* ... code inchangé ... */}
-                 <button
-                   onClick={toggleSelectAll}
-                   className={`text-xs px-2 py-1 rounded-md w-full ${
-                     allPeriodsSelected
-                       ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                       : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                   }`}
-                 >
-                   {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
-                 </button>
+                <button
+                  onClick={toggleSelectAll}
+                  className={`text-xs px-2 py-1 rounded-md w-full ${
+                    allPeriodsSelected
+                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  }`}
+                >
+                  {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
+                </button>
               </div>
-              {/* ---- MODIFIÉ : Affichage des périodes disponibles ---- */}
               <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
                 {availablePeriods.map((value) => (
                   <div key={value} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      id={`period-${value}-${viewMode}`} // ID unique pour le label
+                      id={`period-${value}-${viewMode}`}
                       checked={selectedValues.includes(value)}
                       onChange={() => handleSelectionChange(value)}
                     />
-                    <label htmlFor={`period-${value}-${viewMode}`} className="text-gray-500 cursor-pointer"> {/* Ajout label et htmlFor */}
+                    <label htmlFor={`period-${value}-${viewMode}`} className="text-gray-500 cursor-pointer">
                       {viewMode === "week"
                         ? `S${value}`
                         : viewMode === "month"
@@ -876,19 +785,18 @@ export default function VolumeReentrants({
                   </div>
                 ))}
                 {availablePeriods.length === 0 && (
-                    <p className="text-xs text-gray-400 text-center">Aucune période disponible pour {selectedYear}.</p>
+                  <p className="text-xs text-gray-400 text-center">Aucune période disponible pour {selectedYear}.</p>
                 )}
               </div>
             </div>
           )}
         </div>
 
-        {/* ---- MODIFIÉ : Ajouter la ref au conteneur du graphique ---- */}
         <div className="flex-grow flex justify-center items-center h-[350px]" ref={chartContainerRef}>
           <Bar
             data={chartData}
             options={chartOptions}
-            plugins={[ChartDataLabels]} // ChartDataLabels est déjà enregistré
+            plugins={[ChartDataLabels]}
           />
         </div>
       </div>
@@ -905,22 +813,20 @@ export default function VolumeReentrants({
             <div>
               <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
               <p className="text-sm text-gray-500 mt-1">
-                {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText} {/* Utilisation de la variable mise à jour */}
+                {selectedYear && `Année : ${selectedYear} - `}{periodeLabelText}
               </p>
             </div>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
-          {/* ---- MODIFIÉ : Ajouter la ref au conteneur du graphique modal et le bouton commentaire caché ---- */}
           <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
             <Bar
               data={chartData}
               options={chartOptions}
               plugins={[ChartDataLabels]}
             />
-            {/* Bouton commentaire caché pour afficher/interagir avec les commentaires existants */}
             <CommentButton
               containerRef={modalChartContainerRef}
-              hideButton={true} // Cache le bouton "+" mais permet l'interaction
+              hideButton={true}
               comments={annotations}
               onAddComment={(newComment) => setAnnotations([...annotations, newComment])}
               onUpdateComment={(updatedComment) =>

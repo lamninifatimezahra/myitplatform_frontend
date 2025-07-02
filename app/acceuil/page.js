@@ -138,7 +138,7 @@ export default function AccueilPage() {
         }}
       />
 
-      {/* HEADER */}
+    
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 sm:px-12 bg-transparent">
         <div className="flex items-center gap-3">
           <button
