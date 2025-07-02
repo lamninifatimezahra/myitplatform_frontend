@@ -83,6 +83,10 @@ export default function TicketsReentrantsTable({
   const [searchTicketId, setSearchTicketId] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
+  // ✅ NOUVEAU : État pour savoir si l'utilisateur a fait une sélection manuelle
+  const [hasManualSelection, setHasManualSelection] = useState(false);
+  const [lastGlobalModifiedAt, setLastGlobalModifiedAt] = useState(0);
+
   // États pour la pagination de l'affichage
   const [visibleTickets, setVisibleTickets] = useState(5);
 
@@ -218,7 +222,7 @@ const processIterationData = (tickets) => {
       }
     }
     fetchData();
-  }, [apiUrl]); // Dépendance à apiUrl pour recharger les données si l'URL change
+  }, [apiUrl]);
 
   /**
    * Calcul des semaines disponibles depuis toutes les données de l'année sélectionnée
@@ -236,11 +240,14 @@ const processIterationData = (tickets) => {
   })();
 
   /**
-   * Si le filtre global est appliqué (indiqué par globalModifiedAt),
-   * on sélectionne automatiquement les semaines correspondant à la période choisie.
+   * ✅ MODIFIÉ : Applique le filtre global SEULEMENT s'il y a un nouveau filtre global
+   * et que l'utilisateur n'a pas fait de sélection manuelle depuis.
    */
   useEffect(() => {
-    if (globalModifiedAt > 0 && globalStartDate && globalEndDate) {
+    // Vérifier s'il y a un nouveau filtre global
+    const isNewGlobalFilter = globalModifiedAt > lastGlobalModifiedAt && globalModifiedAt > 0;
+    
+    if (isNewGlobalFilter && globalStartDate && globalEndDate) {
       // Calculer les semaines correspondant à la période choisie
       const weeksToSelect = getAllWeeksBetween(globalStartDate, globalEndDate);
       
@@ -250,18 +257,16 @@ const processIterationData = (tickets) => {
         return allWeeks.includes(week);
       });
       
-      // Vérifier si les semaines sélectionnées sont identiques aux semaines filtrées
-      // pour éviter une boucle infinie
-      const areEqual = 
-        filteredWeeks.length === selectedWeeks.length && 
-        filteredWeeks.every(week => selectedWeeks.includes(week));
+      // Appliquer la sélection automatique du filtre global
+      setSelectedWeeks(filteredWeeks);
       
-      // Mettre à jour les semaines sélectionnées seulement si elles sont différentes
-      if (!areEqual) {
-        setSelectedWeeks(filteredWeeks);
-      }
+      // Marquer que ce n'est plus une sélection manuelle
+      setHasManualSelection(false);
+      
+      // Mémoriser ce globalModifiedAt pour détecter les prochains changements
+      setLastGlobalModifiedAt(globalModifiedAt);
     }
-  }, [globalModifiedAt, globalStartDate, globalEndDate, allWeeks, selectedWeeks]);
+  }, [globalModifiedAt, globalStartDate, globalEndDate, allWeeks, lastGlobalModifiedAt]);
 
   /**
    * Calcul et traitement des données.
@@ -270,7 +275,6 @@ const processIterationData = (tickets) => {
    * le filtrage global est appliqué (filtrage par date). Dès qu'une sélection locale est définie,
    * le filtrage se fait sur l'ensemble des données pour l'année sélectionnée, sans tenir compte du filtre global.
    */
-
   useEffect(() => {
     if (rawData.length > 0 && selectedYear) {
       // Filtrage par année (toutes les données de l'année)
@@ -314,14 +318,14 @@ const filteredData = data.filter(ticket => {
   searchTicketId === "" || ticket.id_ticket.includes(searchTicketId)
 );
 
-  // ✅ NOUVEAU : Fonction pour déterminer si un filtre est appliqué
+  // ✅ Fonction pour déterminer si un filtre est appliqué
   const isFilterApplied = () => {
     const hasGlobalFilter = globalStartDate && globalEndDate;
     const hasLocalFilter = selectedWeeks.length > 0 || searchTicketId.trim() !== "";
     return hasGlobalFilter || hasLocalFilter;
   };
 
-  // ✅ NOUVEAU : Effet pour ajuster visibleTickets quand un filtre est appliqué
+  // ✅ Effet pour ajuster visibleTickets quand un filtre est appliqué
   useEffect(() => {
     if (isFilterApplied()) {
       // Si un filtre est appliqué, afficher tous les tickets
@@ -335,19 +339,23 @@ const filteredData = data.filter(ticket => {
   // Bouton "Tout sélectionner / Tout désélectionner" pour les semaines disponibles.
   const allWeeksSelected =
     allWeeks.length > 0 && allWeeks.every(week => selectedWeeks.includes(week));
+  
+  // ✅ MODIFIÉ : Marquer comme sélection manuelle
   const toggleSelectAll = () => {
     if (allWeeksSelected) {
       setSelectedWeeks([]);
     } else {
       setSelectedWeeks([...allWeeks]);
     }
+    setHasManualSelection(true); // ✅ Marquer comme sélection manuelle
   };
 
-  // Gestion du changement individuel d'une semaine.
+  // ✅ MODIFIÉ : Marquer comme sélection manuelle
   const handleWeekSelectionChange = (week) => {
     setSelectedWeeks(prev =>
       prev.includes(week) ? prev.filter(w => w !== week) : [...prev, week]
     );
+    setHasManualSelection(true); // ✅ Marquer comme sélection manuelle
   };
 
   // Changement d'année.
@@ -355,6 +363,21 @@ const filteredData = data.filter(ticket => {
     setSelectedYear(year);
     // Réinitialisation de la sélection locale à chaque changement d'année.
     setSelectedWeeks([]);
+    setHasManualSelection(false); // ✅ Réinitialiser le flag de sélection manuelle
+  };
+
+  // ✅ NOUVEAU : Fonction pour réinitialiser les filtres locaux et reprendre le filtre global
+  const resetToGlobalFilter = () => {
+    setSelectedWeeks([]);
+    setSearchTicketId("");
+    setHasManualSelection(false);
+    
+    // Réappliquer le filtre global s'il existe
+    if (globalStartDate && globalEndDate) {
+      const weeksToSelect = getAllWeeksBetween(globalStartDate, globalEndDate);
+      const filteredWeeks = weeksToSelect.filter(week => allWeeks.includes(week));
+      setSelectedWeeks(filteredWeeks);
+    }
   };
 
   // Nouvelles fonctions pour gérer l'édition des commentaires
@@ -463,6 +486,19 @@ const saveComment = async (ticketId, commentText) => {
             className="absolute right-2 top-14 bg-white shadow-lg rounded-md p-4 w-64 z-50"
           >
             <h4 className="font-semibold text-black">Filtrer par :</h4>
+            
+            {/* ✅ NOUVEAU : Bouton pour revenir au filtre global */}
+            {hasManualSelection && (globalStartDate && globalEndDate) && (
+              <div className="mb-3">
+                <button
+                  onClick={resetToGlobalFilter}
+                  className="text-xs px-2 py-1 rounded-md w-full bg-orange-100 text-orange-700 hover:bg-orange-200"
+                >
+                  🔄 Revenir au filtre global
+                </button>
+              </div>
+            )}
+            
             <input
               type="text"
               placeholder="Rechercher ID Ticket..."
@@ -492,6 +528,14 @@ const saveComment = async (ticketId, commentText) => {
               </div>
             )}
             <h4 className="font-semibold mt-2 text-black">Semaines :</h4>
+            
+            {/* ✅ NOUVEAU : Indicateur de sélection manuelle */}
+            {hasManualSelection && (
+              <div className="text-xs text-blue-600 mb-2">
+                ✋ Sélection personnalisée active
+              </div>
+            )}
+            
             {/* Bouton Tout sélectionner / Tout désélectionner */}
             <div className="mb-2">
               <button
@@ -520,10 +564,13 @@ const saveComment = async (ticketId, commentText) => {
           </div>
         )}
 
-        {/* ✅ NOUVEAU : Indicateur de filtre actif */}
+        {/* Indicateur de filtre actif */}
         {isFilterApplied() && (
           <div className="mb-3 text-sm text-blue-600 bg-blue-50 p-2 rounded">
             📊 Filtre actif - Affichage de tous les tickets correspondants ({filteredData.length} ticket{filteredData.length > 1 ? 's' : ''})
+            {hasManualSelection && (
+              <span className="ml-2 text-green-600">• Personnalisé</span>
+            )}
           </div>
         )}
 
@@ -606,7 +653,7 @@ const saveComment = async (ticketId, commentText) => {
           </tbody>
         </table>
 
-        {/* ✅ MODIFIÉ : Boutons "Voir Plus/Moins" seulement quand aucun filtre n'est appliqué */}
+        {/* Boutons "Voir Plus/Moins" seulement quand aucun filtre n'est appliqué */}
         {!isFilterApplied() && (
           <div className="no-export flex justify-center space-x-3 mt-4">
             <button

@@ -41,7 +41,6 @@ export default function TicketsEnCoursTable({
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedWeeks, setSelectedWeeks] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(5);
   const [allWeeks, setAllWeeks] = useState([]);
   const [sortOrder, setSortOrder] = useState("desc");
   const [isOpen, setIsOpen] = useState(false);
@@ -228,7 +227,9 @@ export default function TicketsEnCoursTable({
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
         {/* Header avec titre et boutons */}
         <div className="no-export flex justify-between items-start mb-4 relative">
-          <h3 className="text-lg font-semibold text-black">Tickets en cours - Plus de une semaine</h3>
+          <h3 className="text-lg font-semibold text-black">
+            Tickets en cours - Plus de une semaine ({filtered.length} ticket{filtered.length > 1 ? 's' : ''})
+          </h3>
           <div className="flex gap-2">
             <button
               className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition"
@@ -304,7 +305,7 @@ export default function TicketsEnCoursTable({
               </tr>
             </thead>
             <tbody>
-              {filtered.slice(0, visibleCount).map(ticket => (
+              {filtered.map(ticket => (
                 <tr key={ticket[idField]} className="hover:bg-gray-100 text-black">
                   <td className="border p-2">{ticket[idField]}</td>
                   <td className="border p-2">{ticket.titre_ticket}</td>
@@ -355,24 +356,6 @@ export default function TicketsEnCoursTable({
             </tbody>
           </table>
         </div>
-
-        {/* Boutons Voir Plus / Voir Moins */}
-        <div className="no-export flex justify-center space-x-3 mt-4">
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
-            onClick={() => setVisibleCount(prev => prev + 5)}
-            disabled={visibleCount >= filtered.length}
-          >
-            Voir Plus
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-gray-300"
-            onClick={() => setVisibleCount(prev => Math.max(5, prev - 5))}
-            disabled={visibleCount <= 5}
-          >
-            Voir Moins
-          </button>
-        </div>
       </div>
 
       {/* Modal d'agrandissement */}
@@ -384,7 +367,9 @@ export default function TicketsEnCoursTable({
       >
         <div className="bg-white rounded-2xl p-6 w-11/12 md:w-10/12 lg:w-10/12 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-semibold text-black">Tickets en cours - Plus de une semaine</h3>
+            <h3 className="text-2xl font-semibold text-black">
+              Tickets en cours - Plus de une semaine ({filtered.length} ticket{filtered.length > 1 ? 's' : ''})
+            </h3>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
           
