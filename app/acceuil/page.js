@@ -51,7 +51,6 @@ export default function AccueilPage() {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
         <div className="relative w-24 h-24">
-          {/* Cercle animé */}
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
 
           <div className="absolute inset-0 flex items-center justify-center">
