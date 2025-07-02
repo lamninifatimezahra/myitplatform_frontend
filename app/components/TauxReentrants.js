@@ -636,7 +636,7 @@ export default function TauxReentrants({
 
 
   // Regrouper les tickets par identifiant afin de calculer le nombre de réentrants
-// Étape 1 — Calculer le nombre global d’itérations par ticket
+// Étape 1 — Calculer le nombre global d'itérations par ticket
 const ticketIterationsMap = {};
 data.forEach((t) => {
   const id = t.id_ticket;
@@ -748,7 +748,7 @@ for (const [ticketId, iterations] of Object.entries(ticketIterationsMap)) {
             const value = context.raw;
             if (disabledCategories.includes(label)) return null;
             const percent = total ? ((value / total) * 100).toFixed(2) : "0.0";
-            return `${label}: ${value} (${percent}%)`;
+            return `${label}: ${percent}%`;
           },
         },
       },
@@ -759,7 +759,7 @@ for (const [ticketId, iterations] of Object.entries(ticketIterationsMap)) {
           const label = context.chart.data.labels[context.dataIndex];
           if (value === 0 || disabledCategories.includes(label)) return "";
           const percent = ((value / total) * 100).toFixed(2);
-          return `${value} (${percent}%)`;
+          return `${percent}%`;
         },
         anchor: "end",
         align: "end",
