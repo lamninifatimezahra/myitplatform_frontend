@@ -157,12 +157,7 @@ const processIterationData = (tickets) => {
           // Pour les itérations suivantes
           weekText += ` (${cumulativeCount}ème itération)`;
         }
-        
-        // Si plusieurs occurrences dans la même semaine, préciser
-        if (occurrencesInWeek > 1 && i > 0) {
-          weekText += ` - occurrence ${i + 1}`;
-        }
-        
+              
         weekDetails.push({
           week: week,
           iteration: cumulativeCount,
