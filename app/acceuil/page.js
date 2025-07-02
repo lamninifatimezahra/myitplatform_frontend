@@ -53,7 +53,7 @@ export default function AccueilPage() {
         <div className="relative w-24 h-24">
           {/* Cercle animé */}
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
-          {/* Logo MyIT centré */}
+
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
               src="/logo-myit.png"
@@ -157,7 +157,6 @@ export default function AccueilPage() {
           </button>
         </div>
 
-        {/* User Info */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
