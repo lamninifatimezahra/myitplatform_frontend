@@ -201,7 +201,7 @@ export default function ListeUtilisateurs() {
         </tbody>
       </table>
 
-      {/* Identifiants générés affichés */}
+      {/* Identifiants générés affichés ok */}
       {credentialsToShow && (
         <div className="bg-gray-50 border border-gray-300 p-4 rounded-md shadow space-y-3">
           <h3 className="font-semibold text-gray-800">Identifiants :</h3>
