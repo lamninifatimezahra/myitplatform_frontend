@@ -38,7 +38,7 @@ export default function KpiTicketsEnCoursPlus2S({
   dateSortieField = "date_sortie",
   dateDerniereMajField = "date_derniere_maj",
   retardDays = 7,
-  blinkWhenPositive = true,
+  blinkWhenPositive = false,
   dataIdSuffix = "KPI Tickets en Cours +Semaine"  // Modifié ici pour correspondre à l'ID
 }) {
   const id = "KPI Tickets en Cours +Semaine";
@@ -192,7 +192,7 @@ export default function KpiTicketsEnCoursPlus2S({
         {/* Contenu principal */}
         <p className="text-xs text-gray-500 mb-1">{periodeLabel}</p>
         <p
-          className={`text-3xl font-bold ${shouldBlink ? "blink-red" : "text-black"}`}
+          className={`text-3xl font-bold ${ticketsRetard > 0 ? "text-red-500" : "text-black"}`}
           style={{ minHeight: "40px" }}
         >
           {ticketsRetard}
