@@ -28,8 +28,16 @@ const rawData = [
 { type: "REF PMT", date: "27/06/2025" },
 { type: "Renonciation", date: "30/06/2025" },
 { type: "REF PMT", date: "30/06/2025" },
+{ type: "Intervention", date: "30/06/2025" },
 { type: "Renonciation", date: "01/07/2025" },
 { type: "REF PMT", date: "01/07/2025" },
+{ type: "Renonciation", date: "01/07/2025" },
+{ type: "Renonciation", date: "02/07/2025" },
+{ type: "REF PMT", date: "02/07/2025" },
+{ type: "d'abandon de commande", date: "02/07/2025" },
+{ type: "MAJ CR STOC", date: "02/07/2025" },
+{ type: "MAJ CR STOC", date: "02/07/2025" },
+
 
 ]
 ;

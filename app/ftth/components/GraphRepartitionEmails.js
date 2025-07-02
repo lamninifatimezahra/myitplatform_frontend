@@ -21,6 +21,14 @@ const rawData = [
 { type: "REF PMT" },
 { type: "Renonciation" },
 { type: "REF PMT" },
+{ type: "Renonciation" },
+{ type: "REF PMT" },
+{ type: "d'abandon de commande" },
+{ type: "Intervention" },
+{ type: "Renonciation" },
+{ type: "MAJ CR STOC" },
+{ type: "MAJ CR STOC" },
+
 
 ]
 ;
