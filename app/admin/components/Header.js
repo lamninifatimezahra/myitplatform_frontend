@@ -56,7 +56,6 @@ export default function Header() {
       router.push("/login");
     }
   };
-
   const getFormattedName = () => {
     const first = user?.name || '';
     const last = user?.surname || '';
