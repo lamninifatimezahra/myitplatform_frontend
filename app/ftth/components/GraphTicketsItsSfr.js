@@ -9,15 +9,14 @@ import Modal from "react-modal";
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 const iconBtnClass = "w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition";
-
 const COLORS = ["#3b82f6", "#ef4444"]; // ITS = bleu, SFR = rouge
 
-const CustomLabelOutside = ({ name, value, cx, cy, midAngle, outerRadius, fill }) => {
+// 🔁 Composant de label externe avec pourcentage dynamique
+const CustomLabelOutside = ({ name, value, cx, cy, midAngle, outerRadius, fill, total }) => {
   const RADIAN = Math.PI / 180;
   const radius = outerRadius + 20;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  const total = 453;
   const percentage = ((value / total) * 100).toFixed(1);
 
   return (
@@ -43,12 +42,10 @@ export default function GraphTraitementTicketsITS_SFR() {
   const chartRef = useRef(null);
 
   const processData = () => {
-    // Données brutes
     const raw = [
       { name: "ITS", value: 112 },
       { name: "SFR", value: 52 }
     ];
-
     setData(raw);
   };
 
@@ -59,6 +56,8 @@ export default function GraphTraitementTicketsITS_SFR() {
       setLoading(false);
     }, 500);
   }, [selectedPeriod]);
+
+  const total = data.reduce((acc, entry) => acc + entry.value, 0);
 
   return (
     <div
@@ -81,7 +80,7 @@ export default function GraphTraitementTicketsITS_SFR() {
         <h3 className="text-2xl font-semibold text-gray-800">Traitement des Tickets ITS & SFR</h3>
         <div className="flex gap-2">
           <button className={iconBtnClass}><FaPencilAlt className="text-gray-700" /></button>
-          <button onClick={() => processData()} className={iconBtnClass}><FaSyncAlt className="text-gray-700" /></button>
+          <button onClick={processData} className={iconBtnClass}><FaSyncAlt className="text-gray-700" /></button>
           <button onClick={() => setModalIsOpen(true)} className={iconBtnClass}><FaExpand className="text-gray-700" /></button>
         </div>
       </div>
@@ -119,7 +118,7 @@ export default function GraphTraitementTicketsITS_SFR() {
                 outerRadius={170}
                 dataKey="value"
                 labelLine
-                label={CustomLabelOutside}
+                label={(props) => <CustomLabelOutside {...props} total={total} />}
               >
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -154,7 +153,7 @@ export default function GraphTraitementTicketsITS_SFR() {
                   outerRadius={160}
                   dataKey="value"
                   labelLine
-                  label={CustomLabelOutside}
+                  label={(props) => <CustomLabelOutside {...props} total={total} />}
                 >
                   {data.map((entry, index) => (
                     <Cell key={`modal-cell-${index}`} fill={COLORS[index % COLORS.length]} />
