@@ -31,7 +31,6 @@ export default function HeaderMyAI({ setSidebarOpen }) {
           credentials: 'include',
         });
         if (!res.ok) throw new Error('Erreur lors de la récupération de l’utilisateur');
-
         const data = await res.json();
         setUser(data);
       } catch (err) {
@@ -72,7 +71,9 @@ export default function HeaderMyAI({ setSidebarOpen }) {
   const getFormattedName = () => {
     const first = user?.name || '';
     const last = user?.surname || '';
-    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+    const formattedLast = last.toUpperCase();
+    return `${formattedFirst} ${formattedLast}`.trim();
   };
 
   const getDepartment = () => {
@@ -113,6 +114,7 @@ export default function HeaderMyAI({ setSidebarOpen }) {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotifOpen(!notifOpen)}
@@ -148,7 +150,7 @@ export default function HeaderMyAI({ setSidebarOpen }) {
           </AnimatePresence>
         </div>
 
-        {/* USER Profile */}
+        {/* User menu */}
         <div ref={userRef} className="relative">
           <button
             onClick={() => setShowUserPopup(!showUserPopup)}
@@ -181,7 +183,7 @@ export default function HeaderMyAI({ setSidebarOpen }) {
                 <p className="font-bold text-[#31327e] text-base">{getFormattedName()}</p>
                 <p><span className="font-semibold text-gray-600">Email :</span> {user?.email}</p>
                 <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
-                <p className="font-semibold text-gray-600">Activités :</p>
+                <p className="font-semibold text-gray-600">Accès :</p>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {getActivities().length > 0 ? (
                     getActivities().map((item, index) => (
@@ -193,7 +195,7 @@ export default function HeaderMyAI({ setSidebarOpen }) {
                       </span>
                     ))
                   ) : (
-                    <span className="text-gray-400 text-xs italic">Aucune activité</span>
+                    <span className="text-gray-400 text-xs italic">Aucun accès</span>
                   )}
                 </div>
               </div>

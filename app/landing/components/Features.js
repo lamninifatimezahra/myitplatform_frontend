@@ -2,28 +2,23 @@
 import { motion } from "framer-motion";
 import {
   FiBarChart2,
-  FiUsers,
   FiMessageCircle,
-  FiTarget,
-  FiUpload,
 } from "react-icons/fi";
-import {
-  HiOutlineSparkles,
-  HiOutlineLightBulb,
-} from "react-icons/hi2";
+import { HiOutlineSparkles, HiOutlineLightBulb } from "react-icons/hi2";
+import { TbSettingsCog } from "react-icons/tb";
 
 const features = [
   {
-    title: "Tableaux de bord SI OSS",
+    title: "Tableaux de bord OSS",
     desc: "Suivez la santé des systèmes, la performance applicative et les KPIs d’exploitation en temps réel via des dashboards dynamiques.",
     icon: <FiBarChart2 size={32} />,
     color: "from-blue-100 to-blue-50",
   },
   {
-    title: "Onboarding & Compétences",
-    desc: "Parcours guidés, évolutifs et contextualisés pour accueillir les nouveaux et faire progresser les équipes à chaque étape.",
-    icon: <FiUsers size={32} />,
-    color: "from-green-100 to-green-50",
+    title: "Facilitation des Processus Métier",
+    desc: "Automatisez et optimisez les tâches opérationnelles grâce à des outils intelligents centrés sur la productivité et la fluidité des opérations.",
+    icon: <TbSettingsCog size={32} />,
+    color: "from-emerald-100 to-emerald-50",
   },
   {
     title: "Forum Collaboratif",
@@ -32,22 +27,10 @@ const features = [
     color: "from-yellow-100 to-yellow-50",
   },
   {
-    title: "Innovation",
-    desc: "Un espace d’idéation pour soumettre vos idées, participer à des challenges internes et suivre les tendances technologiques.",
-    icon: <FiTarget size={32} />,
-    color: "from-purple-100 to-purple-50",
-  },
-  {
     title: "Assistance Intelligente",
     desc: "Un assistant IA contextuel pour répondre à vos questions, guider vos démarches et vous aider à résoudre les problèmes en temps réel.",
     icon: <HiOutlineLightBulb size={32} />,
     color: "from-indigo-100 to-indigo-50",
-  },
-  {
-    title: "Importation de Données Métier",
-    desc: "Un espace dédié pour centraliser et importer efficacement les données métiers, tout en respectant les accès, la traçabilité et les formats requis.",
-    icon: <FiUpload size={32} />,
-    color: "from-orange-100 to-orange-50",
   },
 ];
 

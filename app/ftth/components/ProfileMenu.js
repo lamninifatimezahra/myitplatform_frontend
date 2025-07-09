@@ -56,7 +56,9 @@ export default function ProfileMenu() {
   const getFormattedName = () => {
     const first = user?.name || "";
     const last = user?.surname || "";
-    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+    const formattedLast = last.toUpperCase();
+    return `${formattedFirst} ${formattedLast}`.trim();
   };
 
   const getDepartment = () => {
@@ -92,7 +94,7 @@ export default function ProfileMenu() {
             <p className="font-bold text-[#31327e] text-base">{getFormattedName()}</p>
             <p><span className="font-semibold text-gray-600">Email :</span> {user?.email}</p>
             <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
-            <p className="font-semibold text-gray-600">Activités :</p>
+            <p className="font-semibold text-gray-600">Accès :</p>
             <div className="flex flex-wrap gap-2 mt-1">
               {getActivities().length > 0 ? (
                 getActivities().map((item, index) => (
@@ -104,7 +106,7 @@ export default function ProfileMenu() {
                   </span>
                 ))
               ) : (
-                <span className="text-gray-400 text-xs italic">Aucune activité</span>
+                <span className="text-gray-400 text-xs italic">Aucun accès</span>
               )}
             </div>
           </div>

@@ -97,7 +97,7 @@ export default function MyFilePage() {
   const getFormattedName = () => {
     const first = user.name || "";
     const last = user.surname || "";
-    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+    return `${first.charAt(0).toUpperCase()}${first.slice(1).toLowerCase()} ${last.toUpperCase()}`;
   };
 
   const getDepartment = () => {
@@ -149,7 +149,7 @@ export default function MyFilePage() {
                 <div className="text-sm text-gray-700 mt-2 space-y-1">
                   <p><span className="font-semibold text-gray-600">Email :</span> {user.email}</p>
                   <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
-                  <p className="font-semibold text-gray-600">Activités :</p>
+                  <p className="font-semibold text-gray-600">Accès :</p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {getActivities().length > 0 ? (
                       getActivities().map((item, index) => (
@@ -158,15 +158,20 @@ export default function MyFilePage() {
                         </span>
                       ))
                     ) : (
-                      <span className="text-gray-400 text-xs italic">Aucune activité</span>
+                      <span className="text-gray-400 text-xs italic">Aucun accès</span>
                     )}
                   </div>
                 </div>
               </div>
               <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
-                <button onClick={handleLogout} className="text-red-600 font-semibold text-sm hover:underline">
-                  Se déconnecter
-                </button>
+<button
+  onClick={handleLogout}
+  className="flex items-center justify-center gap-2 text-red-600 font-semibold text-sm hover:underline w-full"
+>
+  <AiOutlineLogout className="w-4 h-4" />
+  Se déconnecter
+</button>
+
               </div>
             </div>
           )}
@@ -192,14 +197,20 @@ export default function MyFilePage() {
             Uploadez vos fichiers selon votre activité métier.
           </p>
 
-          <div className={`grid gap-8 place-items-center ${accessibleDashboards.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+          <div
+            className={`grid gap-8 ${
+              accessibleDashboards.length === 1
+                ? "grid-cols-1 justify-center"
+                : "grid-cols-1 md:grid-cols-2 place-items-center"
+            }`}
+          >
             {accessibleDashboards.map((dashboard, index) => (
               <motion.div
                 key={dashboard.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.08 }}
-                className={`w-full ${accessibleDashboards.length === 1 ? 'max-w-lg' : 'max-w-sm'}`}
+                className={`w-full max-w-md`}
               >
                 <Link href={`/myfile/${dashboard.route}`}>
                   <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl text-center">

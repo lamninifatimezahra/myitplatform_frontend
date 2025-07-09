@@ -31,7 +31,7 @@ export default function UploadARTHIUSPage() {
 
   const handleUpload = async () => {
     if (!arthiusFile) {
-      setUploadMessage("Veuillez sélectionner un fichier Arthuis.");
+      setUploadMessage("Veuillez sélectionner un fichier Arthius.");
       setUploadStatus("error");
       return;
     }
@@ -81,7 +81,9 @@ export default function UploadARTHIUSPage() {
   const getFormattedName = () => {
     const first = user?.name || "";
     const last = user?.surname || "";
-    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+const formattedLast = last.toUpperCase();
+return `${formattedFirst} ${formattedLast}`.trim();
   };
 
   const getDepartment = () => {
@@ -132,37 +134,23 @@ export default function UploadARTHIUSPage() {
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 sm:px-12 bg-white">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition"
-          >
+          <button onClick={() => router.back()} className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition">
             <AiOutlineArrowLeft size={20} />
           </button>
-          <button
-            onClick={() => router.forward()}
-            className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition"
-          >
+          <button onClick={() => router.forward()} className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition">
             <AiOutlineArrowRight size={20} />
           </button>
         </div>
 
         {/* Utilisateur */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
-          <div
-            className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
-            onClick={() => setShowUserPopup(!showUserPopup)}
-          >
+          <div onClick={() => setShowUserPopup(!showUserPopup)} className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline">
             <AiOutlineUser size={22} />
             <span>{getFormattedName()}</span>
           </div>
-
-          <button
-            onClick={handleLogout}
-            className="text-red-500 hover:text-red-600 transition"
-          >
+          <button onClick={handleLogout} className="text-red-500 hover:text-red-600 transition">
             <AiOutlineLogout size={22} />
           </button>
-
           {showUserPopup && (
             <div className="absolute right-0 top-14 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 animate-fade-in">
               <div className="px-5 py-4 space-y-1">
@@ -184,12 +172,7 @@ export default function UploadARTHIUSPage() {
                 </div>
               </div>
               <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
-                <button
-                  onClick={handleLogout}
-                  className="text-red-600 font-semibold text-sm hover:underline"
-                >
-                  Se déconnecter
-                </button>
+                <button onClick={handleLogout} className="text-red-600 font-semibold text-sm hover:underline">Se déconnecter</button>
               </div>
             </div>
           )}
@@ -198,49 +181,28 @@ export default function UploadARTHIUSPage() {
 
       {/* Carte Upload */}
       <div className="flex flex-1 justify-center items-center pt-28 p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-2xl bg-gray-50 border border-[#31327e] rounded-2xl shadow-xl p-10 flex flex-col items-center"
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-2xl bg-gray-50 border border-[#31327e] rounded-2xl shadow-xl p-10 flex flex-col items-center">
           <Image src="/logo-myit.png" alt="Logo MyIT" width={150} height={60} className="mb-6" />
-
           <h1 className="text-3xl font-bold text-[#31327e] mb-6 text-center">Upload Arthius</h1>
+
+          {/* Message en cours de déploiement */}
+          <div className="w-full bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm mb-6 text-center">
+            🔧 Ce module est en cours de déploiement. Vous pouvez uploader vos fichiers, mais certaines fonctionnalités peuvent encore évoluer.
+          </div>
 
           <div className="w-full space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Fichier Arthius :</label>
               <div className="flex items-center gap-4">
-                <input
-                  type="text"
-                  readOnly
-                  value={arthiusFile ? arthiusFile.name : ""}
-                  placeholder="Aucun fichier sélectionné"
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={handleBrowseARTHIUS}
-                  className="px-6 py-2 border border-[#31327e] text-[#31327e] font-semibold rounded-2xl hover:bg-[#31327e] hover:text-white transition"
-                >
+                <input type="text" readOnly value={arthiusFile ? arthiusFile.name : ""} placeholder="Aucun fichier sélectionné" className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                <button type="button" onClick={handleBrowseARTHIUS} className="px-6 py-2 border border-[#31327e] text-[#31327e] font-semibold rounded-2xl hover:bg-[#31327e] hover:text-white transition">
                   Parcourir
                 </button>
-                <input
-                  type="file"
-                  accept=".xlsx"
-                  onChange={handleFileChange}
-                  ref={arthiusInputRef}
-                  className="hidden"
-                />
+                <input type="file" accept=".xlsx" onChange={handleFileChange} ref={arthiusInputRef} className="hidden" />
               </div>
             </div>
 
-            <button
-              onClick={handleUpload}
-              disabled={isUploading}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#31327e] hover:bg-[#4547b3] text-white font-semibold text-lg rounded-2xl transition"
-            >
+            <button onClick={handleUpload} disabled={isUploading} className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#31327e] hover:bg-[#4547b3] text-white font-semibold text-lg rounded-2xl transition">
               {isUploading ? <AiOutlineLoading3Quarters className="animate-spin" size={20} /> : <AiOutlineUpload size={20} />}
               {isUploading ? "Uploading..." : "Uploader"}
             </button>

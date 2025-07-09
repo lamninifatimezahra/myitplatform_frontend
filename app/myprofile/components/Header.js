@@ -60,7 +60,9 @@ export default function Header() {
   const getFormattedName = () => {
     const first = user?.name || '';
     const last = user?.surname || '';
-    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+const formattedLast = last.toUpperCase();
+return `${formattedFirst} ${formattedLast}`.trim();
   };
 
   const getDepartment = () => {

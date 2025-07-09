@@ -2,9 +2,11 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AiOutlineBell, AiOutlineSearch, AiOutlineMenu } from 'react-icons/ai';
+import { AiOutlineBell, AiOutlineSearch, AiOutlineMenu, AiOutlineUser } from 'react-icons/ai';
+import { ChevronDown, LogOut } from 'lucide-react';
+import fetchWithAuth from '@/utils/fetchWithAuth';
 import Image from 'next/image';
-import fetchWithAuth from '@/utils/fetchWithAuth'; // chemin à adapter selon ton projet
+import { useRouter } from 'next/navigation';
 
 const notifications = [
   { id: 1, message: "Nouvelle réponse à votre post.", time: "Il y a 2 min" },
@@ -14,13 +16,20 @@ const notifications = [
 
 export default function HeaderForum({ setSidebarOpen }) {
   const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
+
   const notifRef = useRef(null);
+  const profileRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setNotifOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -32,17 +41,44 @@ export default function HeaderForum({ setSidebarOpen }) {
       try {
         const res = await fetchWithAuth('https://myit-backend-its-c20c9354ce42.herokuapp.com/api/me/');
         const data = await res.json();
-        setUser({
-          name: `${data.name} ${data.surname}`,
-          avatar: '/avatar.png', // Utilise une valeur statique ou `data.avatar` si disponible
-        });
+        setUser(data);
       } catch (error) {
         console.error("Erreur lors de la récupération des infos utilisateur :", error);
       }
     };
-
     fetchUser();
   }, []);
+
+  const getFormattedName = () => {
+    const first = user?.name || "";
+    const last = user?.surname || "";
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+    const formattedLast = last.toUpperCase();
+    return `${formattedFirst} ${formattedLast}`.trim();
+  };
+
+  const getDepartment = () => {
+    return user?.role === "admin" ? "Administrateur" : user?.department || "N/A";
+  };
+
+  const getAccess = () => {
+    if (user?.role === "admin") return ["Accès libre"];
+    if (user?.dashboards?.length) return user.dashboards;
+    return [];
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/logout/", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Erreur de déconnexion :", err.message);
+    } finally {
+      router.push("/login");
+    }
+  };
 
   return (
     <motion.header
@@ -73,6 +109,7 @@ export default function HeaderForum({ setSidebarOpen }) {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotifOpen(!notifOpen)}
@@ -83,6 +120,7 @@ export default function HeaderForum({ setSidebarOpen }) {
               <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
             )}
           </button>
+
           <AnimatePresence>
             {notifOpen && (
               <motion.div
@@ -92,9 +130,7 @@ export default function HeaderForum({ setSidebarOpen }) {
                 transition={{ duration: 0.2 }}
                 className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
               >
-                <div className="p-4 border-b font-semibold text-sm text-[#31327e]">
-                  Notifications
-                </div>
+                <div className="p-4 border-b font-semibold text-sm text-[#31327e]">Notifications</div>
                 <div className="max-h-60 overflow-y-auto">
                   {notifications.map((notif) => (
                     <div key={notif.id} className="p-3 border-b hover:bg-gray-50 transition">
@@ -108,18 +144,57 @@ export default function HeaderForum({ setSidebarOpen }) {
           </AnimatePresence>
         </div>
 
-        {user && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition whitespace-nowrap">
-            <Image
-              src={user.avatar}
-              alt={user.name}
-              width={32}
-              height={32}
-              className="rounded-full object-cover"
-            />
-            <span className="text-sm font-medium text-gray-700 hidden sm:inline">{user.name}</span>
-          </div>
-        )}
+        {/* Profil */}
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => setProfileOpen(!profileOpen)}
+            className="flex items-center space-x-2 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition duration-300"
+          >
+            <AiOutlineUser className="w-6 h-6 text-gray-700" />
+            <span className="font-medium text-gray-800">{getFormattedName()}</span>
+            <ChevronDown className="w-4 h-4 text-gray-600" />
+          </button>
+
+          <AnimatePresence>
+            {profileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+              >
+                <div className="px-5 py-4 text-sm space-y-1">
+                  <p className="text-xs text-gray-500">Connecté en tant que</p>
+                  <p className="font-bold text-[#31327e] text-base">{getFormattedName()}</p>
+                  <p><span className="font-semibold text-gray-600">Email :</span> {user?.email}</p>
+                  <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
+                  <p className="font-semibold text-gray-600">Accès :</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {getAccess().length > 0 ? (
+                      getAccess().map((item, index) => (
+                        <span key={index} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+                          {item}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 text-xs italic">Aucun accès</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
+                  <button
+                    onClick={handleLogout}
+                    className="text-red-600 font-semibold text-sm hover:underline"
+                  >
+                    <LogOut className="w-4 h-4 inline mr-2" />
+                    Se déconnecter
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </motion.header>
   );

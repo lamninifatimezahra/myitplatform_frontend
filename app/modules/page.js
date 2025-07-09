@@ -62,7 +62,6 @@ export default function AccueilPage() {
             />
           </div>
         </div>
-
         <style jsx>{`
           @keyframes spin-custom {
             0% {
@@ -112,7 +111,9 @@ export default function AccueilPage() {
   const getFormattedName = () => {
     const first = user.name || "";
     const last = user.surname || "";
-    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+    const formattedLast = last.toUpperCase();
+    return `${formattedFirst} ${formattedLast}`.trim();
   };
 
   const getDepartment = () => {
@@ -136,6 +137,7 @@ export default function AccueilPage() {
         }}
       />
 
+      {/* HEADER */}
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 sm:px-12 bg-transparent">
         <div className="flex items-center gap-3">
           <button
@@ -180,7 +182,7 @@ export default function AccueilPage() {
                 <div className="text-sm text-gray-700 mt-2 space-y-1">
                   <p><span className="font-semibold text-gray-600">Email :</span> {user.email}</p>
                   <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
-                  <p className="font-semibold text-gray-600">Activités :</p>
+                  <p className="font-semibold text-gray-600">Accès :</p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {getActivities().length > 0 ? (
                       getActivities().map((item, index) => (
@@ -192,19 +194,20 @@ export default function AccueilPage() {
                         </span>
                       ))
                     ) : (
-                      <span className="text-gray-400 text-xs italic">Aucune activité</span>
+                      <span className="text-gray-400 text-xs italic">Aucun accès</span>
                     )}
                   </div>
                 </div>
               </div>
 
               <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
-                <button
-                  onClick={handleLogout}
-                  className="text-red-600 font-semibold text-sm hover:underline"
-                >
-                  Se déconnecter
-                </button>
+<button
+  onClick={handleLogout}
+  className="flex items-center justify-center gap-2 text-red-600 font-semibold text-sm hover:underline w-full"
+>
+  <AiOutlineLogout className="w-4 h-4" />
+  Se déconnecter
+</button>
               </div>
             </div>
           )}
@@ -240,6 +243,9 @@ export default function AccueilPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
             {accessibleModules.map((mod, index) => {
               const isDisabled = ["MyPropos", "MyAI", "Guide MyIT"].includes(mod.name);
+              const isLastOdd =
+                accessibleModules.length % 2 === 1 &&
+                index === accessibleModules.length - 1;
 
               return (
                 <motion.div
@@ -247,15 +253,19 @@ export default function AccueilPage() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
-                  className="w-full max-w-sm"
+                  className={`w-full ${isLastOdd ? "md:col-span-2" : ""} max-w-sm`}
                 >
                   {isDisabled ? (
                     <div
                       className="w-full py-6 px-6 border border-gray-300 rounded-2xl font-semibold text-lg text-gray-400 bg-gray-100 transition-all duration-300 cursor-not-allowed shadow-sm flex flex-col items-center"
                       title="Bientôt disponible"
                     >
-                      {mod.name}
-                      <span className="text-xs mt-2 italic text-gray-400">Bientôt disponible</span>
+                      <span className="text-gray-400 text-lg font-semibold">
+                        {mod.name}{" "}
+                        <span className="text-sm italic text-gray-500">
+                          (Bientôt disponible)
+                        </span>
+                      </span>
                     </div>
                   ) : (
                     <Link href={mod.path}>
@@ -271,12 +281,14 @@ export default function AccueilPage() {
         </div>
       </div>
 
+      {/* SCROLL HINT */}
       {showScrollHint && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
           <BsChevronDown className="text-[#31327e] animate-bounce text-xl" />
         </div>
       )}
 
+      {/* FOOTER */}
       <footer className="relative z-10 text-center text-sm text-gray-400 py-4 mt-10">
         © {new Date().getFullYear()} MyIT – Plateforme interne Intelcia IT Solutions
       </footer>

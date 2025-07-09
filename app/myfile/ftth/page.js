@@ -86,7 +86,9 @@ export default function UploadFTTHPage() {
   const getFormattedName = () => {
     const first = user?.name || "";
     const last = user?.surname || "";
-    return `${first.toUpperCase()} ${last.toUpperCase()}`.trim();
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+const formattedLast = last.toUpperCase();
+return `${formattedFirst} ${formattedLast}`.trim();
   };
 
   const getDepartment = () => {
@@ -189,12 +191,13 @@ export default function UploadFTTHPage() {
                 </div>
               </div>
               <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
-                <button
-                  onClick={handleLogout}
-                  className="text-red-600 font-semibold text-sm hover:underline"
-                >
-                  Se déconnecter
-                </button>
+<button
+  onClick={handleLogout}
+  className="flex items-center justify-center gap-2 text-red-600 font-semibold text-sm hover:underline w-full"
+>
+  <AiOutlineLogout className="w-4 h-4" />
+  Se déconnecter
+</button>
               </div>
             </div>
           )}
