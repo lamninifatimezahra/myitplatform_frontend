@@ -83,7 +83,7 @@ export default function TicketsReentrantsTable({
   const [searchTicketId, setSearchTicketId] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  // ✅ NOUVEAU : État pour savoir si l'utilisateur a fait une sélection manuelle
+  // ✅ État pour savoir si l'utilisateur a fait une sélection manuelle
   const [hasManualSelection, setHasManualSelection] = useState(false);
   const [lastGlobalModifiedAt, setLastGlobalModifiedAt] = useState(0);
 
@@ -104,7 +104,7 @@ export default function TicketsReentrantsTable({
 
 /**
  * Fonction de traitement des tickets (calcul des itérations).
- * Version améliorée avec attribution cohérente des itérations
+ * Version modifiée pour stocker les réitérations par semaine (excluant la première apparition)
  */
 const processIterationData = (tickets) => {
   const processed = {};
@@ -134,11 +134,24 @@ const processIterationData = (tickets) => {
     
     let cumulativeCount = 0;
     const iterations = {};
+    const weekReiterations = {}; // ✅ NOUVEAU : stocker les réitérations par semaine
     const weekDetails = [];
+    
+    // Identifier la première semaine d'apparition
+    const firstWeek = weeks[0];
     
     // Pour chaque semaine, calculer le nombre d'occurrences et l'itération cumulative
     weeks.forEach((week, index) => {
       const occurrencesInWeek = weekData[week].length;
+      
+      // ✅ NOUVEAU : calculer les réitérations pour cette semaine
+      if (week === firstWeek) {
+        // Pour la première semaine, on soustrait 1 (la première apparition)
+        weekReiterations[week] = Math.max(0, occurrencesInWeek - 1);
+      } else {
+        // Pour les autres semaines, toutes les occurrences sont des réitérations
+        weekReiterations[week] = occurrencesInWeek;
+      }
       
       // Pour chaque occurrence dans cette semaine
       for (let i = 0; i < occurrencesInWeek; i++) {
@@ -172,6 +185,7 @@ const processIterationData = (tickets) => {
     processed[ticketId] = {
       titre_ticket: firstTicket.compl_title,
       iterations: iterations,
+      weekReiterations: weekReiterations, // ✅ NOUVEAU : ajouter les réitérations par semaine
       totalIterations: cumulativeCount,
       weekDetails: weekDetails,
       comment_reentrant: firstTicket.comment_reentrant || "",
@@ -235,7 +249,7 @@ const processIterationData = (tickets) => {
   })();
 
   /**
-   * ✅ MODIFIÉ : Applique le filtre global SEULEMENT s'il y a un nouveau filtre global
+   * ✅ Applique le filtre global SEULEMENT s'il y a un nouveau filtre global
    * et que l'utilisateur n'a pas fait de sélection manuelle depuis.
    */
   useEffect(() => {
@@ -265,10 +279,6 @@ const processIterationData = (tickets) => {
 
   /**
    * Calcul et traitement des données.
-   *
-   * Si aucune sélection locale n'est effectuée (selectedWeeks vide) et qu'un filtre global est défini,
-   * le filtrage global est appliqué (filtrage par date). Dès qu'une sélection locale est définie,
-   * le filtrage se fait sur l'ensemble des données pour l'année sélectionnée, sans tenir compte du filtre global.
    */
   useEffect(() => {
     if (rawData.length > 0 && selectedYear) {
@@ -303,7 +313,6 @@ const filteredData = data.filter(ticket => {
   // Si le ticket n'apparaît dans aucune des semaines sélectionnées
   if (validCounts.length === 0) return false;
   
-  // ✅ NOUVELLE LOGIQUE : 
   // Afficher le ticket SEULEMENT s'il y a au moins une semaine sélectionnée 
   // où le ticket a une itération > 1 (donc pas sa première apparition)
   const hasReiterationInSelectedWeeks = validCounts.some(count => count > 1);
@@ -335,22 +344,22 @@ const filteredData = data.filter(ticket => {
   const allWeeksSelected =
     allWeeks.length > 0 && allWeeks.every(week => selectedWeeks.includes(week));
   
-  // ✅ MODIFIÉ : Marquer comme sélection manuelle
+  // ✅ Marquer comme sélection manuelle
   const toggleSelectAll = () => {
     if (allWeeksSelected) {
       setSelectedWeeks([]);
     } else {
       setSelectedWeeks([...allWeeks]);
     }
-    setHasManualSelection(true); // ✅ Marquer comme sélection manuelle
+    setHasManualSelection(true);
   };
 
-  // ✅ MODIFIÉ : Marquer comme sélection manuelle
+  // ✅ Marquer comme sélection manuelle
   const handleWeekSelectionChange = (week) => {
     setSelectedWeeks(prev =>
       prev.includes(week) ? prev.filter(w => w !== week) : [...prev, week]
     );
-    setHasManualSelection(true); // ✅ Marquer comme sélection manuelle
+    setHasManualSelection(true);
   };
 
   // Changement d'année.
@@ -358,10 +367,10 @@ const filteredData = data.filter(ticket => {
     setSelectedYear(year);
     // Réinitialisation de la sélection locale à chaque changement d'année.
     setSelectedWeeks([]);
-    setHasManualSelection(false); // ✅ Réinitialiser le flag de sélection manuelle
+    setHasManualSelection(false);
   };
 
-  // ✅ NOUVEAU : Fonction pour réinitialiser les filtres locaux et reprendre le filtre global
+  // ✅ Fonction pour réinitialiser les filtres locaux et reprendre le filtre global
   const resetToGlobalFilter = () => {
     setSelectedWeeks([]);
     setSearchTicketId("");
@@ -401,7 +410,7 @@ const saveComment = async (ticketId, commentText) => {
         id_ticket: ticketId,
         comment_type: 'reentrant',
         comment_text: commentText,
-        table_type: tableType    // Spécifier explicitement la table
+        table_type: tableType
       }),
     });
 
@@ -482,7 +491,7 @@ const saveComment = async (ticketId, commentText) => {
           >
             <h4 className="font-semibold text-black">Filtrer par :</h4>
             
-            {/* ✅ NOUVEAU : Bouton pour revenir au filtre global */}
+            {/* Bouton pour revenir au filtre global */}
             {hasManualSelection && (globalStartDate && globalEndDate) && (
               <div className="mb-3">
                 <button
@@ -524,7 +533,7 @@ const saveComment = async (ticketId, commentText) => {
             )}
             <h4 className="font-semibold mt-2 text-black">Semaines :</h4>
             
-            {/* ✅ NOUVEAU : Indicateur de sélection manuelle */}
+            {/* Indicateur de sélection manuelle */}
             {hasManualSelection && (
               <div className="text-xs text-blue-600 mb-2">
                 ✋ Sélection personnalisée active
@@ -597,7 +606,8 @@ const saveComment = async (ticketId, commentText) => {
                   (week) =>
                     selectedWeeks.includes(week) && (
                       <td key={week} className="border p-2">
-                        {ticket.iterations[week] ? ticket.iterations[week] : ""}
+                        {/* ✅ MODIFIÉ : utiliser weekReiterations (excluant la première apparition) */}
+                        {ticket.weekReiterations[week] > 0 ? ticket.weekReiterations[week] : ""}
                       </td>
                     )
                 )}
@@ -717,7 +727,8 @@ const saveComment = async (ticketId, commentText) => {
                       (week) =>
                         selectedWeeks.includes(week) && (
                           <td key={week} className="border p-2">
-                            {ticket.iterations[week] ? ticket.iterations[week] : ""}
+                            {/* ✅ MODIFIÉ : utiliser weekReiterations (excluant la première apparition) */}
+                            {ticket.weekReiterations[week] > 0 ? ticket.weekReiterations[week] : ""}
                           </td>
                         )
                     )}

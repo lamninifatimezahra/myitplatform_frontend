@@ -11,7 +11,7 @@ export default function NewsTickerRetard({
   idField = "id_ticket",
   titreField = "compl_title",
   retardDays = 14,
-  animationDuration = 40
+  scrollSpeed = 50 // Vitesse en pixels par seconde
 }) {
   // Déclaration de tous les états au début de la fonction
   const [tickets, setTickets] = useState([]);
@@ -20,6 +20,7 @@ export default function NewsTickerRetard({
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
+  const [animationDuration, setAnimationDuration] = useState(40);
   const [animationState, setAnimationState] = useState({
     play: true,
     position: 0
@@ -98,6 +99,46 @@ export default function NewsTickerRetard({
     fetchData();
   }, [apiUrl, dateSortieField, dateDerniereMajField, idField, titreField, retardDays]);
 
+  // useEffect pour calculer la durée d'animation basée sur la largeur du contenu
+  useEffect(() => {
+    const calculateAnimationDuration = () => {
+      if (tickerRef.current && tickets.length > 0) {
+        // Attendre un petit délai pour que le DOM soit mis à jour
+        setTimeout(() => {
+          const tickerWidth = tickerRef.current.scrollWidth;
+          const containerWidth = containerRef.current?.offsetWidth || 0;
+          
+          // La distance à parcourir est la moitié de la largeur du ticker (car on a 2 copies)
+          const distance = tickerWidth / 2;
+          
+          // Calculer la durée basée sur la vitesse souhaitée (pixels par seconde)
+          const duration = distance / scrollSpeed;
+          
+          setAnimationDuration(duration);
+          
+          // Réappliquer l'animation avec la nouvelle durée si le ticker n'est pas en pause
+          if (!isPaused && tickerRef.current) {
+            // Utiliser les propriétés individuelles au lieu du shorthand
+            tickerRef.current.style.animationName = 'ticker';
+            tickerRef.current.style.animationDuration = `${duration}s`;
+            tickerRef.current.style.animationTimingFunction = 'linear';
+            tickerRef.current.style.animationIterationCount = 'infinite';
+          }
+        }, 100);
+      }
+    };
+
+    calculateAnimationDuration();
+    
+    // Recalculer si la fenêtre est redimensionnée
+    const handleResize = () => calculateAnimationDuration();
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [tickets, scrollSpeed, isPaused]);
+
   // Deuxième useEffect pour la gestion des événements globaux
   useEffect(() => {
     // Gestionnaires d'événements globaux pour capturer les mouvements même hors du composant
@@ -148,8 +189,8 @@ export default function NewsTickerRetard({
       
       // Arrêter l'animation CSS et capturer la position actuelle
       if (tickerRef.current) {
-        // Désactiver d'abord l'animation
-        tickerRef.current.style.animation = 'none';
+        // Désactiver l'animation en réinitialisant les propriétés
+        tickerRef.current.style.animationName = 'none';
         
         // Forcer un reflow pour appliquer le changement d'animation
         void tickerRef.current.offsetWidth;
@@ -206,8 +247,11 @@ export default function NewsTickerRetard({
       setIsPaused(false);
       
       if (tickerRef.current) {
-        // Réinitialiser les styles CSS
-        tickerRef.current.style.animation = `ticker ${animationDuration}s linear infinite`;
+        // Réinitialiser les styles CSS avec la durée calculée
+        tickerRef.current.style.animationName = 'ticker';
+        tickerRef.current.style.animationDuration = `${animationDuration}s`;
+        tickerRef.current.style.animationTimingFunction = 'linear';
+        tickerRef.current.style.animationIterationCount = 'infinite';
         tickerRef.current.style.transform = '';
         
         // Reprendre l'animation
@@ -326,7 +370,10 @@ export default function NewsTickerRetard({
           ref={tickerRef}
           className="ticker-content inline-block whitespace-nowrap"
           style={{ 
-            animation: `ticker ${animationDuration}s linear infinite`,
+            animationName: 'ticker',
+            animationDuration: `${animationDuration}s`,
+            animationTimingFunction: 'linear',
+            animationIterationCount: 'infinite',
             animationPlayState: isPaused ? 'paused' : 'running',
             touchAction: 'none' // Désactiver les actions tactiles par défaut
           }}
