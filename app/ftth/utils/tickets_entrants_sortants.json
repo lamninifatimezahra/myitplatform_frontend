@@ -1,758 +1,18 @@
 [
   {
-    "ID_TICKET": "C34198359",
-    "CREATE_DATE": "2025-06-23",
-    "DATE_SORTIE": null
+    "ID_TICKET": "C34084166",
+    "CREATE_DATE": "2025-05-27",
+    "DATE_SORTIE": "2025-07-08"
   },
   {
-    "ID_TICKET": "C34204174",
-    "CREATE_DATE": "2025-06-24",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34208951",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34209146",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34209425",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34209540",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34209590",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34209732",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34209858",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34210981",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34211047",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34211268",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34211359",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34211688",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34211731",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34211765",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34211972",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34212229",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34212558",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34212565",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34212811",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34212879",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-25"
-  },
-  {
-    "ID_TICKET": "C34213261",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34213715",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34214075",
-    "CREATE_DATE": "2025-06-25",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34215511",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34215725",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34215735",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34215768",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34216150",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34216441",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34216441",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34216507",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34216763",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34216917",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34216946",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34217418",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-07-03"
-  },
-  {
-    "ID_TICKET": "C34217605",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34217617",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34217811",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34217835",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34217998",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34218079",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34218119",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34218612",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34218859",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34219117",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
+    "ID_TICKET": "C34135831",
+    "CREATE_DATE": "2025-06-10",
+    "DATE_SORTIE": "2025-07-08"
   },
   {
     "ID_TICKET": "C34219249",
     "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34219293",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34219350",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34219508",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34219730",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-26"
-  },
-  {
-    "ID_TICKET": "C34220011",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34220409",
-    "CREATE_DATE": "2025-06-26",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34221697",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34221724",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34222111",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34222191",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34222437",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34222716",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34222808",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34223138",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34223169",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34223216",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34223368",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34223420",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34223432",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34223466",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34223471",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34223657",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34223842",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34223913",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34223929",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34224029",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34224242",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34224475",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34224588",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-27"
-  },
-  {
-    "ID_TICKET": "C34224995",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34225006",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34225075",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34225333",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34225563",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34225951",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34225970",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34226024",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34226050",
-    "CREATE_DATE": "2025-06-27",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34229758",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34229868",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34230243",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34230324",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34230492",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34230551",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34230687",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34230774",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34231104",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34231233",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34231639",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34231654",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34231790",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34231818",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34231934",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34231972",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34232026",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34232362",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34232874",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34232947",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34232984",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34233399",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34233503",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34233721",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34233783",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34234054",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-06-30"
-  },
-  {
-    "ID_TICKET": "C34234058",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34234242",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34234347",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34234414",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34234427",
-    "CREATE_DATE": "2025-06-30",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34236409",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34236570",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34236702",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34237172",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34237209",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34237237",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34237272",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34237363",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34237366",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34237605",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34238080",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-01"
-  },
-  {
-    "ID_TICKET": "C34238801",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34239305",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34239453",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34239459",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34240035",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34240446",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34240637",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34240747",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34240811",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34240849",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34240909",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241107",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34241358",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241410",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241493",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241528",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241578",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34241622",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241665",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241838",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241839",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34241958",
-    "CREATE_DATE": "2025-07-01",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34243220",
-    "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": "2025-07-02"
+    "DATE_SORTIE": "2025-07-08"
   },
   {
     "ID_TICKET": "C34243675",
@@ -770,19 +30,19 @@
     "DATE_SORTIE": null
   },
   {
+    "ID_TICKET": "C34248990",
+    "CREATE_DATE": "2025-07-02",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34243220",
+    "CREATE_DATE": "2025-07-02",
+    "DATE_SORTIE": "2025-07-02"
+  },
+  {
     "ID_TICKET": "C34243968",
     "CREATE_DATE": "2025-07-02",
     "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34244003",
-    "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": "2025-07-02"
-  },
-  {
-    "ID_TICKET": "C34244337",
-    "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
   },
   {
     "ID_TICKET": "C34244528",
@@ -792,12 +52,7 @@
   {
     "ID_TICKET": "C34244924",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34244957",
-    "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": "2025-07-02"
+    "DATE_SORTIE": "2025-07-04"
   },
   {
     "ID_TICKET": "C34245046",
@@ -825,24 +80,14 @@
     "DATE_SORTIE": "2025-07-02"
   },
   {
-    "ID_TICKET": "C34245871",
-    "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
-  },
-  {
     "ID_TICKET": "C34245884",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34246011",
-    "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34246190",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34246682",
@@ -852,22 +97,22 @@
   {
     "ID_TICKET": "C34246724",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34247001",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34247146",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34247210",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34247653",
@@ -877,65 +122,95 @@
   {
     "ID_TICKET": "C34247668",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248017",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248357",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248465",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248509",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248546",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248619",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248642",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248678",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248710",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34248777",
     "CREATE_DATE": "2025-07-02",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
-    "ID_TICKET": "C34248990",
+    "ID_TICKET": "C34245046",
     "CREATE_DATE": "2025-07-02",
     "DATE_SORTIE": null
   },
   {
-    "ID_TICKET": "C34249928",
+    "ID_TICKET": "C34244003",
+    "CREATE_DATE": "2025-07-02",
+    "DATE_SORTIE": "2025-07-02"
+  },
+  {
+    "ID_TICKET": "C34244337",
+    "CREATE_DATE": "2025-07-02",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34245871",
+    "CREATE_DATE": "2025-07-02",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34246011",
+    "CREATE_DATE": "2025-07-02",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34244957",
+    "CREATE_DATE": "2025-07-02",
+    "DATE_SORTIE": "2025-07-02"
+  },
+  {
+    "ID_TICKET": "C34250992",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254221",
     "CREATE_DATE": "2025-07-03",
     "DATE_SORTIE": null
   },
@@ -945,33 +220,748 @@
     "DATE_SORTIE": null
   },
   {
-    "ID_TICKET": "C34249984",
+    "ID_TICKET": "C34251619",
     "CREATE_DATE": "2025-07-03",
     "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34249928",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34249984",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
   },
   {
     "ID_TICKET": "C34250063",
     "CREATE_DATE": "2025-07-03",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34250542",
     "CREATE_DATE": "2025-07-03",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-04"
   },
   {
     "ID_TICKET": "C34250651",
     "CREATE_DATE": "2025-07-03",
-    "DATE_SORTIE": null
-  },
-  {
-    "ID_TICKET": "C34250992",
-    "CREATE_DATE": "2025-07-03",
-    "DATE_SORTIE": null
+    "DATE_SORTIE": "2025-07-03"
   },
   {
     "ID_TICKET": "C34251071",
     "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34252082",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34252115",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34252136",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34252151",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34252183",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34252211",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34252249",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34252292",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34252368",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34252610",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34252686",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34252778",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34253453",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34253496",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34253950",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34254055",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34254274",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34254318",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34254362",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254426",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34254442",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-03"
+  },
+  {
+    "ID_TICKET": "C34254475",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34254602",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34254615",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34254621",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34254922",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34254953",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34254967",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34254978",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34255053",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34254318",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34254953",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254967",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254978",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34255053",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254922",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254503",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254731",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34254774",
+    "CREATE_DATE": "2025-07-03",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34259305",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34260253",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34260400",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34255923",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34256311",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34256771",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34257246",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34257378",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-04"
+  },
+  {
+    "ID_TICKET": "C34257779",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34258010",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34258208",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34258551",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34258668",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34258732",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34258805",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34258843",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34259376",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34257496",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34259935",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34259994",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34260098",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34260292",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34260316",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34260386",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34260586",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34258115",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34257942",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34258013",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-09"
+  },
+  {
+    "ID_TICKET": "C34258053",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34258765",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34258822",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34259520",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34259557",
+    "CREATE_DATE": "2025-07-04",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34265210",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34269024",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34266146",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34266348",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34266242",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34264229",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34264549",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34265056",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34265189",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34265336",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34266090",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34266411",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34266826",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34266912",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34267301",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34267472",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34267876",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34268044",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34268386",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34268719",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34269099",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34269144",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34269145",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34269161",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34269166",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34264681",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34266186",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34266243",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34266335",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34267579",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34264194",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-07"
+  },
+  {
+    "ID_TICKET": "C34264149",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34265395",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34267831",
+    "CREATE_DATE": "2025-07-07",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34272057",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34270411",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34271106",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34271648",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34271650",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34271833",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34272919",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34273017",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34273144",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": "2025-07-08"
+  },
+  {
+    "ID_TICKET": "C34273160",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34273331",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34273385",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34273519",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34273849",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274114",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274574",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274624",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274657",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274728",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274758",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274796",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34270902",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274303",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34271759",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34272525",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34273707",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34273812",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274024",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34273532",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34274438",
+    "CREATE_DATE": "2025-07-08",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34275746",
+    "CREATE_DATE": "2025-07-09",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34275762",
+    "CREATE_DATE": "2025-07-09",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34275779",
+    "CREATE_DATE": "2025-07-09",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34275897",
+    "CREATE_DATE": "2025-07-09",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34276322",
+    "CREATE_DATE": "2025-07-09",
+    "DATE_SORTIE": null
+  },
+  {
+    "ID_TICKET": "C34276381",
+    "CREATE_DATE": "2025-07-09",
     "DATE_SORTIE": null
   }
 ]
