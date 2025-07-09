@@ -96,7 +96,7 @@ function SidebarContent({ pathname, handleLogout, user, closeSidebar }) {
     <>
       {/* Logo cliquable */}
       <div className="mb-6 flex justify-center">
-        <Link href="/acceuil" onClick={closeSidebar} className="hover:opacity-90 transition">
+        <Link href="/modules" onClick={closeSidebar} className="hover:opacity-90 transition">
           <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
         </Link>
       </div>
@@ -132,7 +132,7 @@ function SidebarContent({ pathname, handleLogout, user, closeSidebar }) {
           <SidebarItem
             icon={<AiOutlineArrowLeft size={22} />}
             text="Retour MyIT"
-            href="/acceuil"
+            href="/modules"
             pathname={pathname}
             onClick={closeSidebar}
           />

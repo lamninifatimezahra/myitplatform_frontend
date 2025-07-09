@@ -89,9 +89,9 @@ function SidebarContent({ pathname, handleLogout, closeSidebar, user }) {
 
   return (
     <>
-      {/* Logo cliquable vers l'acceuil */}
+      {/* Logo cliquable vers l'modules */}
       <div className="flex justify-center shrink-0 mb-4">
-        <a href="/acceuil" className="hover:opacity-90 transition">
+        <a href="/modules" className="hover:opacity-90 transition">
           <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
         </a>
       </div>
@@ -128,7 +128,7 @@ function SidebarContent({ pathname, handleLogout, closeSidebar, user }) {
           <SidebarItem
             icon={<AiOutlineArrowLeft size={22} />}
             text="Retour MyIT"
-            href="/acceuil"
+            href="/modules"
             pathname={pathname}
             onClick={closeSidebar}
           />

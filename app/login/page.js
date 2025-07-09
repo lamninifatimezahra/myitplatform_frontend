@@ -108,7 +108,7 @@ export default function LoginPage() {
       } else {
         setSuccessMessage("Connexion réussie !");
         setTimeout(() => {
-          router.push("/acceuil");
+          router.push("/modules");
         }, 1500);
       }
     } catch (err) {
@@ -169,7 +169,7 @@ export default function LoginPage() {
       setError({ email: "", password: "", general: "" });
 
       setTimeout(() => {
-        router.push("/acceuil");
+        router.push("/modules");
       }, 1500);
     } catch (err) {
       setError({ ...error, general: err.message });

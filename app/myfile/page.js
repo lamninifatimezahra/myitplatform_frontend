@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineUser, AiOutlineLogout } from "react-icons/ai";
-import { BsChevronDown } from "react-icons/bs";
 
 export default function MyFilePage() {
   const { user, loading } = useAuth();
@@ -25,7 +24,7 @@ export default function MyFilePage() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    
+
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const scrollBottom = window.innerHeight + scrollTop;
@@ -51,7 +50,6 @@ export default function MyFilePage() {
             <Image src="/logo-myit.png" alt="Logo MyIT" width={48} height={48} className="object-contain" />
           </div>
         </div>
-
         <style jsx>{`
           @keyframes spin-custom {
             0% { transform: rotate(0deg); }
@@ -65,7 +63,6 @@ export default function MyFilePage() {
     );
   }
 
-  // Configuration des dashboards avec leur affichage et leur route
   const dashboardsConfig = [
     { id: "HISPEED", display: "HISPEED", route: "hispeed" },
     { id: "FTTH", display: "FTTH", route: "ftth" },
@@ -75,6 +72,14 @@ export default function MyFilePage() {
     { id: "EARFT", display: "EARF-T", route: "earft" },
     { id: "ARTHIUS", display: "ARTHIUS", route: "arthius" }
   ];
+
+  const comingSoon = ["DSL", "FTTB", "EARF", "EARFT", "ARTHIUS"];
+
+  const accessibleDashboards = dashboardsConfig.filter((dashboard) => {
+    const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
+    const isComingSoon = comingSoon.includes(dashboard.id);
+    return hasAccess && !isComingSoon;
+  });
 
   const handleLogout = async () => {
     try {
@@ -107,34 +112,22 @@ export default function MyFilePage() {
 
   return (
     <main className="flex flex-col min-h-screen bg-white text-gray-800 relative overflow-hidden">
-      {/* Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center z-0"
-        style={{
-          backgroundImage: "url('/background-office.jpg')",
-          filter: "brightness(1.1) blur(5px)",
-          opacity: 0.2,
-        }}
-      />
+      <div className="absolute inset-0 bg-cover bg-center z-0" style={{
+        backgroundImage: "url('/background-office.jpg')",
+        filter: "brightness(1.1) blur(5px)",
+        opacity: 0.2,
+      }} />
 
-      {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 sm:px-12 bg-transparent">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition"
-          >
+          <button onClick={() => router.back()} className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition">
             <AiOutlineArrowLeft size={20} />
           </button>
-          <button
-            onClick={() => router.forward()}
-            className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition"
-          >
+          <button onClick={() => router.forward()} className="p-2 rounded-full bg-[#31327e] text-white hover:bg-[#4547b3] transition">
             <AiOutlineArrowRight size={20} />
           </button>
         </div>
 
-        {/* Utilisateur */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
@@ -144,11 +137,7 @@ export default function MyFilePage() {
             <span>{getFormattedName()}</span>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="text-red-500 hover:text-red-600 transition"
-            title="Se déconnecter"
-          >
+          <button onClick={handleLogout} className="text-red-500 hover:text-red-600 transition" title="Se déconnecter">
             <AiOutlineLogout size={22} />
           </button>
 
@@ -157,7 +146,6 @@ export default function MyFilePage() {
               <div className="px-5 py-4 space-y-1">
                 <p className="text-xs text-gray-500">Connecté en tant que</p>
                 <p className="font-bold text-[#31327e] text-base">{getFormattedName()}</p>
-
                 <div className="text-sm text-gray-700 mt-2 space-y-1">
                   <p><span className="font-semibold text-gray-600">Email :</span> {user.email}</p>
                   <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
@@ -175,12 +163,8 @@ export default function MyFilePage() {
                   </div>
                 </div>
               </div>
-
               <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
-                <button
-                  onClick={handleLogout}
-                  className="text-red-600 font-semibold text-sm hover:underline"
-                >
+                <button onClick={handleLogout} className="text-red-600 font-semibold text-sm hover:underline">
                   Se déconnecter
                 </button>
               </div>
@@ -189,17 +173,10 @@ export default function MyFilePage() {
         </div>
       </div>
 
-      {/* Contenu principal */}
       <div className="relative z-10 flex-1 flex flex-col justify-start pt-28 px-6 py-12 sm:px-12">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-10">
-            <Image
-              src="/logo-myit.png"
-              alt="MyIT Logo"
-              width={280}
-              height={80}
-              className="drop-shadow-lg"
-            />
+            <Image src="/logo-myit.png" alt="MyIT Logo" width={280} height={80} className="drop-shadow-lg" />
           </div>
 
           <motion.h1
@@ -215,34 +192,26 @@ export default function MyFilePage() {
             Uploadez vos fichiers selon votre activité métier.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
-            {dashboardsConfig.map((dashboard, index) => {
-              const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
-              return (
-                <motion.div
-                  key={dashboard.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.08 }}
-                  className="w-full max-w-sm"
-                >
-                  {hasAccess ? (
-                    <Link href={`/myfile/${dashboard.route}`}>
-                      <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl">
-                        {dashboard.display}
-                      </div>
-                    </Link>
-                  ) : (
-                    <div className="w-full py-6 px-6 border border-gray-300 text-gray-400 text-lg font-semibold rounded-2xl bg-gray-100 cursor-not-allowed shadow-inner">
-                      {dashboard.display}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+          <div className={`grid gap-8 place-items-center ${accessibleDashboards.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+            {accessibleDashboards.map((dashboard, index) => (
+              <motion.div
+                key={dashboard.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
+                className={`w-full ${accessibleDashboards.length === 1 ? 'max-w-lg' : 'max-w-sm'}`}
+              >
+                <Link href={`/myfile/${dashboard.route}`}>
+                  <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl text-center">
+                    {dashboard.display}
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
+
       <footer className="relative z-10 text-center text-sm text-gray-400 py-4 mt-10">
         © {new Date().getFullYear()} MyIT – Plateforme interne Intelcia IT Solutions
       </footer>

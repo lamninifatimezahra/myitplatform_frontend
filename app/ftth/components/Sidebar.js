@@ -114,7 +114,7 @@ function SidebarContent({
   return (
     <>
       <div className="flex justify-center shrink-0 mb-4">
-        <Link href="/acceuil" onClick={closeSidebar}>
+        <Link href="/modules" onClick={closeSidebar}>
           <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} className="cursor-pointer" />
         </Link>
       </div>
@@ -173,7 +173,7 @@ function SidebarContent({
           <SidebarItem
             icon={<AiOutlineArrowLeft size={22} />}
             text="Retour en IT"
-            href="/acceuil"
+            href="/modules"
             pathname={pathname}
             onClick={closeSidebar}
           />

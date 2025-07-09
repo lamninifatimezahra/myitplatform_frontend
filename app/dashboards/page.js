@@ -47,23 +47,15 @@ export default function DashboardsPage() {
     };
   }, []);
 
-  // ✅ Spinner si chargement
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
         <div className="relative w-24 h-24">
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Image
-              src="/logo-myit.png"
-              alt="Logo MyIT"
-              width={48}
-              height={48}
-              className="object-contain"
-            />
+            <Image src="/logo-myit.png" alt="Logo MyIT" width={48} height={48} />
           </div>
         </div>
-
         <style jsx>{`
           @keyframes spin-custom {
             0% {
@@ -81,7 +73,6 @@ export default function DashboardsPage() {
     );
   }
 
-  // Configuration des dashboards
   const dashboardsConfig = [
     { id: "HISPEED", display: "HISPEED", route: "hispeed" },
     { id: "FTTH", display: "FTTH", route: "ftth" },
@@ -89,8 +80,16 @@ export default function DashboardsPage() {
     { id: "FTTB", display: "FTTB", route: "fttb" },
     { id: "EARF", display: "Migration Docs", route: "earf" },
     { id: "EARFT", display: "EARF-T", route: "earft" },
-    { id: "ARTHUIS", display: "ARTHUIS", route: "arthuis" }
+    { id: "ARTHUIS", display: "ARTHUIS", route: "arthuis" },
   ];
+
+  const comingSoon = ["DSL", "FTTB", "EARF", "EARFT", "ARTHUIS"];
+
+  const accessibleDashboards = dashboardsConfig.filter((dashboard) => {
+    const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
+    const isComingSoon = comingSoon.includes(dashboard.id);
+    return hasAccess && !isComingSoon;
+  });
 
   const handleLogout = async () => {
     try {
@@ -149,7 +148,6 @@ export default function DashboardsPage() {
           </button>
         </div>
 
-        {/* USER INFO */}
         <div className="flex items-center gap-4 relative" ref={popupRef}>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#31327e] font-medium hover:underline"
@@ -172,7 +170,6 @@ export default function DashboardsPage() {
               <div className="px-5 py-4 space-y-1">
                 <p className="text-xs text-gray-500">Connecté en tant que</p>
                 <p className="font-bold text-[#31327e] text-base">{getFormattedName()}</p>
-
                 <div className="text-sm text-gray-700 mt-2 space-y-1">
                   <p><span className="font-semibold text-gray-600">Email :</span> {user.email}</p>
                   <p><span className="font-semibold text-gray-600">Département :</span> {getDepartment()}</p>
@@ -180,10 +177,7 @@ export default function DashboardsPage() {
                   <div className="flex flex-wrap gap-2 mt-1">
                     {getActivities().length > 0 ? (
                       getActivities().map((item, index) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full"
-                        >
+                        <span key={index} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
                           {item}
                         </span>
                       ))
@@ -193,12 +187,8 @@ export default function DashboardsPage() {
                   </div>
                 </div>
               </div>
-
               <div className="border-t px-5 py-3 bg-gray-50 hover:bg-red-50 transition text-center">
-                <button
-                  onClick={handleLogout}
-                  className="text-red-600 font-semibold text-sm hover:underline"
-                >
+                <button onClick={handleLogout} className="text-red-600 font-semibold text-sm hover:underline">
                   Se déconnecter
                 </button>
               </div>
@@ -211,13 +201,7 @@ export default function DashboardsPage() {
       <div className="relative z-10 flex-1 flex flex-col justify-start pt-28 px-6 py-12 sm:px-12">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-10">
-            <Image
-              src="/logo-myit.png"
-              alt="MyIT Logo"
-              width={280}
-              height={80}
-              className="drop-shadow-lg"
-            />
+            <Image src="/logo-myit.png" alt="MyIT Logo" width={280} height={80} className="drop-shadow-lg" />
           </div>
 
           <motion.h1
@@ -230,35 +214,25 @@ export default function DashboardsPage() {
           </motion.h1>
 
           <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Accédez aux dashboards des différents activités en un seul clic.
+            Accédez aux dashboards des différentes activités en un seul clic.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
-            {dashboardsConfig.map((dashboard, index) => {
-              const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
-              
-              return (
-                <motion.div
-                  key={dashboard.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.08 }}
-                  className="w-full max-w-sm"
-                >
-                  {hasAccess ? (
-                    <Link href={`/${dashboard.route}`}>
-                      <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl">
-                        {dashboard.display}
-                      </div>
-                    </Link>
-                  ) : (
-                    <div className="w-full py-6 px-6 border border-gray-300 text-gray-400 text-lg font-semibold rounded-2xl bg-gray-100 cursor-not-allowed shadow-inner">
-                      {dashboard.display}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+          <div className={`grid gap-8 place-items-center ${accessibleDashboards.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+            {accessibleDashboards.map((dashboard, index) => (
+              <motion.div
+                key={dashboard.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
+                className={`w-full ${accessibleDashboards.length === 1 ? 'max-w-lg' : 'max-w-sm'}`}
+              >
+                <Link href={`/${dashboard.route}`}>
+                  <div className="w-full py-6 px-6 border border-[#31327e] text-[#31327e] font-semibold text-lg rounded-2xl bg-white hover:bg-[#31327e] hover:text-white transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl text-center">
+                    {dashboard.display}
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
