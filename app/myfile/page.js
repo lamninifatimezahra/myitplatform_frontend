@@ -11,7 +11,8 @@ import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineUser, AiOutlineLogout
 import { BsChevronDown } from "react-icons/bs";
 
 export default function MyFilePage() {
-  const { user, loading } = useAuth();
+  // ✅ Ajout de la vérification d'accès MYFILE comme dans Hispeed
+  const { user, loading, authorized, hydrated } = useAuth(null, "MYFILE");
   const router = useRouter();
   const popupRef = useRef(null);
 
@@ -42,25 +43,11 @@ export default function MyFilePage() {
     };
   }, []);
 
-  if (loading || !user) {
+  // ✅ Condition de chargement étendue comme dans Hispeed
+  if (!hydrated || loading || !authorized) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white relative">
-        <div className="relative w-24 h-24">
-          <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Image src="/logo-myit.png" alt="Logo MyIT" width={48} height={48} className="object-contain" />
-          </div>
-        </div>
-
-        <style jsx>{`
-          @keyframes spin-custom {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          .animate-spin-custom {
-            animation: spin-custom 1.1s ease-in-out infinite;
-          }
-        `}</style>
+      <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
+        Chargement...
       </div>
     );
   }
