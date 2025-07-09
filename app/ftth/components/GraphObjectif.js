@@ -15,7 +15,6 @@ import {
 } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 export default function GraphObjectif({
@@ -174,69 +173,67 @@ export default function GraphObjectif({
           </button>
         </div>
       </div>
-<div
-  id="canvas-graph-objectif"
-  ref={chartRef}
-  className="relative mt-6 flex flex-col items-center justify-center rounded-xl bg-white shadow-inner p-10 overflow-hidden"
->
-  {/* Jauge demi-cercle élégante */}
-  <div className="relative w-[480px] h-[260px]">
-    <Doughnut
-      data={{
-        labels: ["Jauge"],
-        datasets: [
-          {
-            data: [1],
-            backgroundColor: (ctx) => {
-              const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 420, 0);
-              gradient.addColorStop(0.0, "#22c55e");   // vert
-              gradient.addColorStop(0.79, "#22c55e");
-              gradient.addColorStop(0.80, "#facc15");  // jaune
-              gradient.addColorStop(0.90, "#f59e0b");
-              gradient.addColorStop(1.0, "#ef4444");   // rouge
-              return [gradient];
-            },
-            borderWidth: 0,
-            circumference: 180,
-            rotation: -90,
-            cutout: "68%",
-          },
-        ],
-      }}
-      options={{
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          tooltip: { enabled: false },
-          legend: { display: false },
-        },
-      }}
-    />
 
-    {/* Aiguille élégante */}
-    <div
-      className="absolute left-1/2 bottom-[45px] origin-bottom"
-      style={{
-        transform: `rotate(${(value / 100) * 180 - 90}deg)`,
-      }}
-    >
-      <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[100px] border-l-transparent border-r-transparent border-b-black" />
-      <div className="w-3.5 h-3.5 bg-black rounded-full mt-[-2px] mx-auto" />
-    </div>
+      {/* Graphe */}
+      <div
+        id="canvas-graph-objectif"
+        ref={chartRef}
+        className="relative mt-6 flex flex-col items-center justify-center rounded-xl bg-white shadow-inner p-10 overflow-hidden"
+      >
+        <div className="relative w-[480px] h-[260px]">
+          <Doughnut
+            data={{
+              labels: ["Jauge"],
+              datasets: [
+                {
+                  data: [1],
+                  backgroundColor: (ctx) => {
+                    const { ctx: canvasCtx, chartArea } = ctx.chart;
+                    if (!canvasCtx || !chartArea) return "#22c55e";
+                    const gradient = canvasCtx.createLinearGradient(0, 0, chartArea.right, 0);
+                    gradient.addColorStop(0, "#22c55e");   // Vert
+                    gradient.addColorStop(0.5, "#facc15"); // Jaune
+                    gradient.addColorStop(1, "#ef4444");   // Rouge
+                    return [gradient];
+                  },
+                  borderWidth: 0,
+                  circumference: 180,
+                  rotation: -90,
+                  cutout: "68%",
+                },
+              ],
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                tooltip: { enabled: false },
+                legend: { display: false },
+              },
+            }}
+          />
 
-    {/* Triangle rouge indicateur */}
-    <div className="absolute top-[-14px] left-1/2 transform -translate-x-1/2">
-      <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[12px] border-l-transparent border-r-transparent border-b-red-500" />
-    </div>
-  </div>
+          {/* Aiguille */}
+          <div
+            className="absolute left-1/2 bottom-[45px] origin-bottom"
+            style={{ transform: `rotate(${(value / 100) * 180 - 90}deg)` }}
+          >
+            <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[100px] border-l-transparent border-r-transparent border-b-black" />
+            <div className="w-3.5 h-3.5 bg-black rounded-full mt-[-2px] mx-auto" />
+          </div>
 
-  {/* Valeur dynamique et label */}
-  <div className="flex items-center justify-center gap-4 mt-12">
-    <div className="text-[6rem] font-black text-slate-900 leading-none">{value}</div>
-    <div className="text-4xl font-semibold text-slate-500">commandes</div>
-  </div>
-</div>
+          {/* Triangle rouge haut */}
+          <div className="absolute top-[-14px] left-1/2 transform -translate-x-1/2">
+            <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[12px] border-l-transparent border-r-transparent border-b-red-500" />
+          </div>
+        </div>
 
+        {/* Texte valeur */}
+        <div className="flex items-center justify-center gap-4 mt-12">
+          <div className="text-[6rem] font-black text-slate-900 leading-none">{value}</div>
+          <div className="text-4xl font-semibold text-slate-500">commandes</div>
+        </div>
+      </div>
 
       {/* Modal agrandi */}
       <Modal
