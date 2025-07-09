@@ -1,35 +1,53 @@
 "use client";
 import { motion } from "framer-motion";
-import { FiBarChart2, FiUsers, FiMessageCircle, FiTarget } from "react-icons/fi";
+import {
+  FiBarChart2,
+  FiUsers,
+  FiMessageCircle,
+  FiTarget,
+  FiUpload,
+} from "react-icons/fi";
+import {
+  HiOutlineSparkles,
+  HiOutlineLightBulb,
+} from "react-icons/hi2";
 
 const features = [
   {
     title: "Tableaux de bord SI OSS",
     desc: "Suivez la santé des systèmes, la performance applicative et les KPIs d’exploitation en temps réel via des dashboards dynamiques.",
     icon: <FiBarChart2 size={32} />,
-    emoji: "📊",
     color: "from-blue-100 to-blue-50",
   },
   {
     title: "Onboarding & Compétences",
     desc: "Parcours guidés, évolutifs et contextualisés pour accueillir les nouveaux et faire progresser les équipes à chaque étape.",
     icon: <FiUsers size={32} />,
-    emoji: "🚀",
     color: "from-green-100 to-green-50",
   },
   {
     title: "Forum Collaboratif",
     desc: "Un espace d’échange vivant et modéré pour partager des bonnes pratiques, poser des questions et valoriser le savoir collectif.",
     icon: <FiMessageCircle size={32} />,
-    emoji: "💬",
     color: "from-yellow-100 to-yellow-50",
   },
   {
-    title: "MYPROPO : Innovation",
+    title: "Innovation",
     desc: "Un espace d’idéation pour soumettre vos idées, participer à des challenges internes et suivre les tendances technologiques.",
     icon: <FiTarget size={32} />,
-    emoji: "🎯",
     color: "from-purple-100 to-purple-50",
+  },
+  {
+    title: "Assistance Intelligente",
+    desc: "Un assistant IA contextuel pour répondre à vos questions, guider vos démarches et vous aider à résoudre les problèmes en temps réel.",
+    icon: <HiOutlineLightBulb size={32} />,
+    color: "from-indigo-100 to-indigo-50",
+  },
+  {
+    title: "Importation de Données Métier",
+    desc: "Un espace dédié pour centraliser et importer efficacement les données métiers, tout en respectant les accès, la traçabilité et les formats requis.",
+    icon: <FiUpload size={32} />,
+    color: "from-orange-100 to-orange-50",
   },
 ];
 
@@ -45,12 +63,15 @@ export default function Features() {
         transition={{ duration: 0.7 }}
         className="max-w-5xl mx-auto text-center mb-20"
       >
-        <h2 className="text-4xl md:text-5xl font-extrabold text-[#004aad] mb-4">
-          ✨ Fonctionnalités Clés
+        <h2 className="text-4xl md:text-5xl font-extrabold text-[#004aad] mb-4 flex items-center justify-center gap-3">
+          <HiOutlineSparkles className="text-[#004aad]" size={36} />
+          Fonctionnalités Clés
         </h2>
+
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          MyIT vous propose un écosystème complet pour booster votre efficacité, renforcer la collaboration
-          et encourager l’innovation au cœur des métiers.
+          MyIT vous propose un écosystème complet pour booster votre efficacité,
+          renforcer la collaboration et encourager l’innovation au cœur des
+          métiers.
         </p>
       </motion.div>
 
@@ -64,13 +85,14 @@ export default function Features() {
             className={`bg-gradient-to-br ${feature.color} rounded-3xl p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 backdrop-blur-md`}
           >
             <div className="flex items-center mb-4 gap-4">
-              <div className="text-4xl animate-pulse">{feature.emoji}</div>
               <div className="text-[#004aad]">{feature.icon}</div>
             </div>
             <h3 className="text-2xl font-bold text-[#004aad] mb-2">
               {feature.title}
             </h3>
-            <p className="text-gray-700 text-[15px] leading-relaxed">{feature.desc}</p>
+            <p className="text-gray-700 text-[15px] leading-relaxed">
+              {feature.desc}
+            </p>
           </motion.div>
         ))}
       </div>

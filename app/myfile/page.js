@@ -10,7 +10,6 @@ import fetchWithAuth from "@/utils/fetchWithAuth";
 import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineUser, AiOutlineLogout } from "react-icons/ai";
 
 export default function MyFilePage() {
-  // ✅ Ajout de la vérification d'accès MYFILE comme dans Hispeed
   const { user, loading, authorized, hydrated } = useAuth(null, "MYFILE");
   const router = useRouter();
   const popupRef = useRef(null);
@@ -42,10 +41,8 @@ export default function MyFilePage() {
     };
   }, []);
 
-  // ✅ Condition de chargement étendue comme dans Hispeed
   if (!hydrated || loading || !authorized) {
     return (
-<<<<<<< HEAD
       <div className="flex items-center justify-center h-screen bg-white relative">
         <div className="relative w-24 h-24">
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
@@ -62,10 +59,6 @@ export default function MyFilePage() {
             animation: spin-custom 1.1s ease-in-out infinite;
           }
         `}</style>
-=======
-      <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
-        Chargement...
->>>>>>> 11a8203ed0d2901533da7c815efd89fa04e29cb8
       </div>
     );
   }

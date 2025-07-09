@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { FaCheckCircle } from "react-icons/fa";
+import { FiTrendingUp } from "react-icons/fi";
 
 const benefits = [
   "Amélioration de l’efficacité opérationnelle",
@@ -31,14 +32,16 @@ export default function Benefits() {
         transition={{ duration: 0.7 }}
         className="max-w-4xl mx-auto text-center relative z-10"
       >
-        <motion.h2
-          className="text-4xl md:text-5xl font-extrabold text-[#004aad] mb-12 flex items-center justify-center gap-3"
-          initial={{ scale: 0.9 }}
-          whileInView={{ scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          🎯 Les bénéfices pour l’entreprise
-        </motion.h2>
+ <motion.h2
+  className="text-4xl md:text-5xl font-extrabold text-[#004aad] mb-12 flex items-center justify-center gap-3"
+  initial={{ scale: 0.9 }}
+  whileInView={{ scale: 1 }}
+  transition={{ duration: 0.4 }}
+>
+  <FiTrendingUp className="text-[#004aad]" size={36} />
+  Les bénéfices pour l’entreprise
+</motion.h2>
+
 
         <ul className="space-y-6 text-left">
           {benefits.map((item, i) => (
