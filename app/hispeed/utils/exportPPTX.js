@@ -743,9 +743,9 @@ const startY = 1.3;
 
 const cards = [
   { title: "Faits marquants", color: "#ef4444" },
-  { title: "Activité", color: "#fbbf24" },
-  { title: "Amélioration continue", color: "#facc15" },
-  { title: "Points d'attention", color: "#10b981" }
+  { title: "Activité", color: "#0713b5" },
+  { title: "Amélioration continue", color: "#1bb507" },
+  { title: "Points d'attention", color: "#fbbf24" }
 ];
 
 cards.forEach((card, i) => {
