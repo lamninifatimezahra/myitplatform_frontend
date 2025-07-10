@@ -14,20 +14,20 @@ const rawData = [
   { type: "REF PMT" },
   { type: "REF PMT" },
   { type: "Renonciation" },
-  { type: "Renonciation" },
+  { type: "REF PMT" },
   { type: "d'abandon de commande" },
   { type: "MAJ CR STOC" },
   { type: "MAJ CR STOC" },
   { type: "MAJ CR STOC" },
-  { type: "Renonciation" },
-  { type: "REF PMT" },
   { type: "REF PMT" },
   { type: "Renonciation" },
   { type: "Renonciation" },
+  { type: "REF PMT" },
   { type: "Renonciation" },
-  { type: "Renonciation" },
-  { type: "Renonciation" },
+  { type: "REF PMT" },
   { type: "Intervention" },
+  { type: "Renonciation" },
+  { type: "REF PMT" },
   { type: "Intervention" },
   { type: "Intervention" },
   { type: "Intervention" },
@@ -36,7 +36,8 @@ const rawData = [
   { type: "MAJ CR STOC" },
   { type: "Intervention" },
   { type: "Rattrapage B57" },
-  { type: "Renonciation" }
+  { type: "Renonciation" },
+  { type: "REF PMT" }
 ];
 
 
