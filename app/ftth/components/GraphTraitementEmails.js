@@ -18,28 +18,28 @@ const COLORS = {
 };
 
 const rawData = [
-{ type: "Renonciation", date: "24/06/2025" },
-{ type: "REF PMT", date: "24/06/2025" },
-{ type: "Renonciation", date: "25/06/2025" },
-{ type: "REF PMT", date: "25/06/2025" },
-{ type: "Renonciation", date: "26/06/2025" },
-{ type: "REF PMT", date: "26/06/2025" },
-{ type: "Renonciation", date: "27/06/2025" },
-{ type: "REF PMT", date: "27/06/2025" },
-{ type: "Renonciation", date: "30/06/2025" },
-{ type: "REF PMT", date: "30/06/2025" },
-{ type: "Intervention", date: "30/06/2025" },
-{ type: "Renonciation", date: "01/07/2025" },
-{ type: "REF PMT", date: "01/07/2025" },
-{ type: "Renonciation", date: "01/07/2025" },
-{ type: "Renonciation", date: "02/07/2025" },
-{ type: "REF PMT", date: "02/07/2025" },
-{ type: "d'abandon de commande", date: "02/07/2025" },
-{ type: "MAJ CR STOC", date: "02/07/2025" },
-{ type: "MAJ CR STOC", date: "02/07/2025" },
+  { type: "Renonciation", date: "02/07/2025" },
+  { type: "Renonciation", date: "02/07/2025" },
+  { type: "REF PMT", date: "02/07/2025" },
+  { type: "d'abandon de commande", date: "02/07/2025" },
+  { type: "MAJ CR STOC", date: "02/07/2025" },
+  { type: "MAJ CR STOC", date: "02/07/2025" },
+  { type: "MAJ CR STOC", date: "02/07/2025" },
+  { type: "Renonciation", date: "02/07/2025" },
+  { type: "REF PMT", date: "02/07/2025" },
+  { type: "Intervention", date: "08/07/2025" },
+  { type: "Intervention", date: "08/07/2025" },
+  { type: "Intervention", date: "08/07/2025" },
+  { type: "Intervention", date: "08/07/2025" },
+  { type: "Intervention", date: "08/07/2025" },
+  { type: "Intervention", date: "08/07/2025" },
+  { type: "Intervention", date: "09/07/2025" },
+  { type: "Renonciation", date: "09/07/2025" },
+  { type: "REF PMT", date: "09/07/2025" },
+  { type: "MAJ CR STOC", date: "09/07/2025" },
+  { type: "Rattrapage B57", date: "09/07/2025" }
+];
 
-
-]
 ;
 
 const aggregateByDateAndType = (data) => {

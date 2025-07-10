@@ -9,8 +9,9 @@ import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-// ✅ JSON local
-import ticketsData from "../utils/tickets_entrants_sortants.json";
+// ✅ Importation des deux fichiers JSON
+import entrantsJson from "../utils/tickets_entrants.json";
+import sortantsJson from "../utils/tickets_sortants.json";
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
@@ -32,6 +33,11 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
     return d;
+  };
+
+  const isWeekday = (date) => {
+    const day = date.getDay();
+    return day !== 0 && day !== 6; // Exclut dimanche (0) et samedi (6)
   };
 
   const getPeriodRange = () => {
@@ -69,21 +75,25 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
       const sortants = {};
       const today = normalizeDate(new Date());
 
-      ticketsData.forEach(ticket => {
-        const createDate = ticket.CREATE_DATE ? normalizeDate(ticket.CREATE_DATE) : null;
-        const sortieDate = ticket.DATE_SORTIE ? normalizeDate(ticket.DATE_SORTIE) : null;
-
-        if (createDate && createDate >= start && createDate <= end && createDate.getTime() !== today.getTime()) {
-          const key = createDate.toLocaleDateString("fr-FR");
+      // ✅ Traiter les tickets entrants (DATE_ENTREE)
+      entrantsJson.forEach(ticket => {
+        const date = ticket.DATE_ENTREE ? normalizeDate(ticket.DATE_ENTREE) : null;
+        if (date && date >= start && date <= end && date.getTime() !== today.getTime() && isWeekday(date)) {
+          const key = date.toLocaleDateString("fr-FR");
           entrants[key] = (entrants[key] || 0) + 1;
         }
+      });
 
-        if (sortieDate && sortieDate >= start && sortieDate <= end && sortieDate.getTime() !== today.getTime()) {
-          const key = sortieDate.toLocaleDateString("fr-FR");
+      // ✅ Traiter les tickets sortants (DATE_SORTIE)
+      sortantsJson.forEach(ticket => {
+        const date = ticket.DATE_SORTIE ? normalizeDate(ticket.DATE_SORTIE) : null;
+        if (date && date >= start && date <= end && date.getTime() !== today.getTime() && isWeekday(date)) {
+          const key = date.toLocaleDateString("fr-FR");
           sortants[key] = (sortants[key] || 0) + 1;
         }
       });
 
+      // ✅ Fusionner les dates et trier
       const allDates = Array.from(new Set([...Object.keys(entrants), ...Object.keys(sortants)]))
         .sort((a, b) => new Date(a.split("/").reverse().join("-")) - new Date(b.split("/").reverse().join("-")));
 
@@ -167,7 +177,6 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
           </BarChart>
         </ResponsiveContainer>
 
-        {/* ✅ Légende dans le même conteneur (capturable PNG) */}
         <div className="mt-4 flex justify-center gap-6 text-sm font-medium text-gray-700">
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded-sm" style={{ backgroundColor: colors[0] }}></span>
@@ -180,7 +189,6 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
         </div>
       </div>
 
-      {/* Modal d'agrandissement (optionnel à modifier aussi) */}
       <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)} className="flex items-center justify-center fixed inset-0 z-50"
         overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm">
         <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">

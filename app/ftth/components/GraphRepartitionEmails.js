@@ -9,29 +9,28 @@ import Modal from "react-modal";
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 const rawData = [
-{ type: "Renonciation" },
-{ type: "REF PMT" },
-{ type: "Renonciation" },
-{ type: "REF PMT" },
-{ type: "Renonciation" },
-{ type: "REF PMT" },
-{ type: "Renonciation" },
-{ type: "REF PMT" },
-{ type: "Renonciation" },
-{ type: "REF PMT" },
-{ type: "Renonciation" },
-{ type: "REF PMT" },
-{ type: "Renonciation" },
-{ type: "REF PMT" },
-{ type: "d'abandon de commande" },
-{ type: "Intervention" },
-{ type: "Renonciation" },
-{ type: "MAJ CR STOC" },
-{ type: "MAJ CR STOC" },
+  { type: "Renonciation" },
+  { type: "Renonciation" },
+  { type: "REF PMT" },
+  { type: "d'abandon de commande" },
+  { type: "MAJ CR STOC" },
+  { type: "MAJ CR STOC" },
+  { type: "MAJ CR STOC" },
+  { type: "Renonciation" },
+  { type: "REF PMT" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Renonciation" },
+  { type: "REF PMT" },
+  { type: "MAJ CR STOC" },
+  { type: "Rattrapage B57" }
+];
 
-
-]
-;
 
 const COLORS = ["#3b82f6", "#f59e0b", "#111827", "#4b5563", "#68bddd", "#6366f1"];
 const iconBtnClass = "w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition";
