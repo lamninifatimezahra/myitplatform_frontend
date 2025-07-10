@@ -4,12 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList
 } from "recharts";
-import { FaExpand, FaSyncAlt } from "react-icons/fa";
+import { FaExpand, FaSyncAlt, FaPencilAlt } from "react-icons/fa";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-// ✅ Importation des deux fichiers JSON
+// ✅ Données locales
 import entrantsJson from "../utils/tickets_entrants.json";
 import sortantsJson from "../utils/tickets_sortants.json";
 
@@ -37,7 +37,7 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
 
   const isWeekday = (date) => {
     const day = date.getDay();
-    return day !== 0 && day !== 6; // Exclut dimanche (0) et samedi (6)
+    return day !== 0 && day !== 6;
   };
 
   const getPeriodRange = () => {
@@ -75,7 +75,6 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
       const sortants = {};
       const today = normalizeDate(new Date());
 
-      // ✅ Traiter les tickets entrants (DATE_ENTREE)
       entrantsJson.forEach(ticket => {
         const date = ticket.DATE_ENTREE ? normalizeDate(ticket.DATE_ENTREE) : null;
         if (date && date >= start && date <= end && date.getTime() !== today.getTime() && isWeekday(date)) {
@@ -84,7 +83,6 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
         }
       });
 
-      // ✅ Traiter les tickets sortants (DATE_SORTIE)
       sortantsJson.forEach(ticket => {
         const date = ticket.DATE_SORTIE ? normalizeDate(ticket.DATE_SORTIE) : null;
         if (date && date >= start && date <= end && date.getTime() !== today.getTime() && isWeekday(date)) {
@@ -93,7 +91,6 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
         }
       });
 
-      // ✅ Fusionner les dates et trier
       const allDates = Array.from(new Set([...Object.keys(entrants), ...Object.keys(sortants)]))
         .sort((a, b) => new Date(a.split("/").reverse().join("-")) - new Date(b.split("/").reverse().join("-")));
 
@@ -117,6 +114,10 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
     setLastFilterSource("local");
   };
 
+  const handleAddComment = () => {
+    console.log("Ajouter une annotation ici");
+  };
+
   return (
     <div className="bg-white shadow-xl rounded-2xl p-6 relative">
       {loading && (
@@ -131,6 +132,7 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-2xl font-semibold text-slate-800">Tickets Entrants / Sortants</h3>
         <div className="flex gap-2">
+          <button onClick={handleAddComment} className={iconBtnClass}><FaPencilAlt /></button>
           <button onClick={handleReset} className={iconBtnClass}><FaSyncAlt /></button>
           <button onClick={() => setModalIsOpen(true)} className={iconBtnClass}><FaExpand /></button>
         </div>
