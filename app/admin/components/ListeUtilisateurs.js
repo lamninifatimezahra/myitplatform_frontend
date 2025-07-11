@@ -44,7 +44,7 @@ export default function ListeUtilisateurs() {
     setEditingUserId(user.id);
     setFormData({ 
       ...user,
-      dashboards: user.dashboards || [] // S'assurer que dashboards existe
+      dashboards: user.dashboards || [] 
     });
     setGeneratedPassword('');
     setCredentialsToShow(null);
@@ -130,13 +130,11 @@ export default function ListeUtilisateurs() {
       const isSelected = currentDashboards.includes(dashboard);
       
       if (isSelected) {
-        // Retirer le dashboard
         return {
           ...prev,
           dashboards: currentDashboards.filter(d => d !== dashboard)
         };
       } else {
-        // Ajouter le dashboard
         return {
           ...prev,
           dashboards: [...currentDashboards, dashboard]
@@ -162,7 +160,6 @@ export default function ListeUtilisateurs() {
       <h2 className="text-xl font-bold mb-4">Gestion des utilisateurs</h2>
       {message && <p className="text-blue-600 mb-4">{message}</p>}
 
-      {/* Tableau Utilisateurs */}
       <table className="w-full text-sm border border-gray-300 mb-6">
         <thead className="bg-gray-100">
           <tr>
@@ -171,7 +168,7 @@ export default function ListeUtilisateurs() {
             <th className="border px-2 py-1">Email</th>
             <th className="border px-2 py-1">Rôle</th>
             <th className="border px-2 py-1">Département</th>
-            <th className="border px-2 py-1">Dashboards</th>
+            <th className="border px-2 py-1">Accès</th>
             <th className="border px-2 py-1">Actions</th>
           </tr>
         </thead>
@@ -197,19 +194,23 @@ export default function ListeUtilisateurs() {
                     <input name="department" value={formData.department} onChange={handleChange} className="w-full border rounded px-1" />
                   </td>
                   <td className="border px-2 py-1">
-                    <div className="grid grid-cols-2 gap-1 text-xs">
-                      {availableDashboards.map((dashboard) => (
-                        <label key={dashboard} className="flex items-center space-x-1 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.dashboards?.includes(dashboard) || false}
-                            onChange={() => handleDashboardChange(dashboard)}
-                            className="w-3 h-3"
-                          />
-                          <span className="text-xs">{dashboard}</span>
-                        </label>
-                      ))}
-                    </div>
+                    {formData.role === "admin" ? (
+                      <span className="text-gray-500 italic">Accès libre</span>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        {availableDashboards.map((dashboard) => (
+                          <label key={dashboard} className="flex items-center space-x-1 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.dashboards?.includes(dashboard) || false}
+                              onChange={() => handleDashboardChange(dashboard)}
+                              className="w-3 h-3"
+                            />
+                            <span className="text-xs">{dashboard}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </td>
                   <td className="border px-2 py-1 space-y-1">
                     <div className="flex flex-col gap-2">
@@ -234,7 +235,7 @@ export default function ListeUtilisateurs() {
                   <td className="border px-2 py-1 capitalize">{u.role}</td>
                   <td className="border px-2 py-1">{u.department}</td>
                   <td className="border px-2 py-1 text-xs">
-                    {u.dashboards && u.dashboards.length > 0 ? u.dashboards.join(', ') : 'Aucun'}
+                    {u.role === "admin" ? "Accès libre" : (u.dashboards?.length > 0 ? u.dashboards.join(', ') : 'Aucun')}
                   </td>
                   <td className="border px-2 py-1">
                     <button onClick={() => handleEditClick(u)} className="bg-yellow-500 text-white px-2 py-1 rounded">Modifier</button>
@@ -246,7 +247,6 @@ export default function ListeUtilisateurs() {
         </tbody>
       </table>
 
-      {/* Identifiants générés affichés ok */}
       {credentialsToShow && (
         <div className="bg-gray-50 border border-gray-300 p-4 rounded-md shadow space-y-3">
           <h3 className="font-semibold text-gray-800">Identifiants :</h3>
