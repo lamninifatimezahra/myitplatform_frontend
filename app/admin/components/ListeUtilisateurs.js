@@ -14,7 +14,6 @@ export default function ListeUtilisateurs() {
   const [loading, setLoading] = useState(true);
   const [copyMessage, setCopyMessage] = useState('');
 
-  // Dashboards disponibles
   const availableDashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHUIS", "MYFILE", "MYFORUM"];
 
   useEffect(() => {
