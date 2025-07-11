@@ -14,6 +14,9 @@ export default function ListeUtilisateurs() {
   const [loading, setLoading] = useState(true);
   const [copyMessage, setCopyMessage] = useState('');
 
+  // Dashboards disponibles
+  const availableDashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHUIS", "MYFILE", "MYFORUM"];
+
   useEffect(() => {
     async function fetchUserAndList() {
       try {
@@ -40,7 +43,10 @@ export default function ListeUtilisateurs() {
 
   const handleEditClick = (user) => {
     setEditingUserId(user.id);
-    setFormData({ ...user });
+    setFormData({ 
+      ...user,
+      dashboards: user.dashboards || [] // S'assurer que dashboards existe
+    });
     setGeneratedPassword('');
     setCredentialsToShow(null);
     setMessage('');
@@ -119,6 +125,27 @@ export default function ListeUtilisateurs() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleDashboardChange = (dashboard) => {
+    setFormData((prev) => {
+      const currentDashboards = prev.dashboards || [];
+      const isSelected = currentDashboards.includes(dashboard);
+      
+      if (isSelected) {
+        // Retirer le dashboard
+        return {
+          ...prev,
+          dashboards: currentDashboards.filter(d => d !== dashboard)
+        };
+      } else {
+        // Ajouter le dashboard
+        return {
+          ...prev,
+          dashboards: [...currentDashboards, dashboard]
+        };
+      }
+    });
+  };
+
   const copyCredentials = () => {
     if (credentialsToShow) {
       const text = `Email : ${credentialsToShow.email}\nMot de passe : ${credentialsToShow.password}`;
@@ -145,6 +172,7 @@ export default function ListeUtilisateurs() {
             <th className="border px-2 py-1">Email</th>
             <th className="border px-2 py-1">Rôle</th>
             <th className="border px-2 py-1">Département</th>
+            <th className="border px-2 py-1">Dashboards</th>
             <th className="border px-2 py-1">Actions</th>
           </tr>
         </thead>
@@ -169,6 +197,21 @@ export default function ListeUtilisateurs() {
                   <td className="border px-2 py-1">
                     <input name="department" value={formData.department} onChange={handleChange} className="w-full border rounded px-1" />
                   </td>
+                  <td className="border px-2 py-1">
+                    <div className="grid grid-cols-2 gap-1 text-xs">
+                      {availableDashboards.map((dashboard) => (
+                        <label key={dashboard} className="flex items-center space-x-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.dashboards?.includes(dashboard) || false}
+                            onChange={() => handleDashboardChange(dashboard)}
+                            className="w-3 h-3"
+                          />
+                          <span className="text-xs">{dashboard}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </td>
                   <td className="border px-2 py-1 space-y-1">
                     <div className="flex flex-col gap-2">
                       <button onClick={handleUpdateUser} className="bg-green-500 text-white px-2 py-1 rounded">Valider</button>
@@ -191,6 +234,9 @@ export default function ListeUtilisateurs() {
                   <td className="border px-2 py-1">{u.email}</td>
                   <td className="border px-2 py-1 capitalize">{u.role}</td>
                   <td className="border px-2 py-1">{u.department}</td>
+                  <td className="border px-2 py-1 text-xs">
+                    {u.dashboards && u.dashboards.length > 0 ? u.dashboards.join(', ') : 'Aucun'}
+                  </td>
                   <td className="border px-2 py-1">
                     <button onClick={() => handleEditClick(u)} className="bg-yellow-500 text-white px-2 py-1 rounded">Modifier</button>
                   </td>
