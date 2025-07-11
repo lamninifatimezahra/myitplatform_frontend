@@ -33,7 +33,7 @@ export default function MyProfile() {
         const meRes = await fetchWithAuth('https://myit-backend-its-c20c9354ce42.herokuapp.com/api/me/', { method: 'GET', credentials: 'include' });
         const usersRes = await fetchWithAuth('https://myit-backend-its-c20c9354ce42.herokuapp.com/api/admin/users/', { method: 'GET', credentials: 'include' });
 
-        if (!meRes.ok || !usersRes.ok) throw new Error('Erreur chargement');
+        if (!meRes.ok || !usersRes.ok) throw new Error('');
         const me = await meRes.json();
         const allUsers = await usersRes.json();
         const current = allUsers.find(u => u.email === me.email);
