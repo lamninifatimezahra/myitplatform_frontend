@@ -83,7 +83,7 @@ export default function DashboardsPage() {
     { id: "ARTHUIS", display: "ARTHUIS", route: "arthuis" },
   ];
 
-  const comingSoon = ["DSL", "FTTB", "EARF", "EARFT", "ARTHUIS"];
+  const comingSoon = [];
 
   const accessibleDashboards = dashboardsConfig.filter((dashboard) => {
     const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);

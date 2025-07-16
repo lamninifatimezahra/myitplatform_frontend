@@ -73,7 +73,7 @@ export default function MyFilePage() {
     { id: "ARTHIUS", display: "ARTHIUS", route: "arthius" }
   ];
 
-  const comingSoon = ["DSL", "FTTB", "EARF", "EARFT", "ARTHIUS"];
+  const comingSoon = [];
 
   const accessibleDashboards = dashboardsConfig.filter((dashboard) => {
     const hasAccess = user.role === "admin" || user.dashboards?.includes(dashboard.id);
