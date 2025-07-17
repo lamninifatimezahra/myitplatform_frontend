@@ -199,19 +199,31 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
           </div>
           <div ref={modalChartRef} className="relative" style={{ height: 500 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="entrants" fill={colors[0]}>
-                  <LabelList dataKey="entrants" position="top" />
-                </Bar>
-                <Bar dataKey="sortants" fill={colors[1]}>
-                  <LabelList dataKey="sortants" position="top" />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+<ResponsiveContainer width="100%" height="80%">
+  <BarChart data={data}>
+    <XAxis dataKey="date" />
+    <YAxis />
+    <Tooltip />
+    <Bar dataKey="entrants" fill={colors[0]}>
+      <LabelList dataKey="entrants" position="top" />
+    </Bar>
+    <Bar dataKey="sortants" fill={colors[1]}>
+      <LabelList dataKey="sortants" position="top" />
+    </Bar>
+  </BarChart>
+</ResponsiveContainer>
+
+<div className="mt-4 flex justify-center gap-6 text-sm font-medium text-gray-700">
+  <div className="flex items-center gap-2">
+    <span className="w-4 h-4 rounded-sm" style={{ backgroundColor: colors[0] }}></span>
+    <span>Entrants</span>
+  </div>
+  <div className="flex items-center gap-2">
+    <span className="w-4 h-4 rounded-sm" style={{ backgroundColor: colors[1] }}></span>
+    <span>Sortants</span>
+  </div>
+</div>
+
           </div>
         </div>
       </Modal>

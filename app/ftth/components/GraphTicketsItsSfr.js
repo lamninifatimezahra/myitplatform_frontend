@@ -43,8 +43,8 @@ export default function GraphTraitementTicketsITS_SFR() {
 
   const processData = () => {
     const raw = [
-      { name: "ITS", value: 160 },
-      { name: "SFR", value: 21 }
+      { name: "ITS", value: 96 },
+      { name: "SFR", value: 48 }
     ];
     setData(raw);
   };
