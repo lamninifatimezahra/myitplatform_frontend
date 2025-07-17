@@ -8,7 +8,7 @@ import fr from 'date-fns/locale/fr';
 import { FaFilter, FaInfoCircle } from "react-icons/fa";
 import { AiOutlineBell, AiOutlineUser, AiOutlineDownload, AiOutlineClockCircle } from "react-icons/ai";
 import { generateWordFromImages } from "../utils/exportWord";
-import { generatePPTFromImages } from "../utils/exportWord";
+import { generatePPTFromImages } from "../utils/exportPPTX";
 import html2canvas from "html2canvas-pro";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 // Import du contexte global de filtre

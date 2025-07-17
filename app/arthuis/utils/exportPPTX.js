@@ -132,8 +132,6 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   // Tableau fixe des KPI à inclure
   const fixedKpiLabels = [
     "KPI Total Documents",
-    "KPI Total Migration",
-    "KPI Total Création"
   ];
 
   // Création d'une version normalisée des labels (trim + lowercase)
