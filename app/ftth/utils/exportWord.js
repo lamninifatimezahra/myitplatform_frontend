@@ -149,7 +149,6 @@ const idToDomId = {
       ${periodLine}
       <p class="subtitle">📊 ${label}</p>
       <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${graphHtml}</div></div>
-      <div class="comment-block"><div class="comment-block-title">💬 Votre commentaire</div>
         <div class="comment-text">${comment}</div>
       </div>
     </td></tr></table>`;

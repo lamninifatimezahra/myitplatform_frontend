@@ -202,7 +202,7 @@ export default function GraphRepartitionManuelle({
     });
 
   return (
-    <div data-graph-id="graph-repartition-manuelle" data-graph-label="Répartition Manuelle (Acteur)"
+    <div data-graph-label="Répartition Manuelle (Acteur)"
       className="bg-white shadow-xl rounded-2xl p-6 relative"
       onClick={() => {
         setShowCommentPopup(false);
