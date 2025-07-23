@@ -149,6 +149,7 @@ const idToDomId = {
       ${periodLine}
       <p class="subtitle">📊 ${label}</p>
       <div style="margin-top:4pt; text-align:center;"><div style="margin-bottom: 6pt;">${graphHtml}</div></div>
+      <div class="comment-block">
         <div class="comment-text">${comment}</div>
       </div>
     </td></tr></table>`;
@@ -160,7 +161,7 @@ const idToDomId = {
               font-family: 'Segoe UI', sans-serif; font-size: 9.8pt; color: #1f2937; text-align: center; line-height: 1.5;
               box-shadow: 0 0 2pt rgba(0, 0, 0, 0.05);">
     Générée automatiquement par 
-    <strong style="color:#004aad;">Ghizlane AOUZAL</strong><br/>
+    <strong style="color:#004aad;">Meryem SAYOUTI</strong><br/>
     <a href="https://myit-its.vercel.app" target="_blank"
        style="text-decoration: none; color: #004aad; font-weight: bold;">
        Dashboard FTTH, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
