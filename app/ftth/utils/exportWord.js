@@ -127,7 +127,6 @@ const idToDomId = {
         <div style="margin-bottom: 6pt;">${objectif}</div>
       </div>
       <div class="comment-block">
-        <div class="comment-block-title">💬 Votre commentaire</div>
         <div class="comment-text">${defaultCommentMap["graph-objectif"]}</div>
       </div>
     </td></tr>

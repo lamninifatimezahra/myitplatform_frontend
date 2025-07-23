@@ -11,24 +11,24 @@ if (typeof window !== "undefined") Modal.setAppElement(document.body);
 const rawData = [
   { type: "Renonciation" },
   { type: "REF PMT" },
-  { type: "REF PMT" },
-  { type: "Finalisation commande" },
+  { type: "Intervention" },
   { type: "Rattrapage B57" },
   { type: "Renonciation" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
+  { type: "REF PMT" },
+  { type: "Rattrapage B57" },
+  { type: "MAJ CR STOC" },
+  { type: "Renonciation" },
   { type: "REF PMT" },
   { type: "Renonciation" },
-  { type: "Rattrapage B57" },
+  { type: "REF PMT" },
+  { type: "REF PMT" },
   { type: "Renonciation" },
-  { type: "Intervention" },
   { type: "REF PMT" },
-  { type: "Rattrapage B57" },
-  { type: "REF PMT" },
-  { type: "Rattrapage B57" },
-  { type: "Renonciation" }
+  { type: "Renonciation" },
+  { type: "MAJ CR STOC" },
+  { type: "MAJ CR STOC" },
+  { type: "Renonciation" },
+  { type: "REF PMT" }
 ];
 
 
