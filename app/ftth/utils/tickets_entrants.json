@@ -72,11 +72,11 @@
     "DATE_ENTREE": "2025-07-16"
   },
   {
-    "ID_TICKET": "C34302603",
+    "ID_TICKET": "C34302583",
     "DATE_ENTREE": "2025-07-16"
   },
   {
-    "ID_TICKET": "C34302583",
+    "ID_TICKET": "C34302603",
     "DATE_ENTREE": "2025-07-16"
   },
   {
@@ -360,11 +360,11 @@
     "DATE_ENTREE": "2025-07-17"
   },
   {
-    "ID_TICKET": "C34309326",
+    "ID_TICKET": "C34309325",
     "DATE_ENTREE": "2025-07-17"
   },
   {
-    "ID_TICKET": "C34309325",
+    "ID_TICKET": "C34309326",
     "DATE_ENTREE": "2025-07-17"
   },
   {
@@ -464,11 +464,11 @@
     "DATE_ENTREE": "2025-07-18"
   },
   {
-    "ID_TICKET": "C34312577",
+    "ID_TICKET": "C34312562",
     "DATE_ENTREE": "2025-07-18"
   },
   {
-    "ID_TICKET": "C34312562",
+    "ID_TICKET": "C34312577",
     "DATE_ENTREE": "2025-07-18"
   },
   {
@@ -584,6 +584,58 @@
     "DATE_ENTREE": "2025-07-18"
   },
   {
+    "ID_TICKET": "C34316877",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34317093",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34317126",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34317230",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34317394",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34317621",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34317625",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34317855",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34318011",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34318052",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34318162",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34318171",
+    "DATE_ENTREE": "2025-07-19"
+  },
+  {
+    "ID_TICKET": "C34319220",
+    "DATE_ENTREE": "2025-07-20"
+  },
+  {
     "ID_TICKET": "C34320150",
     "DATE_ENTREE": "2025-07-21"
   },
@@ -612,11 +664,11 @@
     "DATE_ENTREE": "2025-07-21"
   },
   {
-    "ID_TICKET": "C34320983",
+    "ID_TICKET": "C34320968",
     "DATE_ENTREE": "2025-07-21"
   },
   {
-    "ID_TICKET": "C34320968",
+    "ID_TICKET": "C34320983",
     "DATE_ENTREE": "2025-07-21"
   },
   {
@@ -724,7 +776,11 @@
     "DATE_ENTREE": "2025-07-21"
   },
   {
-    "ID_TICKET": "C34325810",
+    "ID_TICKET": "C34325679",
+    "DATE_ENTREE": "2025-07-22"
+  },
+  {
+    "ID_TICKET": "C34325711",
     "DATE_ENTREE": "2025-07-22"
   },
   {
@@ -732,11 +788,7 @@
     "DATE_ENTREE": "2025-07-22"
   },
   {
-    "ID_TICKET": "C34325679",
-    "DATE_ENTREE": "2025-07-22"
-  },
-  {
-    "ID_TICKET": "C34325711",
+    "ID_TICKET": "C34325810",
     "DATE_ENTREE": "2025-07-22"
   },
   {
@@ -946,5 +998,37 @@
   {
     "ID_TICKET": "C34218079",
     "DATE_ENTREE": "2025-07-23"
+  },
+  {
+    "ID_TICKET": "C34334887",
+    "DATE_ENTREE": "2025-07-23"
+  },
+  {
+    "ID_TICKET": "C34335100",
+    "DATE_ENTREE": "2025-07-23"
+  },
+  {
+    "ID_TICKET": "C34336004",
+    "DATE_ENTREE": "2025-07-24"
+  },
+  {
+    "ID_TICKET": "C34336444",
+    "DATE_ENTREE": "2025-07-24"
+  },
+  {
+    "ID_TICKET": "C34336614",
+    "DATE_ENTREE": "2025-07-24"
+  },
+  {
+    "ID_TICKET": "C34336682",
+    "DATE_ENTREE": "2025-07-24"
+  },
+  {
+    "ID_TICKET": "C34320150",
+    "DATE_ENTREE": "2025-07-24"
+  },
+  {
+    "ID_TICKET": "C34337396",
+    "DATE_ENTREE": "2025-07-24"
   }
 ]
