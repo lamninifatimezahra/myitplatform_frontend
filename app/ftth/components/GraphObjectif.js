@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { FaExpand, FaSyncAlt } from "react-icons/fa";
+import { FaExpand, FaSyncAlt, FaTimes } from "react-icons/fa";
 import Modal from "react-modal";
 import holidaysData from "@/app/ftth/utils/holidays.json";
 import "react-datepicker/dist/react-datepicker.css";
@@ -121,20 +121,73 @@ export default function GraphObjectif({
 
   const getPeriodLabel = () => {
     if (!hasFilter) return "KPI du jour";
-
     let label = "KPI : Moyenne";
     if (globalStartDate && globalEndDate) {
       const weekStart = getWeekNumber(globalStartDate);
       const weekEnd = getWeekNumber(globalEndDate);
       const startStr = globalStartDate.toLocaleDateString("fr-FR");
       const endStr = globalEndDate.toLocaleDateString("fr-FR");
-
       label += ` – Période : S${weekStart}`;
       if (weekStart !== weekEnd) label += `-${weekEnd}`;
       label += ` | Du ${startStr} au ${endStr}`;
     }
     return label;
   };
+
+  const renderGauge = () => (
+    <div className="flex flex-col items-center justify-center gap-6 py-8">
+      <div className="relative w-[480px] h-[260px]">
+        <Doughnut
+          data={{
+            labels: ["Jauge"],
+            datasets: [
+              {
+                data: [1],
+                backgroundColor: (ctx) => {
+                  const { ctx: canvasCtx, chartArea } = ctx.chart;
+                  if (!canvasCtx || !chartArea) return "#22c55e";
+                  const gradient = canvasCtx.createLinearGradient(0, 0, chartArea.right, 0);
+                  gradient.addColorStop(0, "#22c55e");
+                  gradient.addColorStop(0.5, "#facc15");
+                  gradient.addColorStop(1, "#ef4444");
+                  return [gradient];
+                },
+                borderWidth: 0,
+                circumference: 180,
+                rotation: -90,
+                cutout: "68%",
+              },
+            ],
+          }}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              tooltip: { enabled: false },
+              legend: { display: false },
+            },
+          }}
+        />
+        <div
+          className="absolute left-1/2 bottom-[45px] origin-bottom"
+          style={{ transform: `rotate(${(value / 100) * 180 - 90}deg)` }}
+        >
+          <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[100px] border-l-transparent border-r-transparent border-b-black" />
+          <div className="w-3.5 h-3.5 bg-black rounded-full mt-[-2px] mx-auto" />
+        </div>
+        <div className="absolute top-[-14px] left-1/2 transform -translate-x-1/2">
+          <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[12px] border-l-transparent border-r-transparent border-b-red-500" />
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-4">
+        <div className="text-[6rem] font-black text-slate-900 leading-none">{value}</div>
+<div className="text-4xl font-semibold text-slate-500">
+  commandes
+</div>
+
+      </div>
+    </div>
+  );
 
   return (
     <div
@@ -153,7 +206,6 @@ export default function GraphObjectif({
         </div>
       )}
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-gray-800">{getPeriodLabel()}</h3>
         <div className="flex gap-2">
@@ -174,68 +226,15 @@ export default function GraphObjectif({
         </div>
       </div>
 
-      {/* Graphe */}
       <div
         id="canvas-graph-objectif"
         ref={chartRef}
         className="relative mt-6 flex flex-col items-center justify-center rounded-xl bg-white shadow-inner p-10 overflow-hidden"
       >
-        <div className="relative w-[480px] h-[260px]">
-          <Doughnut
-            data={{
-              labels: ["Jauge"],
-              datasets: [
-                {
-                  data: [1],
-                  backgroundColor: (ctx) => {
-                    const { ctx: canvasCtx, chartArea } = ctx.chart;
-                    if (!canvasCtx || !chartArea) return "#22c55e";
-                    const gradient = canvasCtx.createLinearGradient(0, 0, chartArea.right, 0);
-                    gradient.addColorStop(0, "#22c55e");   // Vert
-                    gradient.addColorStop(0.5, "#facc15"); // Jaune
-                    gradient.addColorStop(1, "#ef4444");   // Rouge
-                    return [gradient];
-                  },
-                  borderWidth: 0,
-                  circumference: 180,
-                  rotation: -90,
-                  cutout: "68%",
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                tooltip: { enabled: false },
-                legend: { display: false },
-              },
-            }}
-          />
-
-          {/* Aiguille */}
-          <div
-            className="absolute left-1/2 bottom-[45px] origin-bottom"
-            style={{ transform: `rotate(${(value / 100) * 180 - 90}deg)` }}
-          >
-            <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[100px] border-l-transparent border-r-transparent border-b-black" />
-            <div className="w-3.5 h-3.5 bg-black rounded-full mt-[-2px] mx-auto" />
-          </div>
-
-          {/* Triangle rouge haut */}
-          <div className="absolute top-[-14px] left-1/2 transform -translate-x-1/2">
-            <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[12px] border-l-transparent border-r-transparent border-b-red-500" />
-          </div>
-        </div>
-
-        {/* Texte valeur */}
-        <div className="flex items-center justify-center gap-4 mt-12">
-          <div className="text-[6rem] font-black text-slate-900 leading-none">{value}</div>
-          <div className="text-4xl font-semibold text-slate-500">commandes</div>
-        </div>
+        {renderGauge()}
       </div>
 
-      {/* Modal agrandi */}
+      {/* MODAL */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
@@ -244,17 +243,16 @@ export default function GraphObjectif({
       >
         <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4 px-4">
-            <h3 className="text-2xl font-semibold text-gray-800">Objectif</h3>
+            <h3 className="text-2xl font-semibold text-gray-800">{getPeriodLabel()}</h3>
             <button
               onClick={() => setModalIsOpen(false)}
-              className="w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition z-50 relative"
+              className="w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition"
+              title="Fermer"
             >
-              <FaExpand className="text-gray-700" />
+              <FaTimes className="text-gray-700" />
             </button>
           </div>
-          <div className="relative h-[400px] flex items-center justify-center">
-            <div className="text-5xl font-bold">{value} commandes (moyenne)</div>
-          </div>
+          {renderGauge()}
         </div>
       </Modal>
     </div>

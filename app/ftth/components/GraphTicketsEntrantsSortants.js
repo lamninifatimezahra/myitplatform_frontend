@@ -167,7 +167,14 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
       >
         <ResponsiveContainer width="100%" height={440}>
           <BarChart data={data}>
-            <XAxis dataKey="date" />
+<XAxis
+  dataKey="date"
+  angle={-35}
+  textAnchor="end"
+  height={85}
+  tick={{ fontSize: 14, fill: "#1f2937", fontWeight: 600 }}
+  interval={0}
+/>
             <YAxis />
             <Tooltip />
             <Bar dataKey="entrants" name="Entrants" fill={colors[0]} radius={[6, 6, 0, 0]}>
