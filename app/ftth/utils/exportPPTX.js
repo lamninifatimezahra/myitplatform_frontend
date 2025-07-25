@@ -117,19 +117,51 @@ await createGraphSlide(
 
 // ✅ ✅ ✅ Ajout de 2 slides vides supplémentaires avant SPA : Ticketing & Mailing
 
-const ticketingSlide = pptx.addSlide();
-ticketingSlide.addImage({ path: contentBackground, x: 0, y: 0, w: "100%", h: "100%" });
-ticketingSlide.addText("Ticketing", {
-  x: 0.5, y: 0.7, w: 9.0, h: 0.4, 
-  fontSize: 18, bold: true, color: blue, align: "left"
-});
+// ✅ Slide – Tickets Entrants / Sortants
+await createGraphSlide(
+  pptx,
+  "graph-tickets-entrants-sortants", // ID exact du graphe HTML
+  graphList,
+  commentMap,
+  contentBackground,
+  blue,
+  dateRangeText
+);
 
-const mailingSlide = pptx.addSlide();
-mailingSlide.addImage({ path: contentBackground, x: 0, y: 0, w: "100%", h: "100%" });
-mailingSlide.addText("Mailing", {
-  x: 0.5, y: 0.7, w: 9.0, h: 0.4, 
-  fontSize: 18, bold: true, color: blue, align: "left"
-});
+// ✅ Slide – Traitement des Tickets ITS & SFR
+await createGraphSlide(
+  pptx,
+  "graph-traitement-tickets-its-sfr", // ID exact du graphe HTML
+  graphList,
+  commentMap,
+  contentBackground,
+  blue,
+  dateRangeText
+);
+
+
+// ✅ Slide – Traitement des e-mails
+await createGraphSlide(
+  pptx,
+  "graph-traitement-emails", // ID exact du graphe
+  graphList,
+  commentMap,
+  contentBackground,
+  blue,
+  dateRangeText
+);
+
+// ✅ Slide – Répartition des e-mails
+await createGraphSlide(
+  pptx,
+  "graph-repartition-emails", // ID exact du graphe
+  graphList,
+  commentMap,
+  contentBackground,
+  blue,
+  dateRangeText
+);
+
 
 // ✅ ✅ ✅ Slides personnalisés après Ticketing & Mailing
 const customSlides = [
