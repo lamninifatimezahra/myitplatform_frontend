@@ -48,7 +48,7 @@ export default function UploadFTTHPage() {
     formData.append("regle_file", regleFile);
 
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/upload/", {
         method: "POST",
         body: formData,
       });
@@ -72,7 +72,7 @@ export default function UploadFTTHPage() {
 
   const handleLogout = async () => {
     try {
-      await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/logout/", {
+      await fetchWithAuth("https://api.606510.xyz/api/logout/", {
         method: "POST",
         credentials: "include",
       });

@@ -77,7 +77,7 @@ export default function GraphTopReglesParJour({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/regle/");
+        const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/regle/");
         const json = await res.json();
         if (!json.length) return setData([]);
 

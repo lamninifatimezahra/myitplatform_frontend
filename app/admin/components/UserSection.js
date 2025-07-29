@@ -95,7 +95,7 @@ export default function UserSection() {
       const payload = { email, password, role, name, surname, position, department, activity, competence: [], dashboards: dash };
 
       const res = await fetchWithAuth(
-        "https://myit-backend-its-c20c9354ce42.herokuapp.com/api/admin/create-user/",
+        "https://api.606510.xyz/api/admin/create-user/",
         { method:"POST", headers:{"Content-Type":"application/json"}, credentials:"include", body:JSON.stringify(payload) }
       );
       if (!res.ok) {
@@ -123,7 +123,7 @@ export default function UserSection() {
     if (!deleteEmail.trim()) return showMessage("Veuillez saisir une adresse email valide", "error");
     try {
       const res = await fetchWithAuth(
-        "https://myit-backend-its-c20c9354ce42.herokuapp.com/api/admin/delete-user/",
+        "https://api.606510.xyz/api/admin/delete-user/",
         { method:"DELETE", headers:{"Content-Type":"application/json"}, credentials:"include", body:JSON.stringify({email:deleteEmail}) }
       );
       if (!res.ok) {

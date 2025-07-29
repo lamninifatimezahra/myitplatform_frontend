@@ -111,7 +111,7 @@ export default function GraphVueEnsemble({
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/stock/");
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/stock/");
       const json = await res.json();
       if (!json || !json.length) {
         setData([]);

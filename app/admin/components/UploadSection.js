@@ -163,7 +163,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", hispeedFile);
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/hispeed/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/hispeed/upload/", {
         method: "POST",
         body: formData,
       });
@@ -181,7 +181,7 @@ export default function UploadSection() {
     formData.append("stock_file", ftthStock);
     formData.append("regle_file", ftthRegle);
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/upload/", {
         method: "POST",
         body: formData,
       });
@@ -198,7 +198,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", dslFile);
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/dsl/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/dsl/upload/", {
         method: "POST",
         body: formData,
       });
@@ -215,7 +215,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", fttbFile);
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/fttb/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/fttb/upload/", {
         method: "POST",
         body: formData,
       });
@@ -233,7 +233,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", earfFile);
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/earf/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/earf/upload/", {
         method: "POST",
         body: formData,
       });
@@ -250,7 +250,7 @@ export default function UploadSection() {
     const formData = new FormData();
     formData.append("document", arthiusFile);
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/arthius/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/arthius/upload/", {
         method: "POST",
         body: formData,
       });

@@ -30,8 +30,8 @@ export default function MyProfile() {
     setMounted(true);
     async function fetchData() {
       try {
-        const meRes = await fetchWithAuth('https://myit-backend-its-c20c9354ce42.herokuapp.com/api/me/', { method: 'GET', credentials: 'include' });
-        const usersRes = await fetchWithAuth('https://myit-backend-its-c20c9354ce42.herokuapp.com/api/admin/users/', { method: 'GET', credentials: 'include' });
+        const meRes = await fetchWithAuth('https://api.606510.xyz/api/me/', { method: 'GET', credentials: 'include' });
+        const usersRes = await fetchWithAuth('https://api.606510.xyz/api/admin/users/', { method: 'GET', credentials: 'include' });
 
         if (!meRes.ok || !usersRes.ok) throw new Error('');
         const me = await meRes.json();
@@ -75,7 +75,7 @@ export default function MyProfile() {
     setIsSaving(true);
     try {
       const res = await fetchWithAuth(
-        `https://myit-backend-its-c20c9354ce42.herokuapp.com/api/me/update/`,
+        `https://api.606510.xyz/api/me/update/`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -101,7 +101,7 @@ export default function MyProfile() {
     }
 
     try {
-      const res = await fetchWithAuth('https://myit-backend-its-c20c9354ce42.herokuapp.com/api/change-password/', {
+      const res = await fetchWithAuth('https://api.606510.xyz/api/change-password/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -116,7 +116,7 @@ export default function GraphEntrantsSortants({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/regle/");
+        const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/regle/");
         const rawData = await res.json();
         if (!rawData || !rawData.length) return setData([]);
 

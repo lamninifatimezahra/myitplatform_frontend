@@ -95,7 +95,7 @@ export default function GraphTopRegles({
       }
 
       try {
-        const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/regle/");
+        const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/regle/");
         const json = await res.json();
         const startNorm = normalizeDate(start);
         const endNorm = normalizeDate(end);

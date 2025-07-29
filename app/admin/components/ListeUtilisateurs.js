@@ -19,13 +19,13 @@ export default function ListeUtilisateurs() {
   useEffect(() => {
     async function fetchUserAndList() {
       try {
-        const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/me/", { method: 'GET', credentials: 'include' });
+        const res = await fetchWithAuth("https://api.606510.xyz/api/me/", { method: 'GET', credentials: 'include' });
         if (!res.ok) throw new Error('Utilisateur non trouvé');
         const user = await res.json();
         setCurrentUser(user);
 
         if (user.role === 'admin') {
-          const allRes = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/admin/users/", { method: 'GET', credentials: 'include' });
+          const allRes = await fetchWithAuth("https://api.606510.xyz/api/admin/users/", { method: 'GET', credentials: 'include' });
           if (!allRes.ok) throw new Error('Impossible de charger les utilisateurs');
           const allUsers = await allRes.json();
           setUsers(allUsers);
@@ -60,7 +60,7 @@ export default function ListeUtilisateurs() {
 
   const handleUpdateUser = async () => {
     try {
-      const res = await fetchWithAuth(`https://myit-backend-its-c20c9354ce42.herokuapp.com/api/admin/update-user/${editingUserId}/`, {
+      const res = await fetchWithAuth(`https://api.606510.xyz/api/admin/update-user/${editingUserId}/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -101,7 +101,7 @@ export default function ListeUtilisateurs() {
     }
 
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/admin/reset-password/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/api/admin/reset-password/", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

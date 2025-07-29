@@ -24,7 +24,7 @@ import NewsTickerRetard from "../components/NewsTickerRetard14";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 import { ExportProvider } from "../components/ExportContext";
 
-const API_BASE_URL = "https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api";
+const API_BASE_URL = "https://api.606510.xyz/dashboard/api";
 const API_DSL_DATA = `${API_BASE_URL}/dsl/data/`;
 const API_COMMENT_UPDATE = `${API_BASE_URL}/update-ticket-comment/`;
 

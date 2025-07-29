@@ -15,7 +15,7 @@ import LineChartRates from "../components/LineChartRates";
 import { ExportProvider } from "../components/ExportContext";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 
-const API_BASE_URL = "https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api";
+const API_BASE_URL = "https://api.606510.xyz/dashboard/api";
 const API_EARF_DATA = `${API_BASE_URL}/earf/data/`;
 
 const TAUX_DIVISORS = {

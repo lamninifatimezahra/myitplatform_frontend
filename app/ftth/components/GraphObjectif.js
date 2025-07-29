@@ -53,7 +53,7 @@ export default function GraphObjectif({
     setLoading(true);
     try {
       const res = await fetchWithAuth(
-        "https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/stock/"
+        "https://api.606510.xyz/dashboard/api/ftth/stock/"
       );
       const json = await res.json();
 

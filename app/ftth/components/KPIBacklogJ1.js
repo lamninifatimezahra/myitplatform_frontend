@@ -16,7 +16,7 @@ export default function KPIBacklogJ1({ onComponentReady }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/ftth/stock/");
+        const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/stock/");
         const json = await res.json();
 
         if (Array.isArray(json) && json.length > 1) {

@@ -93,7 +93,7 @@ export default function DashboardsPage() {
 
   const handleLogout = async () => {
     try {
-      await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/logout/", {
+      await fetchWithAuth("https://api.606510.xyz/api/logout/", {
         method: "POST",
         credentials: "include",
       });

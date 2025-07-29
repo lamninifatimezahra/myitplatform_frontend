@@ -44,7 +44,7 @@ export default function UploadEARFTPage() {
     formData.append("document", earftFile);
 
     try {
-      const res = await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/dashboard/api/earft/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/earft/upload/", {
         method: "POST",
         body: formData,
       });
@@ -67,7 +67,7 @@ export default function UploadEARFTPage() {
 
   const handleLogout = async () => {
     try {
-      await fetchWithAuth("https://myit-backend-its-c20c9354ce42.herokuapp.com/api/logout/", {
+      await fetchWithAuth("https://api.606510.xyz/api/logout/", {
         method: "POST",
         credentials: "include",
       });
