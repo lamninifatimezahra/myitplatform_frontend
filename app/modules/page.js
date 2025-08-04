@@ -242,7 +242,7 @@ export default function AccueilPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center">
             {accessibleModules.map((mod, index) => {
-              const isDisabled = ["MyPropos", "MyAI", "Guide MyIT"].includes(mod.name);
+              const isDisabled = ["MyAI", "Guide MyIT"].includes(mod.name);
               const isLastOdd =
                 accessibleModules.length % 2 === 1 &&
                 index === accessibleModules.length - 1;
