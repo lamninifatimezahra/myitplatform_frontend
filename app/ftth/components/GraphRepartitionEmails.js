@@ -9,47 +9,23 @@ import Modal from "react-modal";
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 const rawData = [
-  { type: "MAJ CR STOC" },
-  { type: "MAJ CR STOC" },
-  { type: "Renonciation" },
   { type: "REF PMT" },
+  { type: "Renonciation" },
   { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Finalisation" },
   { type: "Intervention" },
   { type: "Renonciation" },
-  { type: "REF PMT" },
-  { type: "Rattrapage B57" },
   { type: "Intervention" },
   { type: "Intervention" },
   { type: "Renonciation" },
   { type: "REF PMT" },
   { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
   { type: "REF PMT" },
   { type: "Renonciation" },
   { type: "Intervention" },
   { type: "REF PMT" },
-  { type: "MAJ CR STOC" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Renonciation" },
-  { type: "REF PMT" },
-  { type: "Intervention" },
-  { type: "MAJ CR STOC" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "Intervention" },
-  { type: "REF PMT" },
-  { type: "Renonciation" },
-  { type: "Finalisation" }
+  { type: "Renonciation" }
 ];
+
 
 
 const COLORS = ["#3b82f6", "#f59e0b", "#111827", "#4b5563", "#68bddd", "#6366f1"];
