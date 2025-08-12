@@ -43,7 +43,7 @@ export default function DSLDashboard() {
   if (!hydrated || loading || !authorized) {
     return (
       <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
-        Chargement...
+        Chargement....
       </div>
     );
   }
