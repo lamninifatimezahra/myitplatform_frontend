@@ -47,6 +47,16 @@ const getAllWeeksBetween = (startDate, endDate) => {
   return weeksArray;
 };
 
+/**
+ * Fonction utilitaire pour déterminer le statut basé sur date_sortie
+ */
+const getStatusFromDateSortie = (dateSortie) => {
+  if (!dateSortie || dateSortie.trim() === "") {
+    return "Pas encore traité";
+  }
+  return dateSortie;
+};
+
 export default function TicketsReentrantsTable({
   apiUrl,
   commentApiUrl,
@@ -136,6 +146,7 @@ const processIterationData = (tickets) => {
     const iterations = {};
     const weekReiterations = {}; // ✅ NOUVEAU : stocker les réitérations par semaine
     const weekDetails = [];
+    let lastIterationTicket = null; // ✅ NOUVEAU : pour stocker le ticket de la dernière itération
     
     // Identifier la première semaine d'apparition
     const firstWeek = weeks[0];
@@ -160,6 +171,11 @@ const processIterationData = (tickets) => {
         // Stocker l'itération cumulative pour cette semaine
         iterations[week] = cumulativeCount;
         
+        // ✅ NOUVEAU : mettre à jour le ticket de la dernière itération si c'est une réitération (pas la première)
+        if (cumulativeCount > 1) {
+          lastIterationTicket = weekData[week][i];
+        }
+        
         // Préparer le texte pour l'affichage
         let weekText = `S${week}`;
         
@@ -168,7 +184,7 @@ const processIterationData = (tickets) => {
           weekText += " (1ère itération)";
         } else {
           // Pour les itérations suivantes
-          weekText += ` (${cumulativeCount}ème itération)`;
+          weekText += ` (${cumulativeCount}ème itération) `;
         }
               
         weekDetails.push({
@@ -182,6 +198,9 @@ const processIterationData = (tickets) => {
     // Obtenir les infos du premier ticket pour les métadonnées
     const firstTicket = Object.values(weekData)[0][0];
     
+    // ✅ MODIFIÉ : utiliser la date_sortie de la dernière itération pour le statut
+    const dateSortieForStatus = lastIterationTicket ? lastIterationTicket.date_sortie : "";
+    
     processed[ticketId] = {
       titre_ticket: firstTicket.compl_title,
       iterations: iterations,
@@ -189,6 +208,8 @@ const processIterationData = (tickets) => {
       totalIterations: cumulativeCount,
       weekDetails: weekDetails,
       comment_reentrant: firstTicket.comment_reentrant || "",
+      date_sortie: dateSortieForStatus, // ✅ MODIFIÉ : date_sortie de la dernière itération
+      statut: getStatusFromDateSortie(dateSortieForStatus), // ✅ MODIFIÉ : statut basé sur la dernière itération
       // Créer la chaîne d'affichage des semaines
       semainesApparition: weekDetails.map(wd => wd.text).join(", ")
     };
@@ -594,6 +615,7 @@ const saveComment = async (ticketId, commentText) => {
               )}
               <th className="border p-2">Semaines d'Apparition</th>
               <th className="border p-2">Total Réitérations</th>
+              <th className="border p-2">Statut</th>
               <th className="border p-2">Commentaire Réentrant</th>
             </tr>
           </thead>
@@ -613,6 +635,15 @@ const saveComment = async (ticketId, commentText) => {
                 )}
                 <td className="border p-2">{ticket.semainesApparition}</td>
                 <td className="border p-2">{ticket.totalIterations}</td>
+                <td className="border p-2">
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    ticket.statut === "Pas encore traité" 
+                      ? "bg-red-100 text-red-800" 
+                      : "bg-green-100 text-green-800"
+                  }`}>
+                    {ticket.statut}
+                  </span>
+                </td>
                 <td className="border p-2">
                   {editingComment && editingComment.id === ticket.id_ticket ? (
                     <div className="flex flex-col gap-2">
@@ -715,6 +746,7 @@ const saveComment = async (ticketId, commentText) => {
                   )}
                   <th className="border p-2">Semaines d'Apparition</th>
                   <th className="border p-2">Total Réitérations</th>
+                  <th className="border p-2">Statut</th>
                   <th className="border p-2">Commentaire Réentrant</th>
                 </tr>
               </thead>
@@ -734,6 +766,15 @@ const saveComment = async (ticketId, commentText) => {
                     )}
                     <td className="border p-2">{ticket.semainesApparition}</td>
                     <td className="border p-2">{ticket.totalIterations}</td>
+                    <td className="border p-2">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        ticket.statut === "Pas encore traité" 
+                          ? "bg-red-100 text-red-800" 
+                          : "bg-green-100 text-green-800"
+                      }`}>
+                        {ticket.statut}
+                      </span>
+                    </td>
                     <td className="border p-2">
                       {editingComment && editingComment.id === ticket.id_ticket ? (
                         <div className="flex flex-col gap-2">
