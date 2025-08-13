@@ -18,22 +18,30 @@ const COLORS = {
 };
 
 const rawData = [
-  { type: "REF PMT", date: "31/07/2025" },
-  { type: "Renonciation", date: "31/07/2025" },
-  { type: "Intervention", date: "31/07/2025" },
-  { type: "Intervention", date: "31/07/2025" },
-  { type: "Renonciation", date: "01/08/2025" },
-  { type: "Intervention", date: "02/08/2025" },
-  { type: "Intervention", date: "04/08/2025" },
-  { type: "Renonciation", date: "04/08/2025" },
-  { type: "REF PMT", date: "04/08/2025" },
-  { type: "Intervention", date: "05/08/2025" },
-  { type: "REF PMT", date: "05/08/2025" },
-  { type: "Renonciation", date: "05/08/2025" },
-  { type: "Intervention", date: "05/08/2025" },
+  { type: "Renonciation", date: "06/08/2025" },
   { type: "REF PMT", date: "06/08/2025" },
-  { type: "Renonciation", date: "06/08/2025" }
+  { type: "REF PMT", date: "07/08/2025" },
+  { type: "Renonciation", date: "07/08/2025" },
+  { type: "Intervention", date: "08/08/2025" },
+  { type: "Intervention", date: "08/08/2025" },
+  { type: "Renonciation", date: "08/08/2025" },
+  { type: "REF PMT", date: "08/08/2025" },
+  { type: "Intervention", date: "08/08/2025" },
+  { type: "Intervention", date: "11/08/2025" },
+  { type: "Intervention", date: "11/08/2025" },
+  { type: "Renonciation", date: "11/08/2025" },
+  { type: "REF PMT", date: "11/08/2025" },
+  { type: "Intervention", date: "12/08/2025" },
+  { type: "Intervention", date: "12/08/2025" },
+  { type: "Renonciation", date: "12/08/2025" },
+  { type: "REF PMT", date: "12/08/2025" },
+  { type: "Renonciation", date: "13/08/2025" },
+  { type: "REF PMT", date: "13/08/2025" },
+  { type: "Intervention", date: "13/08/2025" },
+  { type: "Intervention", date: "13/08/2025" }
 ];
+
+
 
 
 

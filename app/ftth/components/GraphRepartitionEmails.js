@@ -9,22 +9,29 @@ import Modal from "react-modal";
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 const rawData = [
+  { type: "Renonciation" },
+  { type: "REF PMT" },
   { type: "REF PMT" },
   { type: "Renonciation" },
   { type: "Intervention" },
   { type: "Intervention" },
   { type: "Renonciation" },
+  { type: "REF PMT" },
+  { type: "Intervention" },
   { type: "Intervention" },
   { type: "Intervention" },
   { type: "Renonciation" },
   { type: "REF PMT" },
   { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Renonciation" },
   { type: "REF PMT" },
   { type: "Renonciation" },
-  { type: "Intervention" },
   { type: "REF PMT" },
-  { type: "Renonciation" }
+  { type: "Intervention" },
+  { type: "Intervention" }
 ];
+
 
 
 
