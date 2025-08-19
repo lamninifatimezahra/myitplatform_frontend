@@ -9,11 +9,6 @@ import Modal from "react-modal";
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
 const rawData = [
-  { type: "Renonciation" },
-  { type: "REF PMT" },
-  { type: "REF PMT" },
-  { type: "Renonciation" },
-  { type: "Intervention" },
   { type: "Intervention" },
   { type: "Renonciation" },
   { type: "REF PMT" },
@@ -22,17 +17,31 @@ const rawData = [
   { type: "Intervention" },
   { type: "Renonciation" },
   { type: "REF PMT" },
+  { type: "Renonciation" },
+  { type: "Intervention" },
+  { type: "REF PMT" },
+  { type: "Intervention" },
   { type: "Intervention" },
   { type: "Intervention" },
   { type: "Renonciation" },
   { type: "REF PMT" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "REF PMT" },
   { type: "Renonciation" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "REF PMT" },
+  { type: "Renonciation" },
+  { type: "Renonciation" },
+  { type: "Intervention" },
+  { type: "Intervention" },
+  { type: "Intervention" },
   { type: "REF PMT" },
   { type: "Intervention" },
-  { type: "Intervention" }
+  { type: "Intervention" },
+  { type: "REF PMT" }
 ];
-
-
 
 
 const COLORS = ["#3b82f6", "#f59e0b", "#111827", "#4b5563", "#68bddd", "#6366f1"];

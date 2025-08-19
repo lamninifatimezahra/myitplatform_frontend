@@ -18,30 +18,39 @@ const COLORS = {
 };
 
 const rawData = [
-  { type: "Renonciation", date: "06/08/2025" },
-  { type: "REF PMT", date: "06/08/2025" },
-  { type: "REF PMT", date: "07/08/2025" },
-  { type: "Renonciation", date: "07/08/2025" },
-  { type: "Intervention", date: "08/08/2025" },
-  { type: "Intervention", date: "08/08/2025" },
-  { type: "Renonciation", date: "08/08/2025" },
-  { type: "REF PMT", date: "08/08/2025" },
-  { type: "Intervention", date: "08/08/2025" },
-  { type: "Intervention", date: "11/08/2025" },
-  { type: "Intervention", date: "11/08/2025" },
-  { type: "Renonciation", date: "11/08/2025" },
-  { type: "REF PMT", date: "11/08/2025" },
-  { type: "Intervention", date: "12/08/2025" },
-  { type: "Intervention", date: "12/08/2025" },
-  { type: "Renonciation", date: "12/08/2025" },
-  { type: "REF PMT", date: "12/08/2025" },
-  { type: "Renonciation", date: "13/08/2025" },
-  { type: "REF PMT", date: "13/08/2025" },
-  { type: "Intervention", date: "13/08/2025" },
-  { type: "Intervention", date: "13/08/2025" }
+  { type: "Intervention", date: "2025-08-13" },
+  { type: "Renonciation", date: "2025-08-13" },
+  { type: "REF PMT", date: "2025-08-13" },
+  { type: "Intervention", date: "2025-08-13" },
+  { type: "Intervention", date: "2025-08-13" },
+  { type: "Intervention", date: "2025-08-14" },
+  { type: "Renonciation", date: "2025-08-14" },
+  { type: "REF PMT", date: "2025-08-14" },
+  { type: "Renonciation", date: "2025-08-15" },
+  { type: "Intervention", date: "2025-08-16" },
+  { type: "REF PMT", date: "2025-08-16" },
+  { type: "Intervention", date: "2025-08-16" },
+  { type: "Intervention", date: "2025-08-16" },
+  { type: "Intervention", date: "2025-08-16" },
+  { type: "Renonciation", date: "2025-08-16" },
+  { type: "REF PMT", date: "2025-08-16" },
+  { type: "Intervention", date: "2025-08-17" },
+  { type: "Intervention", date: "2025-08-17" },
+  { type: "REF PMT", date: "2025-08-17" },
+  { type: "Renonciation", date: "2025-08-17" },
+  { type: "Intervention", date: "2025-08-17" },
+  { type: "Intervention", date: "2025-08-18" },
+  { type: "REF PMT", date: "2025-08-18" },
+  { type: "Renonciation", date: "2025-08-18" },
+  { type: "Renonciation", date: "2025-08-18" },
+  { type: "Intervention", date: "2025-08-18" },
+  { type: "Intervention", date: "2025-08-18" },
+  { type: "Intervention", date: "2025-08-18" },
+  { type: "REF PMT", date: "2025-08-19" },
+  { type: "Intervention", date: "2025-08-19" },
+  { type: "Intervention", date: "2025-08-19" },
+  { type: "REF PMT", date: "2025-08-19" }
 ];
-
-
 
 
 
