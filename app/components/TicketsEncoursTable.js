@@ -50,6 +50,9 @@ export default function TicketsEnCoursTable({
   const [editingComment, setEditingComment] = useState(null); // {id: ticketId, text: commentText}
   const [commentSaving, setCommentSaving] = useState(false);
 
+  // États pour la pagination de l'affichage
+  const [visibleTickets, setVisibleTickets] = useState(5);
+
   // Effet pour fermer le panneau de filtre en cas de clic extérieur
   useEffect(() => {
     function handleClickOutside(event) {
@@ -158,6 +161,22 @@ export default function TicketsEnCoursTable({
     });
     setFiltered(filteredTickets);
   }, [tickets, selectedWeeks, sortOrder]);
+
+  // Fonction pour déterminer si un filtre est appliqué
+  const isFilterApplied = () => {
+    return selectedWeeks.length > 0;
+  };
+
+  // Effet pour ajuster visibleTickets quand un filtre est appliqué
+  useEffect(() => {
+    if (isFilterApplied()) {
+      // Si un filtre est appliqué, afficher tous les tickets
+      setVisibleTickets(filtered.length || 5);
+    } else {
+      // Si aucun filtre n'est appliqué, revenir à l'affichage par défaut
+      setVisibleTickets(5);
+    }
+  }, [filtered.length, selectedWeeks]);
 
   const toggleSelectAll = () => {
     if (selectedWeeks.length === allWeeks.length) {
@@ -292,6 +311,13 @@ export default function TicketsEnCoursTable({
           )}
         </div>
 
+        {/* Indicateur de filtre actif */}
+        {isFilterApplied() && (
+          <div className="mb-3 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+            📊 Filtre actif - Affichage de tous les tickets correspondants ({filtered.length} ticket{filtered.length > 1 ? 's' : ''})
+          </div>
+        )}
+
         {/* Affichage du tableau */}
         <div className="flex-grow overflow-auto">
           <table className="w-full border-collapse border border-gray-300 text-sm">
@@ -305,7 +331,7 @@ export default function TicketsEnCoursTable({
               </tr>
             </thead>
             <tbody>
-              {filtered.map(ticket => (
+              {filtered.slice(0, visibleTickets).map(ticket => (
                 <tr key={ticket[idField]} className="hover:bg-gray-100 text-black">
                   <td className="border p-2">{ticket[idField]}</td>
                   <td className="border p-2">{ticket.titre_ticket}</td>
@@ -356,6 +382,26 @@ export default function TicketsEnCoursTable({
             </tbody>
           </table>
         </div>
+
+        {/* Boutons "Voir Plus/Moins" seulement quand aucun filtre n'est appliqué */}
+        {!isFilterApplied() && (
+          <div className="no-export flex justify-center space-x-3 mt-4">
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+              onClick={() => setVisibleTickets((prev) => prev + 5)}
+              disabled={visibleTickets >= filtered.length}
+            >
+              Voir Plus
+            </button>
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-gray-300"
+              onClick={() => setVisibleTickets((prev) => Math.max(5, prev - 5))}
+              disabled={visibleTickets <= 5}
+            >
+              Voir Moins
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal d'agrandissement */}

@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   LabelList,
   Cell,
-  CartesianGrid,          // 👈 AJOUT
+  CartesianGrid,
 } from "recharts";
 import { AiOutlineFilter } from "react-icons/ai";
 import { FaExpand, FaPencilAlt } from "react-icons/fa";
@@ -111,6 +111,30 @@ function IconButton({
   );
 }
 
+/* ====================== CustomTooltip ====================== */
+const CustomTooltip = ({ active, payload, label, needsLogScale }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    return (
+      <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
+        <p className="font-semibold text-gray-800">{label}</p>
+        <p className="text-sm">
+          <span className="font-medium" style={{ color: data.payload.color }}>
+            {data.payload.rule}
+          </span>
+          : <span className="font-bold">{data.value}</span> cas
+        </p>
+        {needsLogScale && (
+          <p className="text-xs text-gray-500 mt-1">
+            (Échelle logarithmique active)
+          </p>
+        )}
+      </div>
+    );
+  }
+  return null;
+};
+
 /* ============================ Composant ============================ */
 export default function GraphTopReglesParJour({
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/regle/",
@@ -134,7 +158,7 @@ export default function GraphTopReglesParJour({
   const modalChartContainerRef = useRef(null);
   const editorRef = useRef(null);
 
-  // palette stable (définie AVANT tout useMemo qui l’utilise)
+  // palette stable (définie AVANT tout useMemo qui l'utilise)
   const colorMapRef = useRef({});
   const palette = ["#68bddd", "#6f80ac", "#4B5563", "#9ca3af", "#60a5fa"];
   function colorForRule(rule) {
@@ -270,7 +294,7 @@ export default function GraphTopReglesParJour({
     return () => document.removeEventListener("mousedown", onDown);
   }, [isOpen]);
 
-  // fermer l’éditeur au clic extérieur
+  // fermer l'éditeur au clic extérieur
   useEffect(() => {
     const onDown = (e) => {
       if (!editor) return;
@@ -432,13 +456,45 @@ export default function GraphTopReglesParJour({
     return rows;
   }, [records, filteredDatesISO, holidaySet]);
 
-  // Axe Y dynamique
-  const maxValue = Math.max(...chartData.map((d) => d.value || 0), 0);
-  let maxY = 100;
-  if (maxValue < 10) maxY = Math.ceil((maxValue + 5) / 10) * 10;
-  else if (maxValue < 100) maxY = Math.ceil((maxValue + 10) / 10) * 10;
-  else if (maxValue < 1000) maxY = Math.ceil((maxValue + 100) / 100) * 100;
-  else maxY = Math.ceil((maxValue + 500) / 500) * 500;
+  // ===== NOUVELLE LOGIQUE D'ÉCHELLE LOGARITHMIQUE =====
+  const allValues = chartData.map((d) => d.value || 0).filter(v => v > 0);
+  const maxValue = Math.max(...allValues, 0);
+  const minValue = Math.min(...allValues.filter(v => v > 0), 1);
+
+  // Fonction pour déterminer si on a besoin d'une échelle logarithmique
+  const needsLogScale = maxValue / minValue > 10; // Si ratio > 10, on utilise log
+
+  let yAxisDomain, yAxisScale, formatYAxisTick;
+
+  if (needsLogScale && maxValue > 0) {
+    // ÉCHELLE LOGARITHMIQUE
+    const logMin = Math.floor(Math.log10(minValue));
+    const logMax = Math.ceil(Math.log10(maxValue));
+    
+    // Domaine logarithmique
+    yAxisDomain = [Math.pow(10, logMin), Math.pow(10, logMax)];
+    yAxisScale = "log";
+    
+    // Fonction pour formater les ticks de l'axe Y
+    formatYAxisTick = (value) => {
+      if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+      if (value >= 100) return value.toString();
+      if (value >= 10) return value.toString();
+      if (value >= 1) return value.toString();
+      return value.toFixed(1);
+    };
+  } else {
+    // ÉCHELLE LINÉAIRE (comportement actuel)
+    let maxY = 100;
+    if (maxValue < 10) maxY = Math.ceil((maxValue + 5) / 10) * 10;
+    else if (maxValue < 100) maxY = Math.ceil((maxValue + 10) / 10) * 10;
+    else if (maxValue < 1000) maxY = Math.ceil((maxValue + 100) / 100) * 100;
+    else maxY = Math.ceil((maxValue + 500) / 500) * 500;
+    
+    yAxisDomain = [0, maxY];
+    yAxisScale = "linear";
+    formatYAxisTick = (value) => value.toString();
+  }
 
   const showData = chartData.some((d) => (d.value || 0) > 0);
 
@@ -534,6 +590,17 @@ export default function GraphTopReglesParJour({
             <p className="text-sm text-gray-500 min-h-[20px]">
               {errorText ? <span className="text-red-500">{errorText}</span> : subtitle}
             </p>
+            {/* ===== INDICATEUR VISUEL ÉCHELLE LOG ===== */}
+            {needsLogScale && showData && (
+              <div className="mt-1">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  Échelle logarithmique active
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="no-export flex items-center gap-2">
@@ -679,7 +746,6 @@ export default function GraphTopReglesParJour({
           ) : showData ? (
             <ResponsiveContainer key={chartKey} width="100%" height="100%">
               <BarChart data={chartData}>
-                {/* 👇 LIGNES DE GRILLE comme Chart.js (horizontales seulement) */}
                 <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="compositeLabel"
@@ -688,11 +754,19 @@ export default function GraphTopReglesParJour({
                   height={85}
                   tick={{ fontSize: 13, fill: "#1f2937", fontWeight: 600 }}
                   interval={0}
-                  axisLine={false}     // pas de bordure d’axe
+                  axisLine={false}
                   tickLine={false}
                 />
-                <YAxis domain={[0, maxY]} axisLine={false} tickLine={false} />
-                <Tooltip />
+                <YAxis 
+                  domain={yAxisDomain}
+                  scale={yAxisScale}
+                  axisLine={false} 
+                  tickLine={false}
+                  tickFormatter={formatYAxisTick}
+                  tick={{ fontSize: 12, fill: "#374151" }}
+                  allowDataOverflow={false}
+                />
+                <Tooltip content={<CustomTooltip needsLogScale={needsLogScale} />} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   <LabelList
                     dataKey="rule"
@@ -712,7 +786,7 @@ export default function GraphTopReglesParJour({
             <p className="text-gray-500 italic grid place-items-center h-full">Aucune donnée à afficher.</p>
           )}
 
-          {/* Overlay d’ajout (carte) */}
+          {/* Overlay d'ajout (carte) */}
           {commentMode && (
             <div
               className="absolute inset-0 z-30 cursor-crosshair"
@@ -784,6 +858,17 @@ export default function GraphTopReglesParJour({
             <div>
               <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
               <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+              {/* ===== INDICATEUR DANS LA MODAL AUSSI ===== */}
+              {needsLogScale && showData && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    Échelle logarithmique active
+                  </span>
+                </div>
+              )}
             </div>
             <button
               onClick={() => { setModalIsOpen(false); setEditor(null); }}
@@ -809,7 +894,6 @@ export default function GraphTopReglesParJour({
             ) : showData ? (
               <ResponsiveContainer key={`m-${chartKey}-${modalChartKey}`} width="100%" height="100%">
                 <BarChart data={chartData}>
-                  {/* 👇 LIGNES DE GRILLE en modal aussi */}
                   <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
                   <XAxis
                     dataKey="compositeLabel"
@@ -821,8 +905,16 @@ export default function GraphTopReglesParJour({
                     axisLine={false}
                     tickLine={false}
                   />
-                  <YAxis domain={[0, maxY]} axisLine={false} tickLine={false} />
-                  <Tooltip />
+                  <YAxis 
+                    domain={yAxisDomain}
+                    scale={yAxisScale}
+                    axisLine={false} 
+                    tickLine={false}
+                    tickFormatter={formatYAxisTick}
+                    tick={{ fontSize: 12, fill: "#374151" }}
+                    allowDataOverflow={false}
+                  />
+                  <Tooltip content={<CustomTooltip needsLogScale={needsLogScale} />} />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                     <LabelList
                       dataKey="rule"
@@ -842,7 +934,7 @@ export default function GraphTopReglesParJour({
               <p className="text-gray-500 italic grid place-items-center h-full">Aucune donnée à afficher.</p>
             )}
 
-            {/* Overlay d’ajout (modal) */}
+            {/* Overlay d'ajout (modal) */}
             {commentMode && (
               <div className="absolute inset-0 z-30 cursor-crosshair" onClick={(e) => openEditorAt(e.clientX, e.clientY, "modal")} />
             )}
