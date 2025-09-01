@@ -4,7 +4,6 @@ import { useState } from "react";
 import useAuth from "@/hooks/useAuth";
 import SidebarFTTHStyled from "../components/Sidebar";
 import Header from "../components/Header";
-
 import KpiTicketTraite from "../components/KPITicketTraite";
 import KpiReentrant from "../components/KpiReentrant";
 import KpiTicketsEntrants from "../components/KpiTicketsEntrants";
@@ -60,7 +59,7 @@ export default function DSLDashboard() {
             ☰
           </button>
 
-          {/* ✅ Sidebar FTTH-style */}
+          {/* Sidebar FTTH-style */}
           <SidebarFTTHStyled
             sidebarOpen={isSidebarOpen}
             setSidebarOpen={setIsSidebarOpen}
