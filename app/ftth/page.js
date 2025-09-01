@@ -1,33 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import useAuth from "@/hooks/useAuth";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import useAuth from "@/hooks/useAuth";
 
 import KPIBacklogJ1 from "./components/KPIBacklogJ1";
 import KPIBacklogJ from "./components/KPIBacklogJ";
-import KPIObjectif from "./components/KPIObjectif";
-import KPIDossiersTraites from "./components/KPIDossiersTraites";
+import KPISPA from "./components/KPISPA";
 
-import GraphObjectif from "./components/GraphObjectif";
 import GraphVueEnsemble from "./components/GraphVueEnsemble";
-import GraphTopRegles from "./components/GraphTopRegles";
 import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
+import GraphTopRegles from "./components/GraphTopRegles";
 import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 import GraphTraitementEmails from "./components/GraphTraitementEmails";
 import GraphRepartitionEmails from "./components/GraphRepartitionEmails";
-
-// Importation des nouveaux graphiques
-import GraphTicketsEntrantsSortants from "./components/GraphTicketsEntrantsSortants"; // Nouveau graphique
-import GraphTicketsItsSfr from "./components/GraphTicketsItsSfr"; // Nouveau graphique
-
+import GraphTicketsEntrantsSortants from "./components/GraphTicketsEntrantsSortants";
+import GraphTicketsItsSfr from "./components/GraphTicketsItsSfr";
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
-import Image from "next/image";
+
+// ★ Nouveau composant
+import SectionRail from "./components/SectionRail";
 
 export default function DashboardFTTH() {
-  const { user, loading, authorized, hydrated } = useAuth(null, "FTTH");
+  const { loading, authorized, hydrated } = useAuth(null, "FTTH");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [globalStartDate, setGlobalStartDate] = useState(null);
   const [globalEndDate, setGlobalEndDate] = useState(null);
@@ -37,42 +34,30 @@ export default function DashboardFTTH() {
     setGlobalEndDate(new Date(end));
   };
 
-  // 🌀 Chargement global (authentification + données utilisateur)
+  // Conteneur scrollable + refs sections
+  const mainRef = useRef(null);
+  const refManual = useRef(null);
+  const refTicketing = useRef(null);
+  const refMailing = useRef(null);
+
+  // Définition des sections (ordre, labels, couleurs)
+  const sections = [
+    { key: "manual", label: "Manuel",  dot: "bg-indigo-600",  ref: refManual },
+    { key: "ticketing", label: "Ticketing", dot: "bg-sky-500",   ref: refTicketing },
+    { key: "mailing", label: "Mailing",  dot: "bg-emerald-500", ref: refMailing },
+  ];
+
   if (!hydrated || loading || !authorized) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white relative">
-        <div className="relative w-24 h-24">
-          <div className="absolute inset-0 border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent rounded-full animate-spin-custom" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Image
-              src="/logo-myit.png"
-              alt="Logo MyIT"
-              width={48}
-              height={48}
-              className="object-contain"
-            />
-          </div>
-        </div>
-        <style jsx>{`
-          @keyframes spin-custom {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-          .animate-spin-custom {
-            animation: spin-custom 1.1s ease-in-out infinite;
-          }
-        `}</style>
+      <div className="flex items-center justify-center h-screen bg-white text-gray-600 text-xl">
+        Chargement...
       </div>
     );
   }
 
   return (
     <div className="flex h-screen w-full overflow-hidden relative">
-      {/* Bouton menu mobile */}
+      {/* Menu mobile */}
       <button
         onClick={() => setIsSidebarOpen(true)}
         className="sm:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white shadow p-2 rounded-md"
@@ -80,97 +65,101 @@ export default function DashboardFTTH() {
         ☰
       </button>
 
-      {/* Barre latérale */}
+      {/* Sidebar */}
       <Sidebar sidebarOpen={isSidebarOpen} setSidebarOpen={setIsSidebarOpen} />
 
       {/* Contenu principal */}
       <div className="flex-1 flex flex-col relative">
-        {/* Fond d’écran flouté */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
-          style={{ backgroundImage: "url('/background-office.jpg')" }}
-        ></div>
+        <Header onGlobalFilter={handleGlobalFilter} setSidebarOpen={setIsSidebarOpen} />
 
-        {/* Header avec filtre global */}
-        <Header
-          onGlobalFilter={handleGlobalFilter}
-          setSidebarOpen={setIsSidebarOpen}
+        <main
+          ref={mainRef}
+          className="flex-1 p-6 space-y-6 overflow-y-auto relative z-10 bg-gray-50"
+        >
+          {/* Ticker */}
+          <div className="w-full overflow-hidden border-b border-gray-200 bg-gray-100 rounded-md">
+            <NewsTickerReglesFTTH />
+          </div>
+
+          {/* KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="kpi-backlog-j1"><KPIBacklogJ1 /></div>
+            <div id="kpi-backlog-j"><KPIBacklogJ /></div>
+            <div id="kpi-spa"><KPISPA /></div>
+          </div>
+
+          {/* ======= SECTION : MANUEL ======= */}
+          <section ref={refManual} className="space-y-6 scroll-mt-16">
+            <div className="grid grid-cols-1 gap-6">
+              <div data-graph-id="graph-vue-ensemble" data-graph-label="Vue d’ensemble combinée du Backlog">
+                <GraphVueEnsemble
+                  externalStartDate={globalStartDate}
+                  externalEndDate={globalEndDate}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div data-graph-id="graph-repartition-manuelle" data-graph-label="Répartition Manuelle (Acteur)">
+                <GraphRepartitionManuelle globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+              <div data-graph-id="graph-top-regles" data-graph-label="Top 5 RÈGLES">
+                <GraphTopRegles globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              <div data-graph-id="graph-top-regles-par-jour" data-graph-label="Top 5 RÈGLES par jour">
+                <GraphTopReglesParJour globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              <div data-graph-id="graph-entrants-sortants" data-graph-label="Entrants – Sortants – Nouveaux cas">
+                <GraphEntrantsSortants globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+            </div>
+          </section>
+
+          {/* ======= SECTION : TICKETING ======= */}
+          <section ref={refTicketing} className="space-y-6 scroll-mt-16">
+            <div className="grid grid-cols-1 gap-6">
+              <div data-graph-id="graph-tickets-entrants-sortants" data-graph-label="Tickets Entrants/Sortants">
+                <GraphTicketsEntrantsSortants globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6">
+              <div data-graph-id="graph-tickets-its-sfr" data-graph-label="Tickets ITS ↔ SFR">
+                <GraphTicketsItsSfr globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+            </div>
+          </section>
+
+          {/* ======= SECTION : MAILING ======= */}
+          <section ref={refMailing} className="space-y-6 scroll-mt-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div data-graph-id="graph-traitement-emails" data-graph-label="Traitement des Emails">
+                <GraphTraitementEmails globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+              <div data-graph-id="graph-repartition-emails" data-graph-label="Répartition des Emails">
+                <GraphRepartitionEmails globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+              </div>
+            </div>
+          </section>
+        </main>
+
+        {/* ★ Barre Excel réutilisable */}
+        <SectionRail
+          sections={sections}
+          scrollContainerRef={mainRef}
+          anchorSelector="[data-graph-id='graph-vue-ensemble']"
         />
-
-        {/* Fil d’actualité en haut */}
-        <NewsTickerReglesFTTH />
-
-        {/* Contenu dashboard */}
-        <div className="flex-1 p-6 space-y-6 overflow-auto relative z-10">
-          {/* 🔷 KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <KPIBacklogJ1 />
-            <KPIBacklogJ />
-            <KPIObjectif />
-            <KPIDossiersTraites />
-          </div>
-
-          {/* 🔷 Graphiques - ligne 1 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphObjectif
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-            <GraphVueEnsemble
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-          </div>
-
-          {/* 🔷 Graphiques - ligne 2 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphTopRegles
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-            <GraphTopReglesParJour
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-          </div>
-
-          {/* 🔷 Graphiques - ligne 3 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphRepartitionManuelle
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-            <GraphEntrantsSortants
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-          </div>
-
-          {/* 🔷 Graphiques - ligne 4 (nouveaux) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphTicketsEntrantsSortants
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-            <GraphTicketsItsSfr
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-          </div>
-
-          {/* 🔷 Graphiques - ligne 5 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GraphTraitementEmails
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-            <GraphRepartitionEmails
-              globalStartDate={globalStartDate}
-              globalEndDate={globalEndDate}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
 }
+
+/* Ajoute (si besoin) dans ton global.css :
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+*/

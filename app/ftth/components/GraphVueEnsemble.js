@@ -1,517 +1,985 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Bar } from "react-chartjs-2";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LabelList, Legend,
-} from "recharts";
-import { FaExpand, FaPencilAlt, FaSyncAlt } from "react-icons/fa";
-import Modal from "react-modal";
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import { AiOutlineFilter } from "react-icons/ai";
+import { FaExpand, FaPencilAlt } from "react-icons/fa";
+import { FiRefreshCw } from "react-icons/fi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { fr } from "date-fns/locale";
+import Modal from "react-modal";
 import fetchWithAuth from "@/utils/fetchWithAuth";
-import holidaysData from "@/app/ftth/utils/holidays.json";
 
+// 👉 Jours fériés FR + MA
+import holidaysMap from "@/app/ftth/utils/holidays.json";
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ChartDataLabels);
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
-const labelStyle = { fill: "#374151", fontSize: 12, fontWeight: "bold" };
-const colors = ["#68bddd", "#6f80ac", "#4B5563"];
-const iconBtnClass = "w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition";
+/* ========================== utils dates ========================== */
+function toISO(d) {
+  if (!d || isNaN(d.getTime())) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function parseISO(s) {
+  if (!s) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+function isWorkingDay(d) {
+  const wd = d.getDay(); // 0=dim,6=sam
+  return wd !== 0 && wd !== 6;
+}
+function weekNumber(date) {
+  const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = tmp.getUTCDay() || 7;
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  return Math.ceil(((tmp.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+const quarterOf = (d) => Math.ceil((d.getMonth() + 1) / 3);
+const semesterOf = (d) => ((d.getMonth() + 1) <= 6 ? 1 : 2);
 
-export default function GraphVueEnsemble({
-  exportMode = false,
-  selectedGraphs = [],
-  onGraphSelect,
-  globalStartDate,
-  globalEndDate,
+function allWorkingDaysBetween(a, b, holidaySet) {
+  const res = [];
+  const d = new Date(a); d.setHours(0,0,0,0);
+  const end = new Date(b); end.setHours(0,0,0,0);
+  while (d <= end) {
+    const iso = toISO(d);
+    if (isWorkingDay(d) && (!holidaySet || !holidaySet.has(iso))) res.push(iso);
+    d.setDate(d.getDate() + 1);
+  }
+  return res;
+}
+function lastNWorkingDays(isoList, n, holidaySet) {
+  return isoList
+    .map((s) => ({ s, d: parseISO(s) }))
+    .filter((x) => x.d && isWorkingDay(x.d) && (!holidaySet || !holidaySet.has(x.s)))
+    .sort((a, b) => b.d - a.d)
+    .slice(0, n)
+    .sort((a, b) => a.d - b.d)
+    .map((x) => x.s);
+}
+
+/* ====================== Légende custom (style Chart.js, top centrée) ====================== */
+const COLORS = ["#68bddd", "#6f80ac", "#4B5563"]; // J / J-1 / Traités
+
+function LegendInline({ visibleKeys, onClick }) {
+  const items = [
+    { key: "stock",       label: "Backlog FTTH J",   color: COLORS[0] },
+    { key: "non_traite",  label: "Backlog FTTH J-1", color: COLORS[1] },
+    { key: "traite",      label: "Dossiers Traités", color: COLORS[2] },
+  ];
+  return (
+    <div className="w-full flex justify-center items-center mt-1 mb-2 select-none">
+      <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        {items.map((it) => {
+          const active = visibleKeys.includes(it.key);
+          return (
+            <li key={it.key}>
+              <button
+                onClick={(e) => onClick(it.key, e)}
+                title="Clic: isoler • Ctrl/Cmd: (dé)cocher"
+                className={`inline-flex items-center gap-2 transition-opacity ${active ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
+              >
+                <span
+                  className="inline-block w-3 h-3 rounded-sm border border-gray-300"
+                  style={{ backgroundColor: it.color }}
+                />
+                <span className="text-gray-800 whitespace-nowrap">{it.label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/* ====================== IconButton ====================== */
+function IconButton({
+  title,
+  ariaLabel,
+  active = false,
+  onClick,
+  dataFilterToggle = false,
+  size = 30,
+  children,
 }) {
-  const [selectedPeriod, setSelectedPeriod] = useState("week");
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [lastFilterSource, setLastFilterSource] = useState("default");
+  const child = React.cloneElement(children, {
+    style: { width: size, height: size },
+    className: "block pointer-events-none",
+  });
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      {...(dataFilterToggle ? { "data-filter-toggle": "" } : {})}
+      title={title}
+      aria-label={ariaLabel || title}
+      className={[
+        "inline-flex items-center justify-center",
+        "w-12 h-12 rounded-full ring-1 shrink-0",
+        "leading-none select-none transition-all duration-150",
+        "hover:scale-105 active:scale-95",
+        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400",
+        active
+          ? "bg-[#2d3853] text-white ring-[#2d3853]"
+          : "bg-gray-200 text-[#2d3853] ring-gray-300 hover:bg-gray-300",
+      ].join(" ")}
+    >
+      {child}
+    </button>
+  );
+}
+
+/* ============================ Composant ============================ */
+export default function GraphVueEnsemble({
+  apiUrl = "https://api.606510.xyz/dashboard/api/ftth/stock/",
+  id = "vue-ensemble-backlog",
+  chartTitle = "Vue d’ensemble combinée du Backlog",
+  defaultViewMode = "day",
+  defaultNumPeriods = 5,
+  externalStartDate = null,
+  externalEndDate = null,
+  holidays = [],
+}) {
+  // refs
+  const filterPanelRef = useRef(null);
+  const chartContainerRef = useRef(null);
+  const modalChartContainerRef = useRef(null);
+  const editorRef = useRef(null);
+
+  // ui
+  const [loading, setLoading] = useState(true);
+  const [errorText, setErrorText] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
-  const [annotations, setAnnotations] = useState([]);
-  const [showCommentPopup, setShowCommentPopup] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [commentColor, setCommentColor] = useState("");
-  const [editingComment, setEditingComment] = useState(null);
-  const [editingColor, setEditingColor] = useState("");
+  // data / filtres
+  const [records, setRecords] = useState([]);
+  const [viewMode, setViewMode] = useState(defaultViewMode);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [multipleYearsExist, setMultipleYearsExist] = useState(false);
+  const [selectedDates, setSelectedDates] = useState([null, null]);
+  const [selectedValues, setSelectedValues] = useState([]);
+  const [chartKey, setChartKey] = useState(0); // force remount du chart (légende, etc.)
 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // ===== Légende custom : jeux visibles
   const [visibleKeys, setVisibleKeys] = useState(["stock", "non_traite", "traite"]);
 
-  const chartRef = useRef(null);
-  const modalChartRef = useRef(null);
-  const endDateRef = useRef(null);
-
-  const normalizeDate = (date) => {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  const getDynamicTitle = () => {
-    if (visibleKeys.length === 1) {
-      switch (visibleKeys[0]) {
-        case "stock": return "Backlog FTTH J";
-        case "non_traite": return "Backlog FTTH J-1";
-        case "traite": return "Dossiers Traités";
-        default: return "Vue d’ensemble combinée du Backlog";
-      }
-    }
-    return "Vue d’ensemble combinée du Backlog";
-  };
-
-  const getLatestDate = (list) => {
-    const validDates = list
-      .map((item) => new Date(item.date))
-      .filter((d) => d.getDay() !== 0 && d.getDay() !== 6);
-    return validDates.length ? new Date(Math.max(...validDates)) : null;
-  };
-
-  const getPeriodRange = (latest) => {
-    const end = new Date(latest);
-    let start = new Date(end);
-    if (selectedPeriod === "day") return [end, end];
-    if (selectedPeriod === "week") start.setDate(end.getDate() - 6);
-    if (selectedPeriod === "month") start.setDate(end.getDate() - 29);
-    if (selectedPeriod === "quarter") start.setMonth(end.getMonth() - 3);
-    if (selectedPeriod === "year") start.setFullYear(end.getFullYear() - 1);
-    return [start, end];
-  };
-  const handleLocalFilterChange = (period) => {
-    setLastFilterSource("local");
-    setSelectedPeriod(period);
-    if (period !== "custom") {
-      setStartDate(null);
-      setEndDate(null);
-    }
-  };
-
-  useEffect(() => {
-    if (globalStartDate && globalEndDate) {
-      setLastFilterSource("global");
-    }
-  }, [globalStartDate, globalEndDate]);
-
-  const isWorkingDay = (dateStr) => {
-  const date = new Date(dateStr);
-  const day = date.getDay(); // 0 = dimanche, 6 = samedi
-  const formattedDate = date.toISOString().split("T")[0];
-
-  const holidays = [
-    ...Object.keys(holidaysData.france),
-    ...Object.keys(holidaysData.morocco),
-  ];
-
-  return day !== 0 && day !== 6 && !holidays.includes(formattedDate);
-};
-
-  const fetchData = async () => {
-    setLoading(true);
+  // ====== Jours fériés FR + MA ======
+  const holidaySet = useMemo(() => {
     try {
-      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/ftth/stock/");
-      const json = await res.json();
-      if (!json || !json.length) {
-        setData([]);
-        return;
-      }
-      const latestDate = getLatestDate(json);
-      if (!latestDate) {
-        setData([]);
-        return;
-      }
+      const fr = holidaysMap?.france ? Object.keys(holidaysMap.france) : [];
+      const ma = holidaysMap?.morocco ? Object.keys(holidaysMap.morocco) : [];
+      const extra = Array.isArray(holidays) ? holidays : [];
+      return new Set([...fr, ...ma, ...extra]);
+    } catch {
+      return new Set(Array.isArray(holidays) ? holidays : []);
+    }
+  }, [holidays]);
 
-      let start, end;
-      if (lastFilterSource === "local") {
-        if (selectedPeriod === "custom" && startDate && endDate) {
-          start = normalizeDate(startDate);
-          end = normalizeDate(endDate);
-        } else if (selectedPeriod === "day") {
-          start = end = normalizeDate(latestDate);
+  // annotations
+  const [commentMode, setCommentMode] = useState(false);
+  const [comments, setComments] = useState([]);   // {id, text, color, x, y}
+  const [editor, setEditor] = useState(null);     // {id?, text, color, x, y, anchor}
+
+  /* ------------- fetch ------------- */
+  const reload = () => {
+    setErrorText("");
+    setLoading(true);
+    let mounted = true;
+    (async () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetchWithAuth(apiUrl, { signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const raw = await res.json();
+        if (!Array.isArray(raw)) throw new Error("Format inattendu: JSON non tableau");
+
+        const mapped = raw
+          .map((r) => {
+            const d = new Date(r.date);
+            if (isNaN(d.getTime())) return null;
+            return {
+              date: r.date,
+              dateObj: d,
+              dateISO: toISO(d),
+              year: d.getFullYear(),
+              week: weekNumber(d),
+              month: d.getMonth() + 1,
+              quarter: quarterOf(d),
+              semester: semesterOf(d),
+              stock: Number(r.stock) || 0,
+              non_traite: Number(r.non_traite) || 0,
+              traite: Number(r.traite) || 0,
+            };
+          })
+          .filter(Boolean);
+
+        if (!mounted) return;
+
+        setRecords(mapped);
+        const years = [...new Set(mapped.map((x) => x.year))].sort((a, b) => a - b);
+        setAvailableYears(years);
+        setMultipleYearsExist(years.length > 1);
+
+        if (defaultViewMode === "day") {
+          const all = [...new Set(mapped.map((x) => x.dateISO))];
+          const last = lastNWorkingDays(all, 10, holidaySet);
+          if (last.length) {
+            setSelectedDates([parseISO(last[0]), parseISO(last[last.length - 1])]);
+            setSelectedValues(last);
+          } else {
+            setSelectedDates([null, null]);
+            setSelectedValues([]);
+          }
         } else {
-          [start, end] = getPeriodRange(latestDate);
+          const latestYear = years.length ? years[years.length - 1] : new Date().getFullYear();
+          setSelectedYear(latestYear);
+          const periods = getAvailablePeriodsForYear(mapped, latestYear, defaultViewMode);
+          setSelectedValues(periods.slice(-defaultNumPeriods));
         }
-      } else if (lastFilterSource === "global" && globalStartDate && globalEndDate) {
-        start = normalizeDate(globalStartDate);
-        end = normalizeDate(globalEndDate);
-      } else {
-        [start, end] = getPeriodRange(latestDate);
+      } catch (err) {
+        console.error("Fetch FTTH stock error:", err);
+        if (mounted) {
+          setRecords([]);
+          setErrorText("Impossible de charger les données (réseau/API).");
+        }
+      } finally {
+        clearTimeout(timer);
+        if (mounted) setLoading(false);
       }
+    })();
 
-const filtered = json
-  .map((item) => ({ ...item, dateObj: new Date(item.date) }))
-  .filter((item) => {
-    const d = normalizeDate(item.dateObj);
-    return d >= start && d <= end && isWorkingDay(item.date);
-  })
+    return () => { mounted = false; };
+  };
 
-        .sort((a, b) => a.dateObj - b.dateObj);
+  useEffect(reload, [apiUrl]);
 
-      const finalData = filtered.map((item) => ({
-        date: item.dateObj.toLocaleDateString("fr-FR"),
-        stock: item.stock || 0,
-        non_traite: item.non_traite || 0,
-        traite: item.traite || 0,
-      }));
+  // plage externe
+  useEffect(() => {
+    if (externalStartDate && externalEndDate) {
+      setViewMode("day");
+      setSelectedDates([externalStartDate, externalEndDate]);
+      setSelectedValues(allWorkingDaysBetween(externalStartDate, externalEndDate, holidaySet));
+    }
+  }, [externalStartDate, externalEndDate, holidaySet]);
 
-      setData(finalData);
-    } catch (error) {
-      console.error("Erreur de chargement des données:", error);
-    } finally {
-      setTimeout(() => setLoading(false), 500);
+  // fermer panneau filtre si clic extérieur
+  useEffect(() => {
+    const onDown = (e) => {
+      if (isOpen && filterPanelRef.current && !filterPanelRef.current.contains(e.target) && !e.target.closest('[data-filter-toggle]')) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [isOpen]);
+
+  // fermer l'éditeur si clic en dehors
+  useEffect(() => {
+    const onDown = (e) => {
+      if (!editor) return;
+      if (editorRef.current && !editorRef.current.contains(e.target)) {
+        setEditor(null);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [editor]);
+
+  function getAvailablePeriodsForYear(data, year, mode) {
+    const key = mode; // "week" | "month" | "quarter" | "semester"
+    const s = new Set();
+    data.forEach((r) => { if (r.year === year) s.add(r[key]); });
+    return Array.from(s).sort((a, b) => a - b);
+  }
+
+  /* ----------------- RESET ----------------- */
+  const resetGraph = () => {
+    setIsOpen(false);
+    setModalIsOpen(false);
+    setCommentMode(false);
+    setEditor(null);
+    setComments([]);
+    setViewMode(defaultViewMode);
+    setSelectedYear(null);
+    setSelectedDates([null, null]);
+    setSelectedValues([]);
+    setErrorText("");
+    setVisibleKeys(["stock", "non_traite", "traite"]);
+    setChartKey((k) => k + 1);
+    reload();
+  };
+
+  /* ----------------- filtres ----------------- */
+  const handleViewModeChange = (m) => {
+    if (m === viewMode) return;
+    setViewMode(m);
+    if (m === "day") {
+      const all = [...new Set(records.map((x) => x.dateISO))];
+      const last = lastNWorkingDays(all, 10, holidaySet);
+      if (last.length) {
+        setSelectedDates([parseISO(last[0]), parseISO(last[last.length - 1])]);
+        setSelectedValues(last);
+      } else {
+        setSelectedDates([null, null]);
+        setSelectedValues([]);
+      }
+    } else {
+      const y =
+        selectedYear ??
+        (availableYears.length ? availableYears[availableYears.length - 1] : new Date().getFullYear());
+      setSelectedYear(y);
+      const periods = getAvailablePeriodsForYear(records, y, m);
+      setSelectedValues(periods.slice(-defaultNumPeriods));
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [selectedPeriod, startDate, endDate, globalStartDate, globalEndDate, lastFilterSource]);
-
-  const handleReset = () => {
-    setVisibleKeys(["stock", "non_traite", "traite"]);
-    setSelectedPeriod("week");
-    setStartDate(null);
-    setEndDate(null);
-    setLastFilterSource("local");
+  const handleDayRangeChange = (dates) => {
+    const [a, b] = dates;
+    setSelectedDates(dates);
+    setSelectedValues(a && b ? allWorkingDaysBetween(a, b, holidaySet) : []);
   };
 
- const getVisibleMaxY = () => {
-  if (!data || data.length === 0) return 100;
+  const handleYearChange = (y) => {
+    if (viewMode === "day") return;
+    setSelectedYear(y);
+    const p = getAvailablePeriodsForYear(records, y, viewMode);
+    setSelectedValues(p.slice(-defaultNumPeriods));
+  };
 
-  const values = data.flatMap((d) =>
-    visibleKeys.map((key) => d[key] || 0)
+  const availablePeriodsForFilter =
+    viewMode === "day" || !selectedYear ? [] : getAvailablePeriodsForYear(records, selectedYear, viewMode);
+
+  const allSelected =
+    viewMode !== "day" &&
+    availablePeriodsForFilter.length > 0 &&
+    availablePeriodsForFilter.every((v) => selectedValues.includes(v));
+
+  const toggleSelectAll = () => {
+    if (viewMode === "day" || !selectedYear) return;
+    setSelectedValues(allSelected ? [] : [...availablePeriodsForFilter]);
+  };
+
+  const toggleOne = (v) => {
+    if (viewMode === "day") return;
+    setSelectedValues((prev) =>
+      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v].sort((a, b) => a - b)
+    );
+  };
+
+  /* ----------------- data du chart ----------------- */
+  const sortedSelectedValues = useMemo(
+    () => (viewMode === "day" ? selectedValues.slice().sort() : selectedValues.slice().sort((a, b) => a - b)),
+    [selectedValues, viewMode]
   );
-  const max = Math.max(...values, 0);
 
-  // Arrondi intelligent
-  if (max <= 10) return 20;
-  if (max <= 50) return 60;
-  if (max <= 100) return 120;
-  if (max <= 200) return 250;
-  if (max <= 500) return 600;
-  if (max <= 1000) return 1200;
-  return Math.ceil((max + 100) / 100) * 100;
-};
+  const labels = useMemo(() => {
+    const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    if (viewMode === "day") {
+      return sortedSelectedValues.map((iso) => {
+        const d = parseISO(iso);
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        return `${dd}/${mm} (S${weekNumber(d)})`;
+      });
+    }
+    if (viewMode === "week") return sortedSelectedValues.map((w) => `S${w}`);
+    if (viewMode === "month") return sortedSelectedValues.map((m) => months[m - 1] || `M${m}`);
+    if (viewMode === "quarter") return sortedSelectedValues.map((q) => `T${q}`);
+    if (viewMode === "semester") return sortedSelectedValues.map((s) => `S${s}`);
+    return sortedSelectedValues.map(String);
+  }, [sortedSelectedValues, viewMode]);
 
-const maxY = getVisibleMaxY();
+  const sums = useMemo(() => {
+    const stock = {}, nonT = {}, tra = {};
+    sortedSelectedValues.forEach((v) => { stock[v]=0; nonT[v]=0; tra[v]=0; });
+    records.forEach((r) => {
+      // ignore les jours fériés en toutes vues
+      if (holidaySet.has(r.dateISO)) return;
 
-
-
-  const renderAnnotations = (ref) =>
-    annotations.map((ann) => {
-      const isEditing = editingComment === ann.id;
-      const handleMouseDown = (e) => {
-        if (isEditing) return;
-        e.preventDefault();
-        const startX = e.clientX, startY = e.clientY;
-        const initialX = ann.x, initialY = ann.y;
-        const rect = ref.current.getBoundingClientRect();
-        const handleMouseMove = (moveEvent) => {
-          const dx = moveEvent.clientX - startX;
-          const dy = moveEvent.clientY - startY;
-          setAnnotations((prev) =>
-            prev.map((a) =>
-              a.id === ann.id
-                ? {
-                    ...a,
-                    x: Math.min(Math.max(0, initialX + dx), rect.width - 160),
-                    y: Math.min(Math.max(0, initialY + dy), rect.height - 80),
-                  }
-                : a
-            )
-          );
-        };
-        const handleMouseUp = () => {
-          document.removeEventListener("mousemove", handleMouseMove);
-          document.removeEventListener("mouseup", handleMouseUp);
-        };
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleMouseUp);
-      };
-      return (
-        <div
-          key={ann.id}
-          onMouseDown={handleMouseDown}
-          className="absolute p-2 rounded-lg shadow text-white text-sm z-40"
-          style={{
-            backgroundColor: ann.color,
-            top: ann.y,
-            left: ann.x,
-            cursor: isEditing ? "default" : "move",
-            maxWidth: "160px",
-            whiteSpace: "pre-wrap",
-          }}
-          onClick={(e) => e.stopPropagation()}
-          onDoubleClick={() => {
-            setEditingComment(ann.id);
-            setCommentText(ann.text);
-            setEditingColor(ann.color);
-          }}
-          title={ann.text}
-        >
-          {ann.text}
-          {isEditing && (
-            <div className="absolute top-full left-0 mt-2 bg-white text-black p-2 rounded shadow-xl z-50 w-64">
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="w-full border rounded p-2 text-sm mb-2"
-              />
-              <div className="flex gap-2 mb-2 justify-center">
-                {["#22c55e", "#eab308", "#ef4444"].map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setEditingColor(color)}
-                    className={`w-6 h-6 rounded-full border-2 ${editingColor === color ? "border-black" : "border-transparent"}`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    setAnnotations((prev) =>
-                      prev.map((a) =>
-                        a.id === ann.id ? { ...a, text: commentText, color: editingColor } : a
-                      )
-                    );
-                    setEditingComment(null);
-                  }}
-                  className="text-white bg-blue-500 px-3 py-1 rounded"
-                >
-                  Modifier
-                </button>
-                <button
-                  onClick={() => {
-                    setAnnotations((prev) => prev.filter((a) => a.id !== ann.id));
-                    setEditingComment(null);
-                  }}
-                  className="text-white bg-red-500 px-3 py-1 rounded"
-                >
-                  Supprimer
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      );
+      if (viewMode === "day") {
+        const key = r.dateISO;
+        if (sortedSelectedValues.includes(key)) {
+          stock[key] += r.stock;
+          nonT[key] += r.non_traite;
+          tra[key] += r.traite;
+        }
+      } else {
+        if (selectedYear && r.year !== selectedYear) return;
+        const key =
+          viewMode === "week" ? r.week :
+          viewMode === "month" ? r.month :
+          viewMode === "quarter" ? r.quarter : r.semester;
+        if (sortedSelectedValues.includes(key)) {
+          stock[key] += r.stock;
+          nonT[key] += r.non_traite;
+          tra[key] += r.traite;
+        }
+      }
     });
+    return {
+      stockArr: sortedSelectedValues.map((v) => stock[v] || 0),
+      nonTraiteArr: sortedSelectedValues.map((v) => nonT[v] || 0),
+      traiteArr: sortedSelectedValues.map((v) => tra[v] || 0),
+    };
+  }, [records, sortedSelectedValues, selectedYear, viewMode, holidaySet]);
+
+  // datasets avec "hidden" piloté par visibleKeys
+  const chartData = useMemo(() => ({
+    labels,
+    datasets: [
+      { label: "Backlog FTTH J",   data: sums.stockArr,     backgroundColor: COLORS[0], borderRadius: 6, hidden: !visibleKeys.includes("stock") },
+      { label: "Backlog FTTH J-1", data: sums.nonTraiteArr, backgroundColor: COLORS[1], borderRadius: 6, hidden: !visibleKeys.includes("non_traite") },
+      { label: "Dossiers Traités", data: sums.traiteArr,    backgroundColor: COLORS[2], borderRadius: 6, hidden: !visibleKeys.includes("traite") },
+    ],
+  }), [labels, sums, visibleKeys]);
+
+  const chartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      datalabels: {
+        display: true,
+        color: "#000",
+        font: { size: 12, weight: "bold" },
+        formatter: (v) => (v > 0 ? v : ""),
+        anchor: "end",
+        align: "top",
+        offset: -3,
+        clamp: true,
+      },
+      legend: {
+        display: false, // ← on désactive la légende native, on utilise LegendInline
+      },
+      tooltip: { mode: "index", intersect: false, padding: 10, titleFont: { size: 13 }, bodyFont: { size: 12 } },
+      title: { display: false },
+    },
+    layout: { padding: { top: 5, right: 20, bottom: 10, left: 10 } },
+    animation: { duration: 250 },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: viewMode === "day" ? 45 : 0, minRotation: viewMode === "day" ? 45 : 0, padding: 10, font: { size: 11 } },
+        title: {
+          display: true,
+          text:
+            viewMode === "day" ? "Jour" :
+            viewMode === "week" ? `Semaines ${selectedYear ?? ""}` :
+            viewMode === "month" ? `Mois ${selectedYear ?? ""}` :
+            viewMode === "quarter" ? `Trimestres ${selectedYear ?? ""}` :
+            `Semestres ${selectedYear ?? ""}`,
+          font: { size: 12 },
+          padding: { top: 10 },
+        },
+      },
+      y: {
+        beginAtZero: true,
+        grid: { drawBorder: false },
+        ticks: { precision: 0, padding: 10 },
+        title: { display: true, text: "Volume", font: { size: 12 }, padding: { bottom: 10 } },
+        grace: "5%",
+      },
+    },
+  }), [viewMode, selectedYear]);
+
+  // sous-titre
+  const subtitle = useMemo(() => {
+    if (viewMode === "day") {
+      const [a, b] = selectedDates;
+      if (a && b) return `Du ${toISO(a)} au ${toISO(b)}`;
+      return "Aucun jour sélectionné";
+    }
+    if (!sortedSelectedValues.length) return "Aucune période sélectionnée";
+    const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    const prefix = viewMode === "week" ? "Semaines" : viewMode === "month" ? "Mois" : viewMode === "quarter" ? "Trimestres" : "Semestres";
+    const values = sortedSelectedValues.map((v) => {
+      if (viewMode === "week") return `S${v}`;
+      if (viewMode === "month") return months[v - 1] || v;
+      if (viewMode === "quarter") return `T${v}`;
+      if (viewMode === "semester") return `S${v}`;
+      return String(v);
+    });
+    return `${selectedYear ? `Année ${selectedYear} - ` : ""}${prefix}: ${values.join(", ")}`;
+  }, [viewMode, selectedDates, sortedSelectedValues, selectedYear]);
+
+  const showData =
+    sums.stockArr.some((n) => n > 0) ||
+    sums.nonTraiteArr.some((n) => n > 0) ||
+    sums.traiteArr.some((n) => n > 0);
+
+  /* ===================== Légende: handlers ===================== */
+  const onLegendClick = (key, e) => {
+    if (e?.ctrlKey || e?.metaKey) {
+      setVisibleKeys((prev) => {
+        const has = prev.includes(key);
+        const next = has ? prev.filter((k) => k !== key) : [...prev, key];
+        return next.length ? next : [key]; // ne jamais tout cacher
+      });
+      return;
+    }
+    setVisibleKeys([key]); // isolement
+  };
+
+  /* ===================== Annotations ===================== */
+  const openEditorAt = (px, py, anchor) => {
+    const ref = anchor === "modal" ? modalChartContainerRef : chartContainerRef;
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = Math.min(Math.max(0.02, (px - rect.left) / rect.width), 0.98);
+    const y = Math.min(Math.max(0.02, (py - rect.top) / rect.height), 0.95);
+    setEditor({ id: null, text: "", color: "#22c55e", x, y, anchor });
+  };
+
+  const addOrUpdateComment = () => {
+    if (!editor || !editor.text.trim()) return;
+    if (editor.id) {
+      setComments((prev) => prev.map((c) => (c.id === editor.id ? { ...c, ...editor } : c)));
+    } else {
+      setComments((prev) => [...prev, { id: Date.now(), text: editor.text.trim(), color: editor.color, x: editor.x, y: editor.y }]);
+    }
+    setEditor(null);
+    setCommentMode(false);
+  };
+
+  const deleteComment = (id) => {
+    setComments((prev) => prev.filter((c) => c.id !== id));
+    setEditor(null);
+  };
+
+  const startDrag = (comment, e, anchor) => {
+    e.preventDefault();
+    const ref = anchor === "modal" ? modalChartContainerRef : chartContainerRef;
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const ix = comment.x, iy = comment.y;
+
+    const onMove = (ev) => {
+      const dx = (ev.clientX - startX) / rect.width;
+      const dy = (ev.clientY - startY) / rect.height;
+      const nx = Math.min(Math.max(0.02, ix + dx), 0.98);
+      const ny = Math.min(Math.max(0.02, iy + dy), 0.95);
+      setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, x: nx, y: ny } : c)));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
+  const openEditorForComment = (c, anchor) =>
+    setEditor({ id: c.id, text: c.text, color: c.color, x: c.x, y: c.y, anchor });
+
+  const posStyle = (c, anchor) => {
+    const ref = anchor === "modal" ? modalChartContainerRef : chartContainerRef;
+    const w = ref.current?.clientWidth || 0;
+    const h = ref.current?.clientHeight || 0;
+    return { left: `${c.x * w}px`, top: `${c.y * h}px` };
+  };
+
+  const popoverStyle = (ed) => {
+    const ref = ed.anchor === "modal" ? modalChartContainerRef : chartContainerRef;
+    const w = ref.current?.clientWidth || 0;
+    const h = ref.current?.clientHeight || 0;
+    const px = ed.x * w, py = ed.y * h;
+    const left = Math.min(Math.max(8, px - 110), Math.max(8, w - 228));
+    const top  = Math.min(Math.max(8, py + 12), Math.max(8, h - 168));
+    return { left, top };
+  };
+
+  /* ============================ Rendu ============================ */
+  if (loading) {
     return (
-      <div
-        data-graph-id="graph-vue-ensemble"
-        data-graph-label="Vue d’ensemble combinée du Backlog"
-        className="bg-white shadow-xl rounded-2xl p-6 relative"
-        onClick={() => {
-          setShowCommentPopup(false);
-          setEditingComment(null);
-        }}
-      >
-        {/* 🔵 Chargement spinner */}
-        {loading && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-60 backdrop-blur-sm rounded-2xl">
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-              <p className="mt-2 text-blue-800 font-semibold text-sm">Chargement <span className="text-blue-500">MyIT</span>…</p>
-            </div>
-          </div>
-        )}
-  
-        {/* 🧠 Header + Actions */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-semibold text-gray-800">{getDynamicTitle()}</h3>
-          <div className="flex gap-2">
-            {exportMode && (
-              <input
-                type="checkbox"
-                className="w-5 h-5 accent-blue-600"
-                checked={selectedGraphs?.includes("graph-vue-ensemble")}
-                onChange={(e) => onGraphSelect?.("graph-vue-ensemble", e.target.checked)}
-              />
-            )}
-            <button onClick={(e) => { e.stopPropagation(); setShowCommentPopup(true); }} className={iconBtnClass}>
-              <FaPencilAlt className="text-gray-700" />
-            </button>
-            <button onClick={handleReset} className={iconBtnClass}>
-              <FaSyncAlt className="text-gray-700" />
-            </button>
-            <button onClick={() => setModalIsOpen(true)} className={iconBtnClass}>
-              <FaExpand className="text-gray-700" />
-            </button>
-          </div>
+      <div className="visualisation relative" data-id={id}>
+        <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-[450px] flex justify-center items-center">
+          <p className="text-center text-gray-500">Chargement des données…</p>
         </div>
-  
-        {/* 📅 Filtres personnalisés */}
-        <div className="flex flex-wrap gap-4 items-center my-4">
-          <select
-            className="p-2 rounded-xl border border-gray-300 bg-white shadow text-sm"
-            value={selectedPeriod}
-            onChange={(e) => handleLocalFilterChange(e.target.value)}
-          >
-            <option value="day">Aujourd’hui</option>
-            <option value="week">Cette semaine</option>
-            <option value="month">Ce mois</option>
-            <option value="quarter">Trimestre</option>
-            <option value="year">Cette année</option>
-            <option value="custom">📅 Personnalisé</option>
-          </select>
-          {selectedPeriod === "custom" && (
-            <>
-              <DatePicker
-                selected={startDate}
-                onChange={(d) => {
-                  handleLocalFilterChange("custom");
-                  setStartDate(d);
-                  setTimeout(() => endDateRef.current?.setFocus(), 200);
-                }}
-                selectsStart startDate={startDate} endDate={endDate}
-                placeholderText="Date de début"
-                className="p-2 rounded-xl border border-gray-300 text-sm bg-white shadow"
-              />
-              <DatePicker
-                ref={endDateRef}
-                selected={endDate}
-                onChange={(d) => {
-                  handleLocalFilterChange("custom");
-                  setEndDate(d);
-                }}
-                selectsEnd startDate={startDate} endDate={endDate}
-                placeholderText="Date de fin"
-                className="p-2 rounded-xl border border-gray-300 text-sm bg-white shadow"
-              />
-            </>
-          )}
-        </div>
-  
-        {/* 📊 Graph principal */}
-        <div id="canvas-graph-vue-ensemble" ref={chartRef} className="relative rounded-xl bg-white shadow-inner p-4" style={{ height: 480 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
-              <XAxis dataKey="date" angle={-35} textAnchor="end" height={85}
-                tick={{ fontSize: 14, fill: "#1f2937", fontWeight: 600 }} />
-              <YAxis domain={[0, maxY]} />
-              <Tooltip />
-              <Legend onClick={(e) => setVisibleKeys([e.dataKey])} />
-              {visibleKeys.includes("stock") && (
-                <Bar dataKey="stock" name="Backlog FTTH J" fill={colors[0]} radius={[6, 6, 0, 0]}>
-                  <LabelList dataKey="stock" position="top" style={labelStyle} />
-                </Bar>
-              )}
-              {visibleKeys.includes("non_traite") && (
-                <Bar dataKey="non_traite" name="Backlog FTTH J-1" fill={colors[1]} radius={[6, 6, 0, 0]}>
-                  <LabelList dataKey="non_traite" position="top" style={labelStyle} />
-                </Bar>
-              )}
-              {visibleKeys.includes("traite") && (
-                <Bar dataKey="traite" name="Dossiers Traités" fill={colors[2]} radius={[6, 6, 0, 0]}>
-                  <LabelList dataKey="traite" position="top" style={labelStyle} />
-                </Bar>
-              )}
-            </BarChart>
-          </ResponsiveContainer>
-          {renderAnnotations(chartRef)}
-        </div>
-  
-        {/* 💬 Popup Ajouter un commentaire */}
-        {showCommentPopup && (
-          <div className="absolute top-10 right-10 bg-white p-4 rounded-xl shadow-2xl z-50 w-72" onClick={(e) => e.stopPropagation()}>
-            <h4 className="text-lg font-semibold mb-2 text-gray-800">Ajouter un commentaire</h4>
-            <textarea
-              className="w-full border border-gray-300 rounded-lg p-2 mb-2 text-sm"
-              rows={3}
-              placeholder="Votre commentaire…"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-            />
-            <div className="flex gap-3 mb-4">
-              {["#22c55e", "#eab308", "#ef4444"].map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setCommentColor(color)}
-                  className={`w-6 h-6 rounded-full border-2 ${commentColor === color ? "border-black" : "border-transparent"}`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-            <button
-              disabled={!commentText || !commentColor}
-              onClick={() => {
-                setAnnotations((prev) => [...prev, { id: Date.now(), text: commentText, color: commentColor, x: 100, y: 50 }]);
-                setCommentText(""); setCommentColor(""); setShowCommentPopup(false);
-              }}
-              className={`w-full py-2 rounded-lg font-bold text-white ${commentText && commentColor ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-300 cursor-not-allowed"}`}
-            >
-              Valider
-            </button>
-          </div>
-        )}
-  
-        {/* 🔍 Modal agrandi */}
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={() => setModalIsOpen(false)}
-          className="flex items-center justify-center fixed inset-0 z-50"
-          overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-        >
-          <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-semibold text-gray-800">{getDynamicTitle()}</h3>
-              <div className="flex gap-2 items-center">
-                <button onClick={handleReset} className={iconBtnClass}>
-                  <FaSyncAlt className="text-gray-700" />
-                </button>
-                <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
-              </div>
-            </div>
-  
-            {/* 🔸 Graph agrandi */}
-            <div ref={modalChartRef} className="relative" style={{ height: 500 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <XAxis dataKey="date" angle={-35} textAnchor="end" height={85}
-                    tick={{ fontSize: 14, fill: "#1f2937", fontWeight: 600 }} />
-                  <YAxis domain={[0, maxY]} />
-                  <Tooltip />
-                  {visibleKeys.includes("stock") && (
-                    <Bar dataKey="stock" fill={colors[0]}>
-                      <LabelList dataKey="stock" position="top" style={labelStyle} />
-                    </Bar>
-                  )}
-                  {visibleKeys.includes("non_traite") && (
-                    <Bar dataKey="non_traite" fill={colors[1]}>
-                      <LabelList dataKey="non_traite" position="top" style={labelStyle} />
-                    </Bar>
-                  )}
-                  {visibleKeys.includes("traite") && (
-                    <Bar dataKey="traite" fill={colors[2]}>
-                      <LabelList dataKey="traite" position="top" style={labelStyle} />
-                    </Bar>
-                  )}
-                </BarChart>
-              </ResponsiveContainer>
-              {renderAnnotations(modalChartRef)}
-            </div>
-  
-            {/* 🔸 Légende sous graph modal */}
-            <div className="flex justify-center gap-6 mt-4">
-              {[
-                { key: "stock", label: "Backlog FTTH J", color: colors[0] },
-                { key: "non_traite", label: "Backlog FTTH J-1", color: colors[1] },
-                { key: "traite", label: "Dossiers Traités", color: colors[2] },
-              ].map((item) => (
-                <div
-                  key={item.key}
-                  onClick={() => setVisibleKeys([item.key])}
-                  className="cursor-pointer flex items-center space-x-2 hover:opacity-80"
-                >
-                  <div className="w-4 h-4 rounded" style={{ backgroundColor: item.color }} />
-                  <span className="text-sm text-gray-800 font-medium">{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Modal>
       </div>
     );
   }
-  
+
+  return (
+    <div className="visualisation relative" data-id={id}>
+      <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-2 relative">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">{chartTitle}</h3>
+            <p className="text-sm text-gray-500 min-h-[20px]">
+              {errorText ? <span className="text-red-500">{errorText}</span> : subtitle}
+            </p>
+          </div>
+
+          <div className="no-export flex items-center gap-2">
+            <IconButton title="Filtrer" ariaLabel="Filtrer" dataFilterToggle onClick={() => setIsOpen((v) => !v)}>
+              <AiOutlineFilter />
+            </IconButton>
+
+            <IconButton
+              title="Mode commentaire (cliquer sur le graphe)"
+              ariaLabel="Commentaires"
+              active={commentMode}
+              onClick={() => { setCommentMode((v) => !v); setEditor(null); }}
+            >
+              <FaPencilAlt />
+            </IconButton>
+
+            <IconButton title="Rafraîchir le graphe" ariaLabel="Rafraîchir" onClick={resetGraph}>
+              <FiRefreshCw />
+            </IconButton>
+
+            <IconButton title="Agrandir" ariaLabel="Agrandir" onClick={() => setModalIsOpen(true)}>
+              <FaExpand />
+            </IconButton>
+          </div>
+
+          {/* Panneau filtre */}
+          {isOpen && (
+            <div
+              ref={filterPanelRef}
+              className="no-export absolute right-0 top-[84px] mt-2 bg-white shadow-lg rounded-md p-4 w-72 z-50 border border-gray-200"
+            >
+              <h4 className="font-semibold text-gray-600 text-sm mb-3">Filtrer par :</h4>
+
+              <div className="flex gap-1 mb-3 flex-wrap">
+                {["day","week","month","quarter","semester"].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => handleViewModeChange(m)}
+                    className={`px-2.5 py-1 rounded text-xs ${viewMode === m ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                  >
+                    {m === "day" ? "Jour" : m === "week" ? "Sem." : m === "month" ? "Mois" : m === "quarter" ? "Trim." : "Sem."}
+                  </button>
+                ))}
+              </div>
+
+              {viewMode === "day" ? (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Plage de dates :</label>
+                  <DatePicker
+                    selected={selectedDates[0]}
+                    onChange={(d) => handleDayRangeChange(d)}
+                    startDate={selectedDates[0]}
+                    endDate={selectedDates[1]}
+                    selectsRange
+                    dateFormat="dd/MM/yyyy"
+                    locale={fr}
+                    inline
+                    filterDate={(d) => isWorkingDay(d) && !holidaySet.has(toISO(d))}
+                    calendarClassName="text-sm"
+                    dayClassName={() => "text-xs"}
+                    maxDate={new Date()}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                </div>
+              ) : (
+                <>
+                  {multipleYearsExist && (
+                    <div className="mb-3">
+                      <h5 className="text-sm font-medium text-gray-500 mb-1">Année :</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {availableYears.map((y) => (
+                          <button
+                            key={y}
+                            onClick={() => handleYearChange(y)}
+                            className={`px-2 py-0.5 text-xs rounded ${selectedYear === y ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                          >
+                            {y}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-2">
+                    <button
+                      onClick={toggleSelectAll}
+                      disabled={availablePeriodsForFilter.length === 0}
+                      className={`text-xs px-2 py-1 rounded w-full ${allSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      {allSelected ? "Tout désélectionner" : "Tout sélectionner"}
+                    </button>
+                  </div>
+
+                  <div className="max-h-32 overflow-y-auto border border-gray-200 p-2 rounded text-sm">
+                    {availablePeriodsForFilter.length ? (
+                      availablePeriodsForFilter.map((v) => (
+                        <label key={v} className="flex items-center gap-2 my-0.5 text-xs text-gray-600">
+                          <input
+                            type="checkbox"
+                            checked={selectedValues.includes(v)}
+                            onChange={() => toggleOne(v)}
+                            className="cursor-pointer h-3.5 w-3.5"
+                          />
+                          {viewMode === "week"
+                            ? `S${v}`
+                            : viewMode === "month"
+                            ? ["Janv.","Fév.","Mars","Avr.","Mai","Juin","Juil.","Août","Sept.","Oct.","Nov.","Déc."][v - 1]
+                            : viewMode === "quarter"
+                            ? ["T1","T2","T3","T4"][v - 1]
+                            : ["S1","S2"][v - 1]}
+                        </label>
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-400 text-center italic py-2">Aucune période disponible</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ===== Légende TOP (custom) ===== */}
+        <LegendInline visibleKeys={visibleKeys} onClick={onLegendClick} />
+
+        {/* Graphique */}
+        <div className="relative flex-grow h-[350px] select-none" ref={chartContainerRef}>
+          {errorText ? (
+            <div className="grid place-items-center h-full">
+              <div className="text-center">
+                <p className="text-red-500 mb-2">{errorText}</p>
+                <button onClick={reload} className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">Réessayer</button>
+              </div>
+            </div>
+          ) : showData ? (
+            <Bar key={chartKey} data={chartData} options={chartOptions} plugins={[ChartDataLabels]} />
+          ) : (
+            <p className="text-gray-500 italic grid place-items-center h-full">Aucune donnée à afficher.</p>
+          )}
+
+          {/* Overlay d’ajout (uniquement si mode commentaire actif) */}
+          {commentMode && (
+            <div
+              className="absolute inset-0 z-30 cursor-crosshair"
+              onClick={(e) => openEditorAt(e.clientX, e.clientY, "main")}
+              aria-label="Zone d'ajout de commentaire"
+            />
+          )}
+
+          {commentMode && (
+            <div className="pointer-events-none absolute top-2 right-2 bg-[#2d3853] text-white text-[11px] px-2 py-1 rounded-md shadow z-40">
+              Mode commentaire actif — cliquez sur le graphe pour ajouter
+            </div>
+          )}
+
+          {/* Annotations */}
+          <div className="pointer-events-none absolute inset-0 z-40">
+            {comments.map((c) => (
+              <div
+                key={c.id}
+                data-comment-bubble
+                className="pointer-events-auto absolute p-2 rounded-lg shadow text-white text-[12px] max-w-[220px] cursor-move"
+                style={{ ...posStyle(c, "main"), backgroundColor: c.color }}
+                title={c.text}
+                onMouseDown={(e) => startDrag(c, e, "main")}
+                onDoubleClick={(e) => { e.stopPropagation(); openEditorForComment(c, "main"); }}
+              >
+                {c.text}
+              </div>
+            ))}
+          </div>
+
+          {/* Popover éditeur (main) */}
+          {editor && editor.anchor === "main" && (
+            <div
+              ref={editorRef}
+              className="no-export absolute z-50 w-[220px] bg-white rounded-lg shadow-xl border border-gray-200 p-3"
+              style={popoverStyle(editor)}
+            >
+              <textarea
+                value={editor.text}
+                onChange={(e) => setEditor({ ...editor, text: e.target.value })}
+                className="w-full border border-gray-300 rounded-md p-2 text-sm h-20 outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Votre commentaire…"
+              />
+              <div className="flex items-center gap-2 mt-2 mb-3">
+                <span className="text-sm text-gray-600">Couleur :</span>
+                {["#22c55e", "#eab308", "#ef4444"].map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setEditor({ ...editor, color: c })}
+                    className={`w-6 h-6 rounded-full border-2 ${editor.color === c ? "border-black" : "border-transparent"}`}
+                    style={{ backgroundColor: c }}
+                    title="Couleur"
+                    aria-label="Couleur"
+                  />
+                ))}
+              </div>
+              <div className="flex gap-2 justify-between">
+                <button
+                  onClick={addOrUpdateComment}
+                  disabled={!editor.text.trim()}
+                  className={`px-3 py-1.5 rounded-md text-white text-sm font-semibold ${editor.text.trim() ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-300 cursor-not-allowed"}`}
+                >
+                  {editor.id ? "Modifier" : "Ajouter"}
+                </button>
+                {editor.id && (
+                  <button
+                    onClick={() => deleteComment(editor.id)}
+                    className="px-3 py-1.5 rounded-md text-white text-sm font-semibold bg-red-500 hover:bg-red-600"
+                  >
+                    Supprimer
+                  </button>
+                )}
+                <button
+                  onClick={() => setEditor(null)}
+                  className="px-3 py-1.5 rounded-md text-sm font-semibold bg-gray-100 hover:bg-gray-200"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal plein écran */}
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={() => { setModalIsOpen(false); setEditor(null); }}
+        className="flex items-center justify-center fixed inset-0 z-50"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
+      >
+        <div className="bg-white rounded-lg p-6 w-11/12 md:w-4/5 lg:w-3/4 shadow-xl max-h-[90vh] overflow-y-auto flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
+              <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+            </div>
+            <button
+              onClick={() => { setModalIsOpen(false); setEditor(null); }}
+              className="text-gray-500 hover:text-red-500 p-2 rounded-full hover:bg-red-100 transition"
+              title="Fermer"
+              aria-label="Fermer"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Légende TOP dans la modal */}
+          <LegendInline visibleKeys={visibleKeys} onClick={onLegendClick} />
+
+          <div className="relative flex-grow min-h-[420px]" ref={modalChartContainerRef}>
+            {errorText ? (
+              <div className="grid place-items-center h-full">
+                <div className="text-center">
+                  <p className="text-red-500 mb-2">{errorText}</p>
+                  <button onClick={reload} className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">
+                    Réessayer
+                  </button>
+                </div>
+              </div>
+            ) : showData ? (
+              <Bar
+                key={`m-${chartKey}`}
+                data={chartData}
+                options={{
+                  ...chartOptions,
+                  plugins: { ...chartOptions.plugins, datalabels: { ...chartOptions.plugins.datalabels, font: { size: 11, weight: "bold" } } }
+                }}
+                plugins={[ChartDataLabels]}
+              />
+            ) : (
+              <p className="text-gray-500 italic grid place-items-center h-full">Aucune donnée à afficher.</p>
+            )}
+
+            {/* Overlay d’ajout (modal) */}
+            {commentMode && (
+              <div className="absolute inset-0 z-30 cursor-crosshair" onClick={(e) => openEditorAt(e.clientX, e.clientY, "modal")} />
+            )}
+
+            <div className="pointer-events-none absolute inset-0 z-40">
+              {comments.map((c) => (
+                <div
+                  key={`m-${c.id}`}
+                  data-comment-bubble
+                  className="pointer-events-auto absolute p-2 rounded-lg shadow text-white text-[12px] max-w-[220px] cursor-move"
+                  style={{ ...posStyle(c, "modal"), backgroundColor: c.color }}
+                  title={c.text}
+                  onMouseDown={(e) => startDrag(c, e, "modal")}
+                  onDoubleClick={(e) => { e.stopPropagation(); openEditorForComment(c, "modal"); }}
+                >
+                  {c.text}
+                </div>
+              ))}
+            </div>
+
+            {editor && editor.anchor === "modal" && (
+              <div
+                ref={editorRef}
+                className="no-export absolute z-50 w-[220px] bg-white rounded-lg shadow-xl border border-gray-200 p-3"
+                style={popoverStyle(editor)}
+              >
+                <textarea
+                  value={editor.text}
+                  onChange={(e) => setEditor({ ...editor, text: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md p-2 text-sm h-20 outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Votre commentaire…"
+                />
+                <div className="flex items-center gap-2 mt-2 mb-3">
+                  <span className="text-sm text-gray-600">Couleur :</span>
+                  {["#22c55e", "#eab308", "#ef4444"].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setEditor({ ...editor, color: c })}
+                      className={`w-6 h-6 rounded-full border-2 ${editor.color === c ? "border-black" : "border-transparent"}`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-2 justify-between">
+                  <button
+                    onClick={addOrUpdateComment}
+                    disabled={!editor.text.trim()}
+                    className={`px-3 py-1.5 rounded-md text-white text-sm font-semibold ${editor.text.trim() ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-300 cursor-not-allowed"}`}
+                  >
+                    {editor.id ? "Modifier" : "Ajouter"}
+                  </button>
+                  {editor.id && (
+                    <button
+                      onClick={() => deleteComment(editor.id)}
+                      className="px-3 py-1.5 rounded-md text-white text-sm font-semibold bg-red-500 hover:bg-red-600"
+                    >
+                      Supprimer
+                    </button>
+                  )}
+                  <button onClick={() => setEditor(null)} className="px-3 py-1.5 rounded-md text-sm font-semibold bg-gray-100 hover:bg-gray-200">
+                    Fermer
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
