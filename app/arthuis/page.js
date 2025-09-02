@@ -13,7 +13,7 @@ import VolumeMigration from "../components/VolumeMigration";
 import { ExportProvider } from "../components/ExportContext";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 
-// ✅ API pour le dashboard Arthius
+//  API pour le dashboard Arthius
 const API_BASE_URL = "https://api.606510.xyz/dashboard/api";
 const API_ARTHIUS_DATA = `${API_BASE_URL}/arthius/data/`;
 
