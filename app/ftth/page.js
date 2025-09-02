@@ -150,24 +150,8 @@ export default function DashboardFTTH() {
               {/* Titre de section */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-1 h-8 bg-sky-500 rounded-full"></div>
-                <h2 className="text-2xl font-bold text-gray-800">Ticketing</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Ticketing FTTH</h2>
               </div>
-
-              {/* Graphiques FTTH Ticketing originaux */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b border-gray-100 pb-2">
-                  Vue générale Ticketing
-                </h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div data-graph-id="graph-tickets-entrants-sortants" data-graph-label="Tickets Entrants/Sortants">
-                    <GraphTicketsEntrantsSortants globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
-                  </div>
-                
-                  <div data-graph-id="graph-tickets-its-sfr" data-graph-label="Tickets ITS ↔ SFR">
-                    <GraphTicketsItsSfr globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
-                  </div>
-                </div>
-                </div>
 
               {/* Section FTTH Ticketing Dashboard intégré */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -220,6 +204,8 @@ export default function DashboardFTTH() {
                 {/* Graphiques ligne 4 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <VolumeReentrant apiUrl={API_FTTH_TICKETING_DATA} />
+                  <GraphTicketsItsSfr globalStartDate={globalStartDate} globalEndDate={globalEndDate} />
+
                 </div>
 
                 {/* Tableaux FTTH Ticketing */}
