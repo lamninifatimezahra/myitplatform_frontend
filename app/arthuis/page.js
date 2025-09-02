@@ -2,23 +2,35 @@
 
 import { useState } from "react";
 import useAuth from "@/hooks/useAuth";
-import SidebarFTTHStyled from "../components/Sidebar";
+import SidebarFTTHStyled from "../components/Sidebar"; // ✅ Sidebar unifié
 import Header from "./components/Header";
 
-import KpiTotalDocuments from "../components/KpiTotalDocuments";
-import GroupedBarChartEARF from "../components/GroupedBarChartEARF";
-import VolumeDocumentsMigres from "../components/VolumeDocumentsMigres1";
-import VolumeMigration from "../components/VolumeMigration";
+import KpiTicketTraite from "../components/KPITicketTraite";
+import KpiReentrant from "../components/KpiReentrant";
+import KpiTicketsEntrants from "../components/KpiTicketsEntrants";
+import KpiTicketsEnCours from "../components/KpiTicketsEnCours";
+import KpiTicketsEnCoursPlus2S from "../components/KpiTicketsEnCoursPlus2S";
+import VolumeReentrant from "../components/VolumeReentrant";
+import SlaAnciennete from "../components/SlaAnciennete";
+import VolumeTicketsDivision from "../components/VolumeTicketsDivision";
+import TauxReentrants from "../components/TauxReentrants";
+import GroupedBarChart from "../components/TicketsEntrantsSortants";
+import RapportSortantsEntrants from "../components/RapportSortantsEntrants";
+import TicketsReentrantsTable from "../components/TicketsReentrantsTable";
+import TicketsEnCoursTable from "../components/TicketsEncoursTable";
+import TranticiteCriticite from "../components/TranticiteCriticite";
+import NewsTickerRetard from "../components/NewsTickerRetard14";
 
-import { ExportProvider } from "../components/ExportContext";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
+import { ExportProvider } from "../components/ExportContext";
 
-// ✅ API pour le dashboard Arthius
+// ✅ API spécifique à Arthuis
 const API_BASE_URL = "https://api.606510.xyz/dashboard/api";
-const API_ARTHIUS_DATA = `${API_BASE_URL}/arthius/data/`;
+const API_ARTHUIS_DATA = `${API_BASE_URL}/arthuis-ticket/data/`;
+const API_COMMENT_UPDATE = `${API_BASE_URL}/update-ticket-comment/`;
 
-export default function ArthiusDashboard() {
-  const { user, loading, authorized, hydrated } = useAuth(null, "ARTHUIS");
+export default function ArthuisDashboard() {
+  const { user, loading, authorized, hydrated } = useAuth(null, "Arthuis");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [globalStartDate, setGlobalStartDate] = useState(null);
   const [globalEndDate, setGlobalEndDate] = useState(null);
@@ -48,14 +60,15 @@ export default function ArthiusDashboard() {
             ☰
           </button>
 
-          {/* ✅ Sidebar style FTTH */}
+          {/* ✅ Sidebar FTTH-style */}
           <SidebarFTTHStyled
             sidebarOpen={isSidebarOpen}
             setSidebarOpen={setIsSidebarOpen}
           />
 
-          {/* ✅ Contenu principal Arthius */}
+          {/* ✅ Contenu principal Arthuis */}
           <div className="flex-1 flex flex-col relative">
+            {/* ✅ Background */}
             <div
               className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
               style={{ backgroundImage: "url('/background-office.jpg')" }}
@@ -64,43 +77,58 @@ export default function ArthiusDashboard() {
             <Header onGlobalFilter={handleGlobalFilter} />
 
             <main className="p-6 flex-1 space-y-6 overflow-y-auto relative z-10 bg-gray-50">
-              {/* 🔢 KPI ligne 1 */}
-              <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-6">
-                <KpiTotalDocuments
-                  apiUrl={API_ARTHIUS_DATA}
-                  title="Total Documents"
-                  dateField="date"
-                />
+              <NewsTickerRetard
+                apiUrl={API_ARTHUIS_DATA}
+                title="Tickets en retard (+14j)"
+                dateSortieField="date_sortie"
+                dateDerniereMajField="date_derniere_maj"
+                idField="id_ticket"
+                titreField="compl_title"
+                retardDays={14}
+                animationDuration={40}
+              />
+
+              {/* 🔢 KPIs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+              <KpiTicketsEntrants apiUrl={API_ARTHUIS_DATA} dateFilterField="date_derniere_maj" />
+              <KpiTicketTraite apiUrl={API_ARTHUIS_DATA} dateSortieField="date_sortie" />
+              <KpiReentrant apiUrl={API_ARTHUIS_DATA} tagField="tag_reentrant" dateField="date_sortie" />
+              <KpiTicketsEnCours apiUrl={API_ARTHUIS_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
+              <KpiTicketsEnCoursPlus2S apiUrl={API_ARTHUIS_DATA} dateSortieField="date_sortie" dateDerniereMajField="date_derniere_maj" />
+            </div>
+
+              {/* 📊 Graphiques – ligne 1 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <GroupedBarChart apiUrl={API_ARTHUIS_DATA} />
+                <TranticiteCriticite apiUrl={API_ARTHUIS_DATA} />
               </div>
 
-              {/* 📊 Graphiques ligne 2 */}
+              {/* 📊 Graphiques – ligne 2 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <GroupedBarChartEARF
-                  apiUrl={API_ARTHIUS_DATA}
-                  title="Documents par Propriétaire et Type"
-                  dateField="date"
-                  ownerField="initiateur"
-                  typeField="type_modop"
-                />
-                <VolumeDocumentsMigres
-                  apiUrl={API_ARTHIUS_DATA}
-                  title="Volume de Documents Migrés par Période"
-                  dateField="date"
-                  ownerField="initiateur"
-                  typeField="type_modop"
-                />
+                <SlaAnciennete apiUrl={API_ARTHUIS_DATA} />
+                <VolumeTicketsDivision apiUrl={API_ARTHUIS_DATA} />
               </div>
 
-              {/* 📊 Graphiques ligne 3 */}
+              {/* 📊 Graphiques – ligne 3 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <VolumeMigration
-                  apiUrl={API_ARTHIUS_DATA}
-                  title="Documents Migrés par Propriétaire"
-                  ownerField="initiateur"
-                  typeField="type_modop"
-                  dateField="date"
-                />
+                <RapportSortantsEntrants apiUrl={API_ARTHUIS_DATA} />
+                <TauxReentrants apiUrl={API_ARTHUIS_DATA} />
               </div>
+
+              {/* 📊 Graphiques – ligne 4 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <VolumeReentrant apiUrl={API_ARTHUIS_DATA} />
+              </div>
+
+              {/* 🧾 Tableaux */}
+              <TicketsReentrantsTable
+                apiUrl={API_ARTHUIS_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="arthuis"/>
+              <TicketsEnCoursTable
+                apiUrl={API_ARTHUIS_DATA}
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="arthuis"/>
             </main>
           </div>
         </div>

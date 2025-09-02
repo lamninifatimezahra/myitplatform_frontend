@@ -79,7 +79,7 @@ export default function Header({ type = "Arthius" }) {
     setIsLoadingUploadDate(true);
     try {
       // Déterminer l'URL en fonction du type de dashboard
-      const apiUrl = `https://api.606510.xyz/dashboard/api/${type.toLowerCase()}/files/`;
+      const apiUrl = `https://api.606510.xyz/dashboard/api/arthuis-ticket/files/`;
       
       const response = await fetchWithAuth(apiUrl);
       
@@ -345,7 +345,7 @@ const captureScreenshots = async () => {
     <div>
       <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
         <span className="text-blue-600">
-          Dashboard de la documentation Confluence ARTHUIS
+          Dashboard ARTHUIS
         </span>
       </h1>
       <div className="flex items-center text-gray-500 text-sm">

@@ -44,13 +44,13 @@ export default function UploadARTHIUSPage() {
     formData.append("document", arthiusFile);
 
     try {
-      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/arthius/upload/", {
+      const res = await fetchWithAuth("https://api.606510.xyz/dashboard/api/arthuis-ticket/upload/", {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
       if (res.ok) {
-        setUploadMessage(data.message || "Le fichier Arthius a été uploadé avec succès.");
+        setUploadMessage(data.message || "Le fichier Arthuis a été uploadé avec succès.");
         setUploadStatus("success");
         setArthiusFile(null);
       } else {
@@ -183,7 +183,7 @@ return `${formattedFirst} ${formattedLast}`.trim();
       <div className="flex flex-1 justify-center items-center pt-28 p-6">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-2xl bg-gray-50 border border-[#31327e] rounded-2xl shadow-xl p-10 flex flex-col items-center">
           <Image src="/logo-myit.png" alt="Logo MyIT" width={150} height={60} className="mb-6" />
-          <h1 className="text-3xl font-bold text-[#31327e] mb-6 text-center">Upload Arthius</h1>
+          <h1 className="text-3xl font-bold text-[#31327e] mb-6 text-center">Upload Arthuis</h1>
 
           {/* Message en cours de déploiement */}
           <div className="w-full bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm mb-6 text-center">
@@ -192,7 +192,7 @@ return `${formattedFirst} ${formattedLast}`.trim();
 
           <div className="w-full space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fichier Arthius :</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Fichier Arthuis :</label>
               <div className="flex items-center gap-4">
                 <input type="text" readOnly value={arthiusFile ? arthiusFile.name : ""} placeholder="Aucun fichier sélectionné" className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm" />
                 <button type="button" onClick={handleBrowseARTHIUS} className="px-6 py-2 border border-[#31327e] text-[#31327e] font-semibold rounded-2xl hover:bg-[#31327e] hover:text-white transition">
