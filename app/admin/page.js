@@ -4,7 +4,7 @@ import { useState } from "react";
 import useAuth from "@/hooks/useAuth";
 import Sidebar from "../components/Sidebar";
 import Header from "./components/Header";
-import UserSection from "./components/UserSection";       // Formulaire Ajouter/Supprimer utilisateur
+import UserSection from "./components/UserSection"; 
 import ListeUtilisateurs from "./components/ListeUtilisateurs"; // Tableau Liste utilisateurs
 import Image from "next/image";
 
