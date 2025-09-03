@@ -21,7 +21,6 @@ import CommentButton from "./CommentButton"; // Assurez-vous que le chemin est c
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
-// --- Fonctions Utilitaires pour Périodes ---
 // Fonction pour obtenir le numéro de semaine ISO (conservée)
 const getWeekNumber = (date) => {
   if (!date || isNaN(date.getTime())) return null; // Handle invalid dates
