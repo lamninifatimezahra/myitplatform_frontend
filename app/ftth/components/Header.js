@@ -79,7 +79,7 @@ export default function Header({ type = "FTTH" }) {
     setIsLoadingUploadDate(true);
     try {
       // Déterminer l'URL en fonction du type de dashboard
-      const apiUrl = `https://api.606510.xyz/dashboard/api/ftth-data/files/`;
+      const apiUrl = `https://api.606510.xyz/dashboard/api/ftth/files/`;
       
       const response = await fetchWithAuth(apiUrl);
       
@@ -231,29 +231,49 @@ const captureScreenshots = async () => {
   return images;
 };
 
-  const generateWord = async () => {
-    if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
-    const images = await captureScreenshots();
-    // Passage des dates du filtre global à la fonction generateWordFromImages
-    await generateWordFromImages(images, globalStartDate, globalEndDate);
-  };
+const generateWord = async () => {
+  if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
   
-  const generatePPT = async () => {
-    if (selectedGraphs.length === 0)
-      return alert("Sélectionnez au moins une visualisation.");
-    
-    const images = await captureScreenshots();
-    
-    // Passage des dates du filtre global à la fonction generatePPTFromImages
-    await generatePPTFromImages(images, globalStartDate, globalEndDate);
-  };
+  // Debug : afficher les graphiques sélectionnés
+  console.log("=== DÉBOGAGE EXPORT WORD FTTH ===");
+  console.log("graphList:", graphList);
+  console.log("selectedGraphs:", selectedGraphs);
+  console.log("Elements with class 'visualisation':", document.querySelectorAll(".visualisation"));
+  
+  // Capturer les screenshots comme dans HISPEED
+  const images = await captureScreenshots();
+  
+  // Debug : afficher les images capturées
+  console.log("Images capturées:", images);
+  
+  // Appeler la fonction avec la même signature qu'HISPEED
+  await generateWordFromImages(images, globalStartDate, globalEndDate);
+};
+  
+const generatePPT = async () => {
+  if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
+  
+  // Debug : afficher les graphiques sélectionnés
+  console.log("=== DÉBOGAGE EXPORT PPT FTTH ===");
+  console.log("graphList:", graphList);
+  console.log("selectedGraphs:", selectedGraphs);
+  
+  // Capturer les screenshots comme dans HISPEED
+  const images = await captureScreenshots();
+  
+  // Debug : afficher les images capturées
+  console.log("Images capturées pour PPT:", images);
+  
+  // Appeler la fonction avec la même signature qu'HISPEED
+  await generatePPTFromImages(images, globalStartDate, globalEndDate);
+};
 
   const handleDownload = () => {
     // Selon le format sélectionné, lancez la bonne fonction
     if (selectedFormat === "word") {
       generateWord();
     } else if (selectedFormat === "pptx") {
-      // Passage des dates du filtre global à la fonction generatePPTFromImages
+      // Passage des dates du filtre global à la fonction generatePPTFromGraphs
       generatePPT(globalStartDate, globalEndDate);
     }
   };
