@@ -52,7 +52,9 @@ export default function KPIBacklogJ({ onComponentReady }) {
   return (
     <motion.div
       id="kpi-backlog-j"
-      className="relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
+      className="visualisation relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
+      data-id="kpi-backlog-j"
+      data-graph-label="KPI Backlog J"
       whileHover={{ scale: 1.05 }}
     >
       {/* Chargement */}

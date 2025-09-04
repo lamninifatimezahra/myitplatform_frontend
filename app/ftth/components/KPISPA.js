@@ -7,8 +7,10 @@ import { motion } from "framer-motion";
 export default function KPISPA({ onComponentReady }) {
   return (
     <motion.div
-    id="kpi-objectif" // pour SPA
-    className="relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
+      id="kpi-spa" // Changé de kpi-objectif à kpi-spa pour plus de clarté
+      className="visualisation relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
+      data-id="kpi-spa"
+      data-graph-label="KPI SPA"
       whileHover={{ scale: 1.05 }}
     >
       {/* Header */}
