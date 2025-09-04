@@ -5,7 +5,7 @@ import useAuth from "@/hooks/useAuth";
 import Sidebar from "../components/Sidebar";
 import Header from "./components/Header";
 import UserSection from "./components/UserSection"; 
-import ListeUtilisateurs from "./components/ListeUtilisateurs"; // Tableau Liste utilisateurs
+import ListeUtilisateurs from "./components/ListeUtilisateurs"; 
 import Image from "next/image";
 
 export default function AdminPage() {
