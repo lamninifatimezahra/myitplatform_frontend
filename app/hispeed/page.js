@@ -125,10 +125,14 @@ export default function HispeedDashboard() {
             {/* Tableaux */}
               <TicketsReentrantsTable
                 apiUrl={API_HISPEED_DATA}
-                commentApiUrl={API_COMMENT_UPDATE}/>
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="hispeed"/>
+
               <TicketsEnCoursTable
                 apiUrl={API_HISPEED_DATA}
-                commentApiUrl={API_COMMENT_UPDATE}/>
+                commentApiUrl={API_COMMENT_UPDATE}
+                tableType="hispeed"/>
+
           </main>
         </div>
       </div>
