@@ -22,6 +22,8 @@ import TicketsEnCoursTable from "../components/TicketsEncoursTable";
 import TranticiteCriticite from "../components/TranticiteCriticite";
 import NewsTickerRetard from "../components/NewsTickerRetard14";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
+import ClientCoupeLineChart from "../components/ClientCoupeLineChart";
+import VolumeReentrantsLineChart from "../components/VolumeReentrantLineChart";
 
 const API_BASE_URL = "https://api.606510.xyz/dashboard/api";
 const API_HISPEED_DATA = `${API_BASE_URL}/hispeed/data/`;
@@ -114,6 +116,10 @@ export default function HispeedDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ClientCoupeChart apiUrl={API_HISPEED_DATA} />
               <VolumeReentrant apiUrl={API_HISPEED_DATA} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ClientCoupeLineChart apiUrl={API_HISPEED_DATA} />
+              <VolumeReentrantsLineChart apiUrl={API_HISPEED_DATA} />
             </div>
 
             {/* Tableaux */}

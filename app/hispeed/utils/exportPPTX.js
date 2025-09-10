@@ -168,6 +168,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   const reentrantLabels = [
     "Détail des Réitérations des Tickets",
     "Volume des Réentrants",
+    "Volume des Réentrants - Evolution",
     "Taux des Réentrants"
   ];
   
