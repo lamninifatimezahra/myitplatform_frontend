@@ -10,6 +10,7 @@ import { GlobalFilterProvider } from "../components/GlobalFilterContext"; // Ass
 import KPIBacklogJ1 from "./components/KPIBacklogJ1";
 import KPIBacklogJ from "./components/KPIBacklogJ";
 import KPISPA from "./components/KPISPA";
+import KPIRules14Days from "./components/KPIRules14Days"; // << ajouté
 import GraphVueEnsemble from "./components/GraphVueEnsemble";
 import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
 import GraphTopRegles from "./components/GraphTopRegles";
@@ -51,10 +52,9 @@ export default function DashboardFTTH() {
   const [globalModifiedAt, setGlobalModifiedAt] = useState(0); // Timestamp pour forcer les mises à jour
 
   const handleGlobalFilter = (start, end) => {
-    // On s'assure de gérer les dates nulles correctement
     setGlobalStartDate(start ? new Date(start) : null);
     setGlobalEndDate(end ? new Date(end) : null);
-    setGlobalModifiedAt(Date.now()); // On met à jour le timestamp pour signaler un changement
+    setGlobalModifiedAt(Date.now());
   };
 
   // Conteneur scrollable + refs sections
@@ -77,8 +77,7 @@ export default function DashboardFTTH() {
     );
   }
 
-  // 2. On prépare l'objet `value` à passer au Provider.
-  // Il contient les dates de notre état local et la fonction pour les changer.
+  // 2. Valeur du Provider pour le filtre global
   const filterContextValue = {
     globalStartDate,
     globalEndDate,
@@ -87,8 +86,6 @@ export default function DashboardFTTH() {
   };
 
   return (
-    // 3. On passe notre état local au Provider via la prop `value`.
-    // C'est ici que la connexion est faite.
     <GlobalFilterProvider value={filterContextValue}>
       <div className="flex h-screen w-full overflow-hidden relative bg-gray-50">
         <button
@@ -101,17 +98,14 @@ export default function DashboardFTTH() {
         <Sidebar sidebarOpen={isSidebarOpen} setSidebarOpen={setIsSidebarOpen} />
 
         <div className="flex-1 flex flex-col relative">
-          {/* Le Header continue de mettre à jour l'état local de cette page via la prop */}
+          {/* Header */}
           <Header onGlobalFilter={handleGlobalFilter} setSidebarOpen={setIsSidebarOpen} />
 
           <main
             ref={mainRef}
             className="flex-1 p-6 space-y-6 overflow-y-auto relative z-10"
           >
-            {/* 
-              Tous les composants ci-dessous liront maintenant les bonnes dates 
-              car le Provider a été mis à jour avec les valeurs de cette page.
-            */}
+            {/* Titre + ticker manuel */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-1 h-8 bg-sky-500 rounded-full"></div>
               <h2 className="text-2xl font-bold text-gray-800">Manuel FTTH</h2>
@@ -119,10 +113,13 @@ export default function DashboardFTTH() {
             <div className="w-full overflow-hidden border-b border-gray-200 bg-gray-100 rounded-md">
               <NewsTickerReglesFTTH />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            {/* Ligne des KPI (4 colonnes en lg) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <KPIBacklogJ1 />
               <KPIBacklogJ />
               <KPISPA />
+              <KPIRules14Days /> {/* << nouvelle carte KPI */}
             </div>
 
             {/* ======= SECTION : MANUEL ======= */}
