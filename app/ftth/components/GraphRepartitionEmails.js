@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,13 +12,15 @@ import {
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { AiOutlineFilter } from "react-icons/ai";
 import { FaExpand } from "react-icons/fa";
+import { FiRefreshCw } from "react-icons/fi";
 import Modal from "react-modal";
 
-// Remplacez le mock par le vrai import de votre projet
-import CommentButton from "@/app/components/CommentButton"; 
-// Simule fetchWithAuth si ce n'est pas un import global
-const fetchWithAuth = (url) => fetch(url); 
+// Import du contexte global
+import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
 
+// Imports locaux
+import CommentButton from "@/app/components/CommentButton"; 
+import fetchWithAuth from "@/utils/fetchWithAuth";
 
 // Configuration de Modal
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
@@ -33,7 +36,6 @@ const viewModeLabels = {
     semester: "Semestre"
 };
 
-
 // Enregistrement des plugins ChartJS
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
@@ -47,6 +49,63 @@ const getWeekNumber = (date) => {
 };
 const getQuarter = (date) => Math.ceil((date.getMonth() + 1) / 3);
 const getSemester = (date) => (date.getMonth() < 6 ? 1 : 2);
+
+// Fonctions utilitaires pour générer les listes de périodes entre deux dates
+function getAllWeeksBetween(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const weeksSet = new Set();
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+  
+  while (current <= end) {
+    weeksSet.add(getWeekNumber(current));
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return Array.from(weeksSet).sort((a, b) => a - b);
+}
+
+function getAllMonthsBetween(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const monthsSet = new Set();
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+  
+  while (current <= end) {
+    monthsSet.add(current.getMonth() + 1);
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return Array.from(monthsSet).sort((a, b) => a - b);
+}
+
+function getAllQuartersBetween(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const quartersSet = new Set();
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+  
+  while (current <= end) {
+    quartersSet.add(getQuarter(current));
+    current.setMonth(current.getMonth() + 1);
+  }
+  
+  return Array.from(quartersSet).sort((a, b) => a - b);
+}
+
+function getAllSemestersBetween(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const semestersSet = new Set();
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+  
+  while (current <= end) {
+    semestersSet.add(getSemester(current));
+    current.setMonth(current.getMonth() + 3);
+  }
+  
+  return Array.from(semestersSet).sort((a, b) => a - b);
+}
 
 export default function GraphRepartitionParType() {
   const apiUrl = "https://api.606510.xyz/dashboard/api/mail-ftth/data/";
@@ -64,8 +123,12 @@ export default function GraphRepartitionParType() {
   // Références et états
   const filterPanelRef = useRef(null);
   const chartContainerRef = useRef(null);
-  const modalChartContainerRef = useRef(null); // <-- Ajout de la ref pour le modal
+  const modalChartContainerRef = useRef(null);
   const prevViewMode = useRef(null);
+  
+  // États pour l'initialisation et la gestion du filtre global
+  const initializationCompleted = useRef(false);
+  const globalFilterApplied = useRef(false);
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,15 +140,60 @@ export default function GraphRepartitionParType() {
   const [selectedYear, setSelectedYear] = useState(null);
   const [multipleYearsExist, setMultipleYearsExist] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [comments, setComments] = useState([]); // <-- État pour les commentaires
+  const [comments, setComments] = useState([]);
 
-  // États pour mémoriser les sélections
+  // États pour la gestion du filtre global
+  const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
+
+  // États pour mémoriser les sélections selon la vue
   const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
   const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
   const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
   const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
 
-  // --- Fonctions de gestion des commentaires (inspirées du modèle) ---
+  // États pour la gestion de la priorisation des filtres locaux vs globaux
+  const [weekSelectionModifiedAt, setWeekSelectionModifiedAt] = useState(0);
+  const [monthSelectionModifiedAt, setMonthSelectionModifiedAt] = useState(0);
+  const [quarterSelectionModifiedAt, setQuarterSelectionModifiedAt] = useState(0);
+  const [semesterSelectionModifiedAt, setSemesterSelectionModifiedAt] = useState(0);
+
+  // Extraction du filtre global via le contexte
+  const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
+
+  // Application du filtre global sur les différentes vues
+  const applyGlobalFilter = () => {
+    if (!globalStartDate || !globalEndDate) return;
+    
+    const yearFromGlobal = globalStartDate.getFullYear();
+    
+    // Calcul des listes pour chaque mode de vue
+    const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
+    const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
+    const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
+    const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
+
+    // Mise à jour de toutes les sélections de vue
+    setWeekViewSelection({ values: weekList, year: yearFromGlobal });
+    setMonthViewSelection({ values: monthList, year: yearFromGlobal });
+    setQuarterViewSelection({ values: quarterList, year: yearFromGlobal });
+    setSemesterViewSelection({ values: semesterList, year: yearFromGlobal });
+    
+    // Application selon la vue courante
+    setSelectedYear(yearFromGlobal);
+    if (viewMode === "week") {
+      setSelectedValues(weekList);
+    } else if (viewMode === "month") {
+      setSelectedValues(monthList);
+    } else if (viewMode === "quarter") {
+      setSelectedValues(quarterList);
+    } else if (viewMode === "semester") {
+      setSelectedValues(semesterList);
+    }
+    
+    setHasGlobalFilter(true);
+  };
+
+  // Fonctions de gestion des commentaires
   const handleAddComment = (comment) => {
     setComments(prevComments => [...prevComments, comment]);
   };
@@ -97,7 +205,6 @@ export default function GraphRepartitionParType() {
   const handleDeleteComment = (commentId) => {
     setComments(prevComments => prevComments.filter(c => c.id !== commentId));
   };
-
 
   // Gestion des clics extérieurs pour fermer le panneau de filtre
   useEffect(() => {
@@ -116,12 +223,15 @@ export default function GraphRepartitionParType() {
       prevViewMode.current = viewMode;
       return;
     }
+    
+    // Sauvegarder l'état de l'ancienne vue
     const selectionState = { values: selectedValues, year: selectedYear };
     if (prevViewMode.current === "week") setWeekViewSelection(selectionState);
     else if (prevViewMode.current === "month") setMonthViewSelection(selectionState);
     else if (prevViewMode.current === "quarter") setQuarterViewSelection(selectionState);
     else if (prevViewMode.current === "semester") setSemesterViewSelection(selectionState);
 
+    // Restaurer l'état de la nouvelle vue
     let targetSelection = { values: [], year: selectedYear };
     if (viewMode === "week") targetSelection = weekViewSelection;
     else if (viewMode === "month") targetSelection = monthViewSelection;
@@ -150,15 +260,27 @@ export default function GraphRepartitionParType() {
         const years = [...new Set(result.map(t => new Date(t[dateField]).getFullYear()))].sort();
         setAvailableYears(years);
         setMultipleYearsExist(years.length > 1);
-        const latestYear = years[years.length - 1];
-        setSelectedYear(latestYear);
+        
+        // Initialisation seulement si pas encore fait
+        if (!initializationCompleted.current) {
+          const latestYear = years[years.length - 1];
+          setSelectedYear(latestYear);
 
-        const initialPeriods = [...new Set(result
-            .filter(t => new Date(t[dateField]).getFullYear() === latestYear)
-            .map(t => getWeekNumber(new Date(t[dateField]))))]
-            .sort((a, b) => a - b);
-        setSelectedValues(initialPeriods);
-        setWeekViewSelection({ values: initialPeriods, year: latestYear });
+          const initialPeriods = [...new Set(result
+              .filter(t => new Date(t[dateField]).getFullYear() === latestYear)
+              .map(t => getWeekNumber(new Date(t[dateField]))))]
+              .sort((a, b) => a - b);
+          setSelectedValues(initialPeriods);
+          setWeekViewSelection({ values: initialPeriods, year: latestYear });
+          
+          initializationCompleted.current = true;
+        }
+
+        // Application du filtre global s'il existe
+        if (globalStartDate && globalEndDate && !globalFilterApplied.current) {
+          applyGlobalFilter();
+          globalFilterApplied.current = true;
+        }
         
       } catch (error) {
         console.error("Erreur lors du fetch :", error);
@@ -168,6 +290,13 @@ export default function GraphRepartitionParType() {
     }
     fetchData();
   }, [apiUrl, dateField]);
+
+  // Application du filtre global quand il change
+  useEffect(() => {
+    if (globalStartDate && globalEndDate && globalModifiedAt > 0) {
+      applyGlobalFilter();
+    }
+  }, [globalStartDate, globalEndDate, globalModifiedAt]);
 
   const getAvailablePeriodsForYear = (year, mode = viewMode) => {
     const ticketsForYear = data.filter(t => new Date(t[dateField]).getFullYear() === year);
@@ -183,19 +312,112 @@ export default function GraphRepartitionParType() {
   const availablePeriods = getAvailablePeriodsForYear(selectedYear);
   const allPeriodsSelected = availablePeriods.length > 0 && availablePeriods.every(period => selectedValues.includes(period));
 
+  // Réinitialisation complète
+  const resetGraph = () => {
+    setIsOpen(false);
+    setModalIsOpen(false);
+    setViewMode("week");
+    setSelectedYear(null);
+    setSelectedValues([]);
+    setHasGlobalFilter(false);
+    setDisabledCategories([]);
+    setComments([]);
+    
+    // Reset des sélections par vue
+    setWeekViewSelection({ values: [], year: null });
+    setMonthViewSelection({ values: [], year: null });
+    setQuarterViewSelection({ values: [], year: null });
+    setSemesterViewSelection({ values: [], year: null });
+    
+    // Reset des timestamps
+    setWeekSelectionModifiedAt(0);
+    setMonthSelectionModifiedAt(0);
+    setQuarterSelectionModifiedAt(0);
+    setSemesterSelectionModifiedAt(0);
+    
+    initializationCompleted.current = false;
+    globalFilterApplied.current = false;
+    
+    // Recharger les données
+    window.location.reload();
+  };
+
   // Logique de filtrage
-  const handleViewModeChange = (newMode) => setViewMode(newMode);
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+  };
+  
   const handleYearChange = (year) => {
     setSelectedYear(year);
     const newPeriods = getAvailablePeriodsForYear(year, viewMode);
-    setSelectedValues(newPeriods);
+    
+    if (hasGlobalFilter && globalStartDate && globalEndDate) {
+      let filteredPeriods = [];
+      if (viewMode === "week") {
+        filteredPeriods = getAllWeeksBetween(globalStartDate, globalEndDate)
+          .filter(w => newPeriods.includes(w));
+      } else if (viewMode === "month") {
+        filteredPeriods = getAllMonthsBetween(globalStartDate, globalEndDate)
+          .filter(m => newPeriods.includes(m));
+      } else if (viewMode === "quarter") {
+        filteredPeriods = getAllQuartersBetween(globalStartDate, globalEndDate)
+          .filter(q => newPeriods.includes(q));
+      } else if (viewMode === "semester") {
+        filteredPeriods = getAllSemestersBetween(globalStartDate, globalEndDate)
+          .filter(s => newPeriods.includes(s));
+      }
+      setSelectedValues(filteredPeriods);
+    } else {
+      setSelectedValues(newPeriods);
+    }
   };
+  
   const handleSelectionChange = (value) => {
-    setSelectedValues(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+    const newValues = selectedValues.includes(value) 
+      ? selectedValues.filter(v => v !== value) 
+      : [...selectedValues, value];
+    setSelectedValues(newValues);
+    
+    // Mettre à jour la sélection pour la vue courante
+    if (viewMode === "week") {
+      setWeekViewSelection({ values: newValues, year: selectedYear });
+      setWeekSelectionModifiedAt(Date.now());
+    } else if (viewMode === "month") {
+      setMonthViewSelection({ values: newValues, year: selectedYear });
+      setMonthSelectionModifiedAt(Date.now());
+    } else if (viewMode === "quarter") {
+      setQuarterViewSelection({ values: newValues, year: selectedYear });
+      setQuarterSelectionModifiedAt(Date.now());
+    } else if (viewMode === "semester") {
+      setSemesterViewSelection({ values: newValues, year: selectedYear });
+      setSemesterSelectionModifiedAt(Date.now());
+    }
+    
+    setHasGlobalFilter(false);
   };
+  
   const toggleSelectAll = () => {
-    setSelectedValues(allPeriodsSelected ? [] : [...availablePeriods]);
+    const newValues = allPeriodsSelected ? [] : [...availablePeriods];
+    setSelectedValues(newValues);
+    
+    // Mettre à jour la sélection pour la vue courante
+    if (viewMode === "week") {
+      setWeekViewSelection({ values: newValues, year: selectedYear });
+      setWeekSelectionModifiedAt(Date.now());
+    } else if (viewMode === "month") {
+      setMonthViewSelection({ values: newValues, year: selectedYear });
+      setMonthSelectionModifiedAt(Date.now());
+    } else if (viewMode === "quarter") {
+      setQuarterViewSelection({ values: newValues, year: selectedYear });
+      setQuarterSelectionModifiedAt(Date.now());
+    } else if (viewMode === "semester") {
+      setSemesterViewSelection({ values: newValues, year: selectedYear });
+      setSemesterSelectionModifiedAt(Date.now());
+    }
+    
+    setHasGlobalFilter(false);
   };
+  
   const toggleCategory = (category) => {
     setDisabledCategories(prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]);
   };
@@ -281,12 +503,20 @@ export default function GraphRepartitionParType() {
     layout: { padding: 10 },
   };
 
-  const periodeLabel = selectedValues.length > 0
-    ? viewMode === "week" ? `Semaine(s) : ${selectedValues.join(", ")}`
-    : viewMode === "month" ? `Mois : ${selectedValues.map(m => moisFrancais[m]).join(", ")}`
-    : viewMode === "quarter" ? `Trimestre(s) : ${selectedValues.map(q => trimestres[q]).join(", ")}`
-    : `Semestre(s) : ${selectedValues.map(s => semestres[s]).join(", ")}`
-    : "Aucune période sélectionnée";
+  const periodeLabel = useMemo(() => {
+    if (hasGlobalFilter && globalStartDate && globalEndDate) {
+      const startStr = globalStartDate.toLocaleDateString("fr-FR");
+      const endStr = globalEndDate.toLocaleDateString("fr-FR");
+      return `Filtre global: ${startStr} - ${endStr}`;
+    }
+    
+    if (selectedValues.length === 0) return "Aucune période sélectionnée";
+    
+    return viewMode === "week" ? `Semaine(s) : ${selectedValues.join(", ")}`
+      : viewMode === "month" ? `Mois : ${selectedValues.map(m => moisFrancais[m]).join(", ")}`
+      : viewMode === "quarter" ? `Trimestre(s) : ${selectedValues.map(q => trimestres[q]).join(", ")}`
+      : `Semestre(s) : ${selectedValues.map(s => semestres[s]).join(", ")}`;
+  }, [selectedValues, viewMode, hasGlobalFilter, globalStartDate, globalEndDate]);
 
   if (loading) {
     return (
@@ -306,12 +536,16 @@ export default function GraphRepartitionParType() {
             <p className="text-sm text-gray-500">
               {selectedYear && `Année : ${selectedYear} - `}{periodeLabel}
             </p>
+            {hasGlobalFilter && (
+              <span className="inline-block mt-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                Filtre global actif
+              </span>
+            )}
           </div>
           <div className="no-export flex gap-2">
             <button className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800" onClick={() => setIsOpen(!isOpen)} data-filter-toggle="true">
               <AiOutlineFilter size={20} />
             </button>
-            {/* --- Bouton Commentaire Corrigé --- */}
             <CommentButton
                 containerRef={chartContainerRef}
                 comments={comments}
@@ -319,6 +553,9 @@ export default function GraphRepartitionParType() {
                 onUpdateComment={handleUpdateComment}
                 onDeleteComment={handleDeleteComment}
             />
+            <button className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800" onClick={resetGraph}>
+              <FiRefreshCw size={18} />
+            </button>
             <button className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition text-gray-600 hover:text-gray-800" onClick={() => setModalIsOpen(true)}>
               <FaExpand size={18} />
             </button>

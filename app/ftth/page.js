@@ -64,9 +64,9 @@ export default function DashboardFTTH() {
   const refMailing = useRef(null);
 
   const sections = [
-    { key: "manual", label: "Manuel",  dot: "bg-indigo-600",  ref: refManual },
-    { key: "ticketing", label: "Ticketing", dot: "bg-sky-500",   ref: refTicketing },
-    { key: "mailing", label: "Mailing",  dot: "bg-emerald-500", ref: refMailing },
+    { key: "manual", label: "Manuel", dot: "bg-indigo-600", ref: refManual },
+    { key: "ticketing", label: "Ticketing", dot: "bg-sky-500", ref: refTicketing },
+    { key: "mailing", label: "Mailing", dot: "bg-emerald-500", ref: refMailing },
   ];
 
   if (!hydrated || loading || !authorized) {
@@ -162,9 +162,13 @@ export default function DashboardFTTH() {
                   <VolumeReentrant apiUrl={API_FTTH_TICKETING_DATA} />
                   <GraphTicketsItsSfr />
                 </div>
-                <TicketsReentrantsTable apiUrl={API_FTTH_TICKETING_DATA} commentApiUrl={API_FTTH_COMMENT_UPDATE} />
-                <TicketsEnCoursTable apiUrl={API_FTTH_TICKETING_DATA} commentApiUrl={API_FTTH_COMMENT_UPDATE} />
-              </div>
+                <TicketsReentrantsTable apiUrl={API_FTTH_TICKETING_DATA} commentApiUrl={API_FTTH_COMMENT_UPDATE} tableType="ftth" />
+                <TicketsEnCoursTable
+                  apiUrl={API_FTTH_TICKETING_DATA}
+                  commentApiUrl={API_FTTH_COMMENT_UPDATE}
+                  tableType="ftth"  
+                />              
+                </div>
             </section>
 
             {/* ======= SECTION : MAILING ======= */}
@@ -178,9 +182,10 @@ export default function DashboardFTTH() {
                 <GraphRepartitionEmails />
               </div>
             </section>
+                      <SectionRail sections={sections} scrollContainerRef={mainRef} />
+
           </main>
 
-          <SectionRail sections={sections} scrollContainerRef={mainRef} />
         </div>
       </div>
     </GlobalFilterProvider>

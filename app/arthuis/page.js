@@ -124,11 +124,11 @@ export default function ArthuisDashboard() {
               <TicketsReentrantsTable
                 apiUrl={API_ARTHUIS_DATA}
                 commentApiUrl={API_COMMENT_UPDATE}
-                tableType="arthuis"/>
+                tableType="arthuis_ticket"/>
               <TicketsEnCoursTable
                 apiUrl={API_ARTHUIS_DATA}
                 commentApiUrl={API_COMMENT_UPDATE}
-                tableType="arthuis"/>
+                tableType="arthuis_ticket"/>
             </main>
           </div>
         </div>
