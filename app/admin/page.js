@@ -10,8 +10,7 @@ import Image from "next/image";
 
 export default function AdminPage() {
   const { user, loading, authorized, hydrated } = useAuth(null, "admin");
-  const [selectedSection, setSelectedSection] = useState("user"); // "user" ou "list"
-
+  const [selectedSection, setSelectedSection] = useState("user");
   if (!hydrated || loading || !authorized) {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
@@ -71,7 +70,6 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Section dynamique */}
         <div className="p-6">
           {selectedSection === "user" && <UserSection />}
           {selectedSection === "list" && <ListeUtilisateurs />}
