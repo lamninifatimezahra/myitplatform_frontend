@@ -6,7 +6,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/landing"); // redirige la racine vers la landing page
+    router.replace("/landing"); 
   }, []);
 
   return null;
