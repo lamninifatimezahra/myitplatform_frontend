@@ -1,18 +1,19 @@
 'use client';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import fetchWithAuth from '@/utils/fetchWithAuth';
-import { Copy, Key } from 'lucide-react';
+import { Copy, Key, RefreshCw } from 'lucide-react';
 
 export default function ListeUtilisateurs() {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [editingUserId, setEditingUserId] = useState(null);
   const [formData, setFormData] = useState({});
-  const [generatedPassword, setGeneratedPassword] = useState('');
   const [credentialsToShow, setCredentialsToShow] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [copyMessage, setCopyMessage] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
   const availableDashboards = ["HISPEED", "FTTH", "DSL", "FTTB", "EARF", "ARTHUIS", "MYFILE", "MYFORUM"];
 
@@ -46,16 +47,16 @@ export default function ListeUtilisateurs() {
       ...user,
       dashboards: user.dashboards || [] 
     });
-    setGeneratedPassword('');
     setCredentialsToShow(null);
     setMessage('');
+    setShowResetConfirmation(false);
   };
 
   const handleCancelEdit = () => {
     setEditingUserId(null);
     setFormData({});
-    setGeneratedPassword('');
     setCredentialsToShow(null);
+    setShowResetConfirmation(false);
   };
 
   const handleUpdateUser = async () => {
@@ -73,12 +74,6 @@ export default function ListeUtilisateurs() {
         prev.map((u) => (u.id === updated.id ? updated : u))
       );
       setMessage('Utilisateur mis à jour avec succès');
-      if (generatedPassword) {
-        setCredentialsToShow({
-          email: updated.email,
-          password: generatedPassword,
-        });
-      }
       handleCancelEdit();
     } catch (err) {
       setMessage(err.message || "Erreur lors de la mise à jour");
@@ -91,32 +86,45 @@ export default function ListeUtilisateurs() {
     for (let i = 0; i < 12; i++) {
       generated += chars[Math.floor(Math.random() * chars.length)];
     }
-    setGeneratedPassword(generated);
+    return generated;
   };
 
-  const handleResetPassword = async () => {
-    if (!generatedPassword) {
-      setMessage('Veuillez générer un mot de passe d\'abord.');
-      return;
-    }
+  const handleResetPasswordClick = () => {
+    setShowResetConfirmation(true);
+  };
 
+  const confirmResetPassword = async () => {
+    setIsResettingPassword(true);
+    
+    // Générer automatiquement un nouveau mot de passe
+    const newPassword = generatePassword();
+    
     try {
       const res = await fetchWithAuth("https://api.606510.xyz/api/admin/reset-password/", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ id: editingUserId, new_password: generatedPassword }),
+        body: JSON.stringify({ id: editingUserId, new_password: newPassword }),
       });
       if (!res.ok) throw new Error("Échec de la réinitialisation du mot de passe");
 
       setCredentialsToShow({
         email: formData.email,
-        password: generatedPassword,
+        password: newPassword,
+        userId: editingUserId, // Ajouter l'ID de l'utilisateur
       });
       setMessage('Mot de passe réinitialisé avec succès');
+      setShowResetConfirmation(false);
+      // NE PAS appeler handleCancelEdit() ici pour garder l'affichage
     } catch (err) {
       setMessage(err.message || "Erreur lors de la réinitialisation");
+    } finally {
+      setIsResettingPassword(false);
     }
+  };
+
+  const cancelResetPassword = () => {
+    setShowResetConfirmation(false);
   };
 
   const handleChange = (e) => {
@@ -174,94 +182,192 @@ export default function ListeUtilisateurs() {
         </thead>
         <tbody>
           {users.map((u) => (
-            <tr key={u.id} className="text-center">
-              {editingUserId === u.id ? (
-                <>
-                  <td className="border px-2 py-1">
-                    <input name="name" value={formData.name} onChange={handleChange} className="w-full border rounded px-1" />
-                  </td>
-                  <td className="border px-2 py-1">
-                    <input name="surname" value={formData.surname} onChange={handleChange} className="w-full border rounded px-1" />
-                  </td>
-                  <td className="border px-2 py-1">{u.email}</td>
-                  <td className="border px-2 py-1">
-                    <select name="role" value={formData.role} onChange={handleChange} className="w-full border rounded">
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                  <td className="border px-2 py-1">
-                    <input name="department" value={formData.department} onChange={handleChange} className="w-full border rounded px-1" />
-                  </td>
-                  <td className="border px-2 py-1">
-                    {formData.role === "admin" ? (
-                      <span className="text-gray-500 italic">Accès libre</span>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        {availableDashboards.map((dashboard) => (
-                          <label key={dashboard} className="flex items-center space-x-1 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={formData.dashboards?.includes(dashboard) || false}
-                              onChange={() => handleDashboardChange(dashboard)}
-                              className="w-3 h-3"
-                            />
-                            <span className="text-xs">{dashboard}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-                  <td className="border px-2 py-1 space-y-1">
-                    <div className="flex flex-col gap-2">
-                      <button onClick={handleUpdateUser} className="bg-green-500 text-white px-2 py-1 rounded">Valider</button>
-                      <button onClick={handleCancelEdit} className="bg-gray-300 px-2 py-1 rounded">Annuler</button>
-                      <button onClick={generatePassword} className="bg-blue-500 text-white px-2 py-1 rounded flex items-center justify-center gap-1">
-                        <Key size={16} /> Générer mot de passe
-                      </button>
-                      {generatedPassword && (
-                        <button onClick={handleResetPassword} className="bg-indigo-500 text-white px-2 py-1 rounded">
-                          Réinitialiser avec le mot de passe généré
-                        </button>
+            <React.Fragment key={u.id}>
+              <tr className="text-center">
+                {editingUserId === u.id ? (
+                  <>
+                    <td className="border px-2 py-1">
+                      <input name="name" value={formData.name} onChange={handleChange} className="w-full border rounded px-1" />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <input name="surname" value={formData.surname} onChange={handleChange} className="w-full border rounded px-1" />
+                    </td>
+                    <td className="border px-2 py-1">{u.email}</td>
+                    <td className="border px-2 py-1">
+                      <select name="role" value={formData.role} onChange={handleChange} className="w-full border rounded">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
+                    <td className="border px-2 py-1">
+                      <input name="department" value={formData.department} onChange={handleChange} className="w-full border rounded px-1" />
+                    </td>
+                    <td className="border px-2 py-1">
+                      {formData.role === "admin" ? (
+                        <span className="text-gray-500 italic">Accès libre</span>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                          {availableDashboards.map((dashboard) => (
+                            <label key={dashboard} className="flex items-center space-x-1 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={formData.dashboards?.includes(dashboard) || false}
+                                onChange={() => handleDashboardChange(dashboard)}
+                                className="w-3 h-3"
+                              />
+                              <span className="text-xs">{dashboard}</span>
+                            </label>
+                          ))}
+                        </div>
                       )}
+                    </td>
+                    <td className="border px-2 py-1">
+                      <div className="space-y-2">
+                        {/* Actions principales */}
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={handleUpdateUser} 
+                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                          >
+                            ✓ Valider
+                          </button>
+                          <button 
+                            onClick={handleCancelEdit} 
+                            className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm transition-colors"
+                          >
+                            ✕ Annuler
+                          </button>
+                        </div>
+                        
+                        {/* Bouton de réinitialisation ou confirmation */}
+                        {!showResetConfirmation ? (
+                          <button 
+                            onClick={handleResetPasswordClick}
+                            className="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center gap-2 transition-colors"
+                          >
+                            <Key size={14} />
+                            Réinitialiser le mot de passe
+                          </button>
+                        ) : (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded p-3 space-y-2">
+                            <p className="text-sm text-yellow-800 font-medium">
+                              ⚠️ Confirmer la réinitialisation ?
+                            </p>
+                            <p className="text-xs text-yellow-700">
+                              Un nouveau mot de passe sera généré automatiquement.
+                            </p>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={confirmResetPassword}
+                                disabled={isResettingPassword}
+                                className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-2 py-1 rounded text-xs flex items-center justify-center gap-1 transition-colors"
+                              >
+                                {isResettingPassword ? (
+                                  <>
+                                    <RefreshCw size={12} className="animate-spin" />
+                                    Réinitialisation...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Key size={12} />
+                                    Confirmer
+                                  </>
+                                )}
+                              </button>
+                              <button 
+                                onClick={cancelResetPassword}
+                                disabled={isResettingPassword}
+                                className="flex-1 bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white px-2 py-1 rounded text-xs transition-colors"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="border px-2 py-1">{u.name}</td>
+                    <td className="border px-2 py-1">{u.surname}</td>
+                    <td className="border px-2 py-1">{u.email}</td>
+                    <td className="border px-2 py-1 capitalize">{u.role}</td>
+                    <td className="border px-2 py-1">{u.department}</td>
+                    <td className="border px-2 py-1 text-xs">
+                      {u.role === "admin" ? "Accès libre" : (u.dashboards?.length > 0 ? u.dashboards.join(', ') : 'Aucun')}
+                    </td>
+                    <td className="border px-2 py-1">
+                      <button 
+                        onClick={() => handleEditClick(u)} 
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                      >
+                        ✏️ Modifier
+                      </button>
+                    </td>
+                  </>
+                )}
+              </tr>
+              
+              {/* Affichage des identifiants directement sous la ligne de l'utilisateur */}
+              {credentialsToShow && credentialsToShow.userId === u.id && (
+                <tr>
+                  <td colSpan="7" className="border px-2 py-3 bg-green-50">
+                    <div className="bg-green-50 border border-green-200 p-4 rounded-lg shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <Key size={16} className="text-green-600" />
+                        </div>
+                        <h3 className="font-semibold text-green-800">Mot de passe réinitialisé avec succès !</h3>
+                      </div>
+                      
+                      <div className="bg-white border border-green-200 rounded-md p-4 mb-3">
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <span className="block text-sm font-medium text-gray-700 mb-1">Email de connexion :</span>
+                            <div className="font-mono text-sm bg-gray-50 p-2 rounded border">
+                              {credentialsToShow.email}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe :</span>
+                            <div className="font-mono text-sm bg-gray-50 p-2 rounded border">
+                              {credentialsToShow.password}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <button 
+                          onClick={copyCredentials} 
+                          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors"
+                        >
+                          <Copy size={16} /> 
+                          Copier les identifiants
+                        </button>
+                        {copyMessage && (
+                          <span className="text-green-700 font-medium text-sm bg-green-100 px-3 py-1 rounded-full">
+                            {copyMessage}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Bouton pour fermer la zone des identifiants */}
+                      <button 
+                        onClick={() => setCredentialsToShow(null)}
+                        className="mt-2 bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                      >
+                        Fermer
+                      </button>
                     </div>
                   </td>
-                </>
-              ) : (
-                <>
-                  <td className="border px-2 py-1">{u.name}</td>
-                  <td className="border px-2 py-1">{u.surname}</td>
-                  <td className="border px-2 py-1">{u.email}</td>
-                  <td className="border px-2 py-1 capitalize">{u.role}</td>
-                  <td className="border px-2 py-1">{u.department}</td>
-                  <td className="border px-2 py-1 text-xs">
-                    {u.role === "admin" ? "Accès libre" : (u.dashboards?.length > 0 ? u.dashboards.join(', ') : 'Aucun')}
-                  </td>
-                  <td className="border px-2 py-1">
-                    <button onClick={() => handleEditClick(u)} className="bg-yellow-500 text-white px-2 py-1 rounded">Modifier</button>
-                  </td>
-                </>
+                </tr>
               )}
-            </tr>
+            </React.Fragment>
           ))}
         </tbody>
       </table>
-
-      {credentialsToShow && (
-        <div className="bg-gray-50 border border-gray-300 p-4 rounded-md shadow space-y-3">
-          <h3 className="font-semibold text-gray-800">Identifiants :</h3>
-          <div className="bg-white p-3 rounded border border-gray-200">
-            <p><span className="font-semibold">Email :</span> {credentialsToShow.email}</p>
-            <p><span className="font-semibold">Mot de passe :</span> {credentialsToShow.password}</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <button onClick={copyCredentials} className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-              <Copy size={18} /> Copier
-            </button>
-            {copyMessage && <span className="text-green-600 text-sm">{copyMessage}</span>}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

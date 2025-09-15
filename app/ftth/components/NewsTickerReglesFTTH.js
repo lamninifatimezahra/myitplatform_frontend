@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import fetchWithAuth from "@/utils/fetchWithAuth";
 
-export default function NewsTickerReglesFTTH() {
+export default function NewsTickerManuelData() {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -14,34 +14,40 @@ export default function NewsTickerReglesFTTH() {
   const tickerRef = useRef(null);
   const containerRef = useRef(null);
 
-  const apiUrl = "https://api.606510.xyz/dashboard/api/ftth/regle/";
+  const apiUrl = "https://api.606510.xyz/dashboard/api/manuel/data/";
+
+  // Fonction pour calculer le délai en jours
+  const calculateDelayDays = (depuisDate) => {
+    const depuis = new Date(depuisDate);
+    const today = new Date();
+    const diffTime = today - depuis;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const sinceDate = new Date();
-        sinceDate.setDate(sinceDate.getDate() - 14);
-        const iso = sinceDate.toISOString().split("T")[0];
-
-        const res = await fetchWithAuth(`${apiUrl}?since=${iso}`);
+        const res = await fetchWithAuth(apiUrl);
         const data = await res.json();
 
-        const map = new Map();
-        data.forEach((item) => {
-          const key = `${item.regle}::${item.consigne}`;
-          if (!map.has(key)) {
-            map.set(key, {
-              rule: item.regle,
-              consigne: item.consigne,
-              date: new Date(item.date || item.created_at),
-            });
-          }
+        // Transformer les données selon le format demandé: 'id_dossier' : "consigne" + Délai
+        const transformedData = data.map((item) => {
+          const delayDays = calculateDelayDays(item.depuis);
+          return {
+            id_dossier: item.id_dossier,
+            consigne: item.consigne,
+            delai: delayDays,
+            date: new Date(item.depuis),
+            displayText: `${item.id_dossier}: ${item.consigne} (Délai: ${delayDays} jours)`
+          };
         });
 
-        const sorted = [...map.values()].sort((a, b) => b.date - a.date);
+        // Trier par délai décroissant (délai le plus grand en premier)
+        const sorted = transformedData.sort((a, b) => b.delai - a.delai);
         setRules(sorted);
       } catch (err) {
-        console.error("Erreur API FTTH:", err);
+        console.error("Erreur API Manuel Data:", err);
       } finally {
         setLoading(false);
       }
@@ -111,13 +117,12 @@ export default function NewsTickerReglesFTTH() {
           key={index}
           className="inline-block mx-6 text-xs sm:text-sm md:text-base whitespace-nowrap"
         >
-          <span className="font-semibold text-red-600">{item.rule}</span>
-          {item.consigne && (
-            <>
-              {" – "}
-              <span className="text-gray-700">{item.consigne}</span>
-            </>
-          )}
+          <span className="font-semibold text-blue-600">{item.id_dossier}</span>
+          {" : "}
+          <span className="text-gray-700">{item.consigne}</span>
+          <span className="ml-2 font-medium text-orange-600">
+            (Délai: {item.delai} jour{item.delai > 1 ? 's' : ''})
+          </span>
         </div>
       ))}
     </>
@@ -135,7 +140,7 @@ export default function NewsTickerReglesFTTH() {
           backgroundColor: "rgba(255, 255, 255, 0.1)",
         }}
       >
-        Chargement des règles FTTH...
+        Chargement des données manuelles...
       </div>
     );
   }
@@ -152,16 +157,15 @@ export default function NewsTickerReglesFTTH() {
           backgroundColor: "rgba(255, 255, 255, 0.8)",
         }}
       >
-        Aucune règle FTTH enregistrée
+        Aucune donnée manuelle enregistrée
       </div>
     );
   }
 
   return (
     <div
-  className="w-full h-[44px] border-y border-gray-200 shadow-sm relative overflow-hidden flex items-center bg-white/10 backdrop-blur-sm"
->
-
+      className="w-full h-[44px] border-y border-gray-200 shadow-sm relative overflow-hidden flex items-center bg-white/10 backdrop-blur-sm"
+    >
       <div
         ref={containerRef}
         className="absolute w-full h-full left-0 top-0 px-4 sm:px-6 overflow-hidden flex items-center"
@@ -180,7 +184,7 @@ export default function NewsTickerReglesFTTH() {
           }}
         >
           <div className="inline-flex items-center gap-3 text-sm font-medium text-gray-800">
-            <span className="text-red-600 font-bold">📢 Alertes :</span>
+            <span className="text-red-600 font-bold">📋 Dossiers Manuels :</span>
             {createContinuousTicker()}
           </div>
         </div>

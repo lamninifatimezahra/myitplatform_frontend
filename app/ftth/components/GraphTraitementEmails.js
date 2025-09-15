@@ -242,7 +242,7 @@ ChartJS.register(
 export default function GraphTraitementEmails({
   apiUrl = 'https://api.606510.xyz/dashboard/api/mail-ftth/data/',
   title = "Traitement des e-mails",
-  id = "traitement-emails",
+  id = "Traitement des E-mails",
   dateField = "date",
   weekField = "semaine",
   colors = COLORS,

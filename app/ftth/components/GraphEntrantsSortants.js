@@ -11,6 +11,7 @@ import {
   LabelList,
   CartesianGrid,
   Label,
+  Cell,
 } from "recharts";
 import { AiOutlineFilter } from "react-icons/ai";
 import { FaExpand, FaPencilAlt } from "react-icons/fa";
@@ -54,21 +55,26 @@ function weekNumber(date) {
 const quarterOf  = (d) => Math.ceil((d.getMonth() + 1) / 3);
 const semesterOf = (d) => ((d.getMonth() + 1) <= 6 ? 1 : 2);
 
+// MODIFIÉ: Inclure tous les jours ouvrés, même les fériés
 function allWorkingDaysBetween(a, b, holidaySet) {
   const res = [];
   const d = new Date(a); d.setHours(0,0,0,0);
   const end = new Date(b); end.setHours(0,0,0,0);
   while (d <= end) {
     const iso = toISO(d);
-    if (isWorkingDay(d) && (!holidaySet || !holidaySet.has(iso))) res.push(iso);
+    if (isWorkingDay(d)) { // Inclure tous les jours ouvrés (lun-ven)
+      res.push(iso);
+    }
     d.setDate(d.getDate() + 1);
   }
   return res;
 }
+
+// MODIFIÉ: Inclure les jours fériés dans les derniers jours ouvrés
 function lastNWorkingDays(isoList, n, holidaySet) {
   return isoList
     .map((s) => ({ s, d: parseISO(s) }))
-    .filter((x) => x.d && isWorkingDay(x.d) && (!holidaySet || !holidaySet.has(x.s)))
+    .filter((x) => x.d && isWorkingDay(x.d)) // Garder tous les jours ouvrés
     .sort((a, b) => b.d - a.d)
     .slice(0, n)
     .sort((a, b) => a.d - b.d)
@@ -249,6 +255,30 @@ function IconButton({ title, ariaLabel, active = false, onClick, dataFilterToggl
   );
 }
 
+// NOUVEAU: Composant pour afficher "Day off" sur les jours fériés
+function DayOffLabel({ viewBox, payload }) {
+  if (!payload || !payload.isHoliday) return null;
+  
+  const { x, width } = viewBox;
+  const centerX = x + width / 2;
+  const centerY = viewBox.y + viewBox.height / 2;
+  
+  return (
+    <text
+      x={centerX}
+      y={centerY}
+      textAnchor="middle"
+      dominantBaseline="middle"
+      fill="#ef4444"
+      fontSize="10"
+      fontWeight="bold"
+      transform={`rotate(-45 ${centerX} ${centerY})`}
+    >
+      Day off
+    </text>
+  );
+}
+
 /* ============================ Composant ============================ */
 export default function GraphEntrantsSortants({
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/regle/",
@@ -270,7 +300,6 @@ export default function GraphEntrantsSortants({
   // États pour l'initialisation et la gestion du filtre global
   const initializationCompleted = useRef(false);
   const globalFilterApplied = useRef(false);
-  const prevViewMode = useRef(null);
 
   // ui
   const [loading, setLoading] = useState(true);
@@ -291,21 +320,7 @@ export default function GraphEntrantsSortants({
 
   // États pour la gestion du filtre global
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
-
-  // États pour mémoriser les sélections selon la vue
-  const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
-  const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
-  const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
-  const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
-  const [dayViewSelection, setDayViewSelection] = useState({ dates: [null, null], values: [] });
-
-  // États pour la gestion de la priorisation des filtres locaux vs globaux
-  const [weekSelectionModifiedAt, setWeekSelectionModifiedAt] = useState(0);
-  const [monthSelectionModifiedAt, setMonthSelectionModifiedAt] = useState(0);
-  const [quarterSelectionModifiedAt, setQuarterSelectionModifiedAt] = useState(0);
-  const [semesterSelectionModifiedAt, setSemesterSelectionModifiedAt] = useState(0);
-  const [daySelectionModifiedAt, setDaySelectionModifiedAt] = useState(0);
-
+  
   // légende (isolement/toggle)
   const [visibleKeys, setVisibleKeys] = useState(["stock", "non_traite", "traite"]);
 
@@ -333,82 +348,32 @@ export default function GraphEntrantsSortants({
   const applyGlobalFilter = () => {
     if (!globalStartDate || !globalEndDate) return;
     
-    // Calcul des listes pour chaque mode de vue
-    const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
-    const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
-    const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
-    const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
-    const dayList = allWorkingDaysBetween(globalStartDate, globalEndDate, holidaySet);
-
-    // Mise à jour de toutes les sélections de vue
-    setWeekViewSelection({ values: weekList, year: globalStartDate.getFullYear() });
-    setMonthViewSelection({ values: monthList, year: globalStartDate.getFullYear() });
-    setQuarterViewSelection({ values: quarterList, year: globalStartDate.getFullYear() });
-    setSemesterViewSelection({ values: semesterList, year: globalStartDate.getFullYear() });
-    setDayViewSelection({ dates: [globalStartDate, globalEndDate], values: dayList });
-    
     // Application selon la vue courante
     if (viewMode === "day") {
+      const dayList = allWorkingDaysBetween(globalStartDate, globalEndDate, holidaySet);
       setSelectedDates([globalStartDate, globalEndDate]);
       setSelectedValues(dayList);
     } else if (viewMode === "week") {
+      const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
       setSelectedValues(weekList);
       setSelectedYear(globalStartDate.getFullYear());
     } else if (viewMode === "month") {
+      const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
       setSelectedValues(monthList);
       setSelectedYear(globalStartDate.getFullYear());
     } else if (viewMode === "quarter") {
+      const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
       setSelectedValues(quarterList);
       setSelectedYear(globalStartDate.getFullYear());
     } else if (viewMode === "semester") {
+      const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
       setSelectedValues(semesterList);
       setSelectedYear(globalStartDate.getFullYear());
     }
     
     setHasGlobalFilter(true);
   };
-
-  // Conserver l'état de la vue quand celle-ci change
-  useEffect(() => {
-    if (!prevViewMode.current) {
-      prevViewMode.current = viewMode;
-      return;
-    }
-
-    // Sauvegarder l'état de l'ancienne vue
-    if (prevViewMode.current === "day") {
-      setDayViewSelection({ dates: selectedDates, values: selectedValues });
-    } else if (prevViewMode.current === "week") {
-      setWeekViewSelection({ values: selectedValues, year: selectedYear });
-    } else if (prevViewMode.current === "month") {
-      setMonthViewSelection({ values: selectedValues, year: selectedYear });
-    } else if (prevViewMode.current === "quarter") {
-      setQuarterViewSelection({ values: selectedValues, year: selectedYear });
-    } else if (prevViewMode.current === "semester") {
-      setSemesterViewSelection({ values: selectedValues, year: selectedYear });
-    }
-    
-    // Restaurer l'état de la nouvelle vue
-    if (viewMode === "day" && dayViewSelection.values.length > 0) {
-      setSelectedDates(dayViewSelection.dates);
-      setSelectedValues(dayViewSelection.values);
-    } else if (viewMode === "week" && weekViewSelection.values.length > 0) {
-      setSelectedValues(weekViewSelection.values);
-      setSelectedYear(weekViewSelection.year || selectedYear);
-    } else if (viewMode === "month" && monthViewSelection.values.length > 0) {
-      setSelectedValues(monthViewSelection.values);
-      setSelectedYear(monthViewSelection.year || selectedYear);
-    } else if (viewMode === "quarter" && quarterViewSelection.values.length > 0) {
-      setSelectedValues(quarterViewSelection.values);
-      setSelectedYear(quarterViewSelection.year || selectedYear);
-    } else if (viewMode === "semester" && semesterViewSelection.values.length > 0) {
-      setSelectedValues(semesterViewSelection.values);
-      setSelectedYear(semesterViewSelection.year || selectedYear);
-    }
-
-    prevViewMode.current = viewMode;
-  }, [viewMode]);
-
+  
   /* ----------------- fetch ----------------- */
   const reload = () => {
     setErrorText("");
@@ -453,16 +418,12 @@ export default function GraphEntrantsSortants({
           if (defaultViewMode === "day") {
             const all = [...new Set(mapped.map((x) => x.dateISO))].filter((iso) => {
               const d = parseISO(iso);
-              return isWorkingDay(d) && !holidaySet.has(iso);
+              return isWorkingDay(d); // MODIFIÉ: Ne plus exclure les fériés
             });
             const last = lastNWorkingDays(all, 10, holidaySet);
             if (last.length) {
               setSelectedDates([parseISO(last[0]), parseISO(last[last.length - 1])]);
               setSelectedValues(last);
-              setDayViewSelection({
-                dates: [parseISO(last[0]), parseISO(last[last.length - 1])],
-                values: last
-              });
             } else {
               setSelectedDates([null, null]);
               setSelectedValues([]);
@@ -473,17 +434,6 @@ export default function GraphEntrantsSortants({
             const periods = getAvailablePeriodsForYear(mapped, latestYear, defaultViewMode);
             const selectedPeriods = periods.slice(-defaultNumPeriods);
             setSelectedValues(selectedPeriods);
-
-            // Initialiser les sélections pour chaque vue
-            if (defaultViewMode === "week") {
-              setWeekViewSelection({ values: selectedPeriods, year: latestYear });
-            } else if (defaultViewMode === "month") {
-              setMonthViewSelection({ values: selectedPeriods, year: latestYear });
-            } else if (defaultViewMode === "quarter") {
-              setQuarterViewSelection({ values: selectedPeriods, year: latestYear });
-            } else if (defaultViewMode === "semester") {
-              setSemesterViewSelection({ values: selectedPeriods, year: latestYear });
-            }
           }
           initializationCompleted.current = true;
         }
@@ -554,86 +504,70 @@ export default function GraphEntrantsSortants({
     setErrorText("");
     setHasGlobalFilter(false);
     setVisibleKeys(["stock","non_traite","traite"]);
-    
-    // Reset des sélections par vue
-    setWeekViewSelection({ values: [], year: null });
-    setMonthViewSelection({ values: [], year: null });
-    setQuarterViewSelection({ values: [], year: null });
-    setSemesterViewSelection({ values: [], year: null });
-    setDayViewSelection({ dates: [null, null], values: [] });
-    
-    // Reset des timestamps
-    setWeekSelectionModifiedAt(0);
-    setMonthSelectionModifiedAt(0);
-    setQuarterSelectionModifiedAt(0);
-    setSemesterSelectionModifiedAt(0);
-    setDaySelectionModifiedAt(0);
-    
     initializationCompleted.current = false;
     globalFilterApplied.current = false;
-    
     setChartKey((k) => k + 1);
     reload();
   };
+  
+  /* ==================================================================== */
+  /* MODIFICATION : Logique de changement de vue pour sélectionner le dernier élément */
+  /* ==================================================================== */
+  const handleViewModeChange = (newMode) => {
+    if (newMode === viewMode || !records.length) return;
 
-  /* ----------------- filtres ----------------- */
-  const handleViewModeChange = (m) => {
-    if (m === viewMode) return;
-    setViewMode(m);
+    const latestYear = availableYears.length > 0
+        ? Math.max(...availableYears)
+        : new Date().getFullYear();
+
+    if (newMode === "day") {
+        const allISODates = [...new Set(records.map(r => r.dateISO))];
+        const lastDayArray = lastNWorkingDays(allISODates, 1, holidaySet);
+        
+        if (lastDayArray.length > 0) {
+            const lastDateObj = parseISO(lastDayArray[0]);
+            setSelectedDates([lastDateObj, lastDateObj]);
+            setSelectedValues(lastDayArray);
+        } else {
+            setSelectedDates([null, null]);
+            setSelectedValues([]);
+        }
+    } else {
+        setSelectedYear(latestYear);
+        const availablePeriods = getAvailablePeriodsForYear(records, latestYear, newMode);
+        
+        if (availablePeriods.length > 0) {
+            const latestPeriod = availablePeriods[availablePeriods.length - 1];
+            setSelectedValues([latestPeriod]);
+        } else {
+            setSelectedValues([]);
+        }
+    }
+
+    setViewMode(newMode);
+    setHasGlobalFilter(false);
   };
-
+  
   const handleDayRangeChange = (dates) => {
     const [a, b] = dates;
     setSelectedDates(dates);
     const dayValues = a && b ? allWorkingDaysBetween(a, b, holidaySet) : [];
     setSelectedValues(dayValues);
-    setDayViewSelection({ dates: dates, values: dayValues });
-    setDaySelectionModifiedAt(Date.now());
     setHasGlobalFilter(false);
   };
 
   const handleYearChange = (y) => {
-    if (viewMode === "day") return;
+    if (viewMode === "day" || y === selectedYear) return;
+    
     setSelectedYear(y);
     const availablePeriods = getAvailablePeriodsForYear(records, y, viewMode);
     
-    if (hasGlobalFilter && globalStartDate && globalEndDate) {
-      let filteredPeriods = [];
-      if (viewMode === "week") {
-        filteredPeriods = getAllWeeksBetween(globalStartDate, globalEndDate)
-          .filter(w => availablePeriods.includes(w));
-        setSelectedValues(filteredPeriods);
-        setWeekViewSelection({ values: filteredPeriods, year: y });
-      } else if (viewMode === "month") {
-        filteredPeriods = getAllMonthsBetween(globalStartDate, globalEndDate)
-          .filter(m => availablePeriods.includes(m));
-        setSelectedValues(filteredPeriods);
-        setMonthViewSelection({ values: filteredPeriods, year: y });
-      } else if (viewMode === "quarter") {
-        filteredPeriods = getAllQuartersBetween(globalStartDate, globalEndDate)
-          .filter(q => availablePeriods.includes(q));
-        setSelectedValues(filteredPeriods);
-        setQuarterViewSelection({ values: filteredPeriods, year: y });
-      } else if (viewMode === "semester") {
-        filteredPeriods = getAllSemestersBetween(globalStartDate, globalEndDate)
-          .filter(s => availablePeriods.includes(s));
-        setSelectedValues(filteredPeriods);
-        setSemesterViewSelection({ values: filteredPeriods, year: y });
-      }
-    } else {
-      const p = availablePeriods.slice(-defaultNumPeriods);
-      setSelectedValues(p);
-      
-      if (viewMode === "week") {
-        setWeekViewSelection({ values: p, year: y });
-      } else if (viewMode === "month") {
-        setMonthViewSelection({ values: p, year: y });
-      } else if (viewMode === "quarter") {
-        setQuarterViewSelection({ values: p, year: y });
-      } else if (viewMode === "semester") {
-        setSemesterViewSelection({ values: p, year: y });
-      }
-    }
+    const newSelectedValues = availablePeriods.length > 0
+        ? [availablePeriods[availablePeriods.length - 1]]
+        : [];
+    
+    setSelectedValues(newSelectedValues);
+    setHasGlobalFilter(false);
   };
 
   const availablePeriodsForFilter =
@@ -648,20 +582,6 @@ export default function GraphEntrantsSortants({
     if (viewMode === "day" || !selectedYear) return;
     const newValues = allSelected ? [] : [...availablePeriodsForFilter];
     setSelectedValues(newValues);
-    
-    if (viewMode === "week") {
-      setWeekViewSelection({ values: newValues, year: selectedYear });
-      setWeekSelectionModifiedAt(Date.now());
-    } else if (viewMode === "month") {
-      setMonthViewSelection({ values: newValues, year: selectedYear });
-      setMonthSelectionModifiedAt(Date.now());
-    } else if (viewMode === "quarter") {
-      setQuarterViewSelection({ values: newValues, year: selectedYear });
-      setQuarterSelectionModifiedAt(Date.now());
-    } else if (viewMode === "semester") {
-      setSemesterViewSelection({ values: newValues, year: selectedYear });
-      setSemesterSelectionModifiedAt(Date.now());
-    }
     setHasGlobalFilter(false);
   };
 
@@ -669,20 +589,6 @@ export default function GraphEntrantsSortants({
     if (viewMode === "day") return;
     const newValues = selectedValues.includes(v) ? selectedValues.filter((x) => x !== v) : [...selectedValues, v].sort((a, b) => a - b);
     setSelectedValues(newValues);
-    
-    if (viewMode === "week") {
-      setWeekViewSelection({ values: newValues, year: selectedYear });
-      setWeekSelectionModifiedAt(Date.now());
-    } else if (viewMode === "month") {
-      setMonthViewSelection({ values: newValues, year: selectedYear });
-      setMonthSelectionModifiedAt(Date.now());
-    } else if (viewMode === "quarter") {
-      setQuarterViewSelection({ values: newValues, year: selectedYear });
-      setQuarterSelectionModifiedAt(Date.now());
-    } else if (viewMode === "semester") {
-      setSemesterViewSelection({ values: newValues, year: selectedYear });
-      setSemesterSelectionModifiedAt(Date.now());
-    }
     setHasGlobalFilter(false);
   };
 
@@ -704,7 +610,7 @@ export default function GraphEntrantsSortants({
     }
     const out = Array.from(accepts).filter((iso) => {
       const d = parseISO(iso);
-      return d && isWorkingDay(d) && !holidaySet.has(iso);
+      return d && isWorkingDay(d); // Garder uniquement les jours ouvrés (lun-ven)
     });
     return out.sort();
   }, [records, viewMode, selectedValues, selectedYear, holidaySet]);
@@ -715,7 +621,7 @@ export default function GraphEntrantsSortants({
     const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
     // init accumulateurs par clé (jour/sem/mois/trim/semestre)
-    const agg = new Map(); // key -> { stock, non_traite, traite, label, orderKey }
+    const agg = new Map(); // key -> { stock, non_traite, traite, label, orderKey, isHoliday }
 
     const makeKeyAndLabel = (r) => {
       if (viewMode === "day") {
@@ -732,15 +638,49 @@ export default function GraphEntrantsSortants({
     };
 
     const accepted = new Set(acceptedDatesISO);
+    
+    // NOUVEAU: Ajouter tous les jours sélectionnés, même ceux sans données
+    if (viewMode === "day") {
+      acceptedDatesISO.forEach(iso => {
+        const d = parseISO(iso);
+        if (!d) return;
+        
+        const { key, label, orderKey } = makeKeyAndLabel({ dateObj: d, dateISO: iso });
+        const isHoliday = holidaySet.has(iso);
+        
+        if (!agg.has(key)) {
+          agg.set(key, { 
+            stock: 0, 
+            non_traite: 0, 
+            traite: 0, 
+            label, 
+            orderKey,
+            isHoliday 
+          });
+        }
+      });
+    }
+    
     records.forEach((r) => {
       if (!accepted.has(r.dateISO)) return;          // filtre jours retenus
       if (viewMode !== "day" && r.year !== selectedYear) return; // sécurité
+      
       const { key, label, orderKey } = makeKeyAndLabel(r);
-      if (!agg.has(key)) agg.set(key, { stock: 0, non_traite: 0, traite: 0, label, orderKey });
+      const isHoliday = viewMode === "day" ? holidaySet.has(r.dateISO) : false;
+      
+      if (!agg.has(key)) agg.set(key, { stock: 0, non_traite: 0, traite: 0, label, orderKey, isHoliday });
       const slot = agg.get(key);
-      slot.stock      += r.stock      || 0;
-      slot.non_traite += r.non_traite || 0;
-      slot.traite     += r.traite     || 0;
+      
+      // MODIFIÉ: Si c'est un jour férié, on met les valeurs à 0
+      if (isHoliday) {
+        slot.stock = 0;
+        slot.non_traite = 0;
+        slot.traite = 0;
+      } else {
+        slot.stock      += r.stock      || 0;
+        slot.non_traite += r.non_traite || 0;
+        slot.traite     += r.traite     || 0;
+      }
     });
 
     const order = viewMode === "day"
@@ -748,12 +688,13 @@ export default function GraphEntrantsSortants({
       : (a, b) => a.orderKey - b.orderKey;
 
     return Array.from(agg.values()).sort(order);
-  }, [records, acceptedDatesISO, viewMode, selectedYear]);
+  }, [records, acceptedDatesISO, viewMode, selectedYear, holidaySet]);
 
   // Y max selon jeux visibles
   const maxVisible = useMemo(() => {
     let m = 0;
     chartRows.forEach((r) => {
+      if (r.isHoliday) return; // Ne pas compter les jours fériés pour le max
       if (visibleKeys.includes("stock"))      m = Math.max(m, r.stock);
       if (visibleKeys.includes("non_traite")) m = Math.max(m, r.non_traite);
       if (visibleKeys.includes("traite"))     m = Math.max(m, r.traite);
@@ -938,7 +879,7 @@ export default function GraphEntrantsSortants({
                   dateFormat="dd/MM/yyyy"
                   locale={fr}
                   inline
-                  filterDate={(d) => isWorkingDay(d) && !holidaySet.has(toISO(d))}
+                  filterDate={(d) => isWorkingDay(d)} // MODIFIÉ: Ne plus filtrer les fériés
                   calendarClassName="text-sm"
                   dayClassName={() => "text-xs"}
                   maxDate={new Date()}
@@ -1003,6 +944,7 @@ export default function GraphEntrantsSortants({
             )}
           </div>
         )}
+
         {/* Graphe (carte) */}
         <div className="relative flex-grow h-[350px] select-none" ref={chartContainerRef}>
           {errorText ? (
@@ -1040,17 +982,62 @@ export default function GraphEntrantsSortants({
                 <Tooltip />
                 {visibleKeys.includes("stock") && (
                   <Bar dataKey="stock" name="Stock de la veille" fill={COLORS[0]} radius={[6, 6, 0, 0]}>
-                    <LabelList dataKey="stock" position="top" style={labelStyle} formatter={(v) => (v > 0 ? v : "")} />
+                    <LabelList 
+                      dataKey={(entry) => entry.isHoliday ? "" : entry.stock} 
+                      position="top" 
+                      style={labelStyle} 
+                      formatter={(v) => (v > 0 ? v : "")} 
+                    />
                   </Bar>
                 )}
                 {visibleKeys.includes("non_traite") && (
                   <Bar dataKey="non_traite" name="Fermé hier" fill={COLORS[1]} radius={[6, 6, 0, 0]}>
-                    <LabelList dataKey="non_traite" position="top" style={labelStyle} formatter={(v) => (v > 0 ? v : "")} />
+                    <LabelList 
+                      dataKey={(entry) => entry.isHoliday ? "" : entry.non_traite} 
+                      position="top" 
+                      style={labelStyle} 
+                      formatter={(v) => (v > 0 ? v : "")} 
+                    />
                   </Bar>
                 )}
                 {visibleKeys.includes("traite") && (
                   <Bar dataKey="traite" name="Nouveaux cas" fill={COLORS[2]} radius={[6, 6, 0, 0]}>
-                    <LabelList dataKey="traite" position="top" style={labelStyle} formatter={(v) => (v > 0 ? v : "")} />
+                    <LabelList 
+                      dataKey={(entry) => entry.isHoliday ? "" : entry.traite} 
+                      position="top" 
+                      style={labelStyle} 
+                      formatter={(v) => (v > 0 ? v : "")} 
+                    />
+                  </Bar>
+                )}
+                
+                {/* NOUVEAU: Ajouter les labels "Day off" pour les jours fériés */}
+                {viewMode === "day" && (
+                  <Bar dataKey="stock" fill="transparent">
+                    <LabelList 
+                      content={(props) => {
+                        const { payload, x, y, width, height } = props;
+                        if (!payload || !payload.isHoliday) return null;
+                        
+                        const centerX = x + width / 2;
+                        const centerY = y + height / 2;
+                        
+                        return (
+                          <text
+                            x={centerX}
+                            y={centerY}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill="#ef4444"
+                            fontSize="10"
+                            fontWeight="bold"
+                            transform={`rotate(-45 ${centerX} ${centerY})`}
+                          >
+                            Day off
+                          </text>
+                        );
+                      }}
+                    />
                   </Bar>
                 )}
               </BarChart>
@@ -1179,17 +1166,64 @@ export default function GraphEntrantsSortants({
                   <Tooltip />
                   {visibleKeys.includes("stock") && (
                     <Bar dataKey="stock" fill={COLORS[0]} radius={[6, 6, 0, 0]}>
-                      <LabelList dataKey="stock" position="top" style={labelStyle} formatter={(v) => (v > 0 ? v : "")} />
+                      <LabelList 
+                        dataKey={(entry) => entry.isHoliday ? "" : entry.stock} 
+                        position="top" 
+                        style={labelStyle} 
+                        formatter={(v) => (v > 0 ? v : "")} 
+                      />
                     </Bar>
                   )}
                   {visibleKeys.includes("non_traite") && (
                     <Bar dataKey="non_traite" fill={COLORS[1]} radius={[6, 6, 0, 0]}>
-                      <LabelList dataKey="non_traite" position="top" style={labelStyle} formatter={(v) => (v > 0 ? v : "")} />
+                      <LabelList 
+                        dataKey={(entry) => entry.isHoliday ? "" : entry.non_traite} 
+                        position="top" 
+                        style={labelStyle} 
+                        formatter={(v) => (v > 0 ? v : "")} 
+                      />
                     </Bar>
                   )}
                   {visibleKeys.includes("traite") && (
                     <Bar dataKey="traite" fill={COLORS[2]} radius={[6, 6, 0, 0]}>
-                      <LabelList dataKey="traite" position="top" style={labelStyle} formatter={(v) => (v > 0 ? v : "")} />
+                      <LabelList 
+                        dataKey={(entry) => entry.isHoliday ? "" : entry.traite} 
+                        position="top" 
+                        style={labelStyle} 
+                        formatter={(v) => (v > 0 ? v : "")} 
+                      />
+                    </Bar>
+                  )}
+                  
+                  {/* NOUVEAU: Ajouter les labels "Day off" pour les jours fériés dans la modal */}
+                  {viewMode === "day" && chartRows.some(row => row.isHoliday) && (
+                    <Bar dataKey={() => 1} fill="transparent">
+                      <LabelList 
+                        content={(props) => {
+                          const { payload, x, y, width, height, index } = props;
+                          const rowData = chartRows[index];
+                          if (!rowData || !rowData.isHoliday) return null;
+                          
+                          const centerX = x + width / 2;
+                          const centerY = y + height / 2;
+                          
+                          return (
+                            <text
+                              key={`modal-dayoff-${index}`}
+                              x={centerX}
+                              y={centerY}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              fill="#ef4444"
+                              fontSize="11"
+                              fontWeight="bold"
+                              transform={`rotate(-45 ${centerX} ${centerY})`}
+                            >
+                              Day off
+                            </text>
+                          );
+                        }}
+                      />
                     </Bar>
                   )}
                 </BarChart>
@@ -1198,7 +1232,7 @@ export default function GraphEntrantsSortants({
               <p className="text-gray-500 italic grid place-items-center h-full">Aucune donnée à afficher.</p>
             )}
 
-            {/* Overlay d’ajout (modal) */}
+            {/* Overlay d'ajout (modal) */}
             {commentMode && (
               <div className="absolute inset-0 z-30 cursor-crosshair" onClick={(e) => openEditorAt(e.clientX, e.clientY, "modal")} />
             )}

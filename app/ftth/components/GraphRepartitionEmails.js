@@ -109,7 +109,7 @@ function getAllSemestersBetween(startDate, endDate) {
 
 export default function GraphRepartitionParType() {
   const apiUrl = "https://api.606510.xyz/dashboard/api/mail-ftth/data/";
-  const id = "repartition-par-type";
+  const id = "Répartition des E-mails par type";
   const dateField = "date";
   const title = "Répartition des e-mails par type";
   const COLORS = {

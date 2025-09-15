@@ -7,23 +7,22 @@ import { motion } from "framer-motion";
 export default function KPISPA({ onComponentReady }) {
   return (
     <motion.div
-      id="kpi-spa" // Changé de kpi-objectif à kpi-spa pour plus de clarté
-      className="visualisation relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
+      id="kpi-spa"
+      className="visualisation relative w-64"
       data-id="kpi-spa"
       data-graph-label="KPI SPA"
       whileHover={{ scale: 1.05 }}
     >
-      {/* Header */}
-      <div className="flex justify-between items-center mb-1">
-        <h3 className="text-gray-700 text-sm font-semibold">SPA</h3>
-        <Target className="text-blue-500 w-5 h-5" />
+      <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+        <div className="flex justify-between items-start w-full mb-2">
+          <h3 className="text-gray-800 text-lg font-medium">SPA</h3>
+          <Target className="text-gray-800 w-5 h-5" />
+        </div>
+                
+        <p className="text-3xl font-bold text-black">...</p>
+
+        <p className="text-xs text-gray-500 mt-1">...% (... unités)</p>
       </div>
-
-      {/* Valeur masquée */}
-      <p className="text-3xl font-bold text-gray-800">...</p>
-
-      {/* Commentaire neutre */}
-      <p className="text-sm text-gray-400">...% (... unités)</p>
     </motion.div>
   );
 }

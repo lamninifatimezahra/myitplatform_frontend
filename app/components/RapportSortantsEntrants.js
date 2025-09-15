@@ -252,7 +252,10 @@ export default function RapportSortantsEntrants({
   // Options graphiques
   lineTension = 0.4,
   enableFill = true,
-  showTooltipPercentage = true
+  showTooltipPercentage = true,
+  // ---- NOUVEAU : Options pour la ligne de moyenne ----
+  showAverageLine = true,
+  averageThreshold = 100
 }) {
   // Vérification de la présence de l'URL de l'API
   if (!apiUrl) {
@@ -288,6 +291,8 @@ export default function RapportSortantsEntrants({
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
   // ---- NOUVEAU : État pour les annotations ----
   const [annotations, setAnnotations] = useState([]);
+  // ---- NOUVEAU : État pour contrôler l'affichage de la ligne de moyenne ----
+  const [showAverage, setShowAverage] = useState(showAverageLine);
 
   // États pour mémoriser les sélections pour chaque vue
   const [dayViewSelection, setDayViewSelection] = useState({
@@ -1186,6 +1191,20 @@ export default function RapportSortantsEntrants({
     });
   }, [filteredPeriods, groupedData, calculateRatio, ratioMultiplier]);
 
+  // ---- NOUVEAU : Calcul de la moyenne des valeurs sélectionnées ----
+  const averageValue = useMemo(() => {
+    if (dataValues.length === 0) return 0;
+    const numericValues = dataValues.map(v => parseFloat(v) || 0);
+    const sum = numericValues.reduce((acc, val) => acc + val, 0);
+    return (sum / numericValues.length).toFixed(1);
+  }, [dataValues]);
+
+  // ---- NOUVEAU : Déterminer la couleur de la ligne de moyenne ----
+  const averageLineColor = useMemo(() => {
+    const avgValue = parseFloat(averageValue);
+    return avgValue >= averageThreshold ? "#22c55e" : "#6b7280"; // Vert si >= seuil, gris sinon
+  }, [averageValue, averageThreshold]);
+
   // Détermination du texte pour la période sélectionnée
   const periodeLabel = useMemo(() => {
     if (selectedValues.length === 0) {
@@ -1221,7 +1240,26 @@ export default function RapportSortantsEntrants({
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: { 
+          display: showAverage && dataValues.length > 0,
+          position: 'top',
+          labels: {
+            generateLabels: (chart) => {
+              const original = ChartJS.defaults.plugins.legend.labels.generateLabels(chart);
+              if (showAverage && dataValues.length > 0) {
+                original.push({
+                  text: `Moyenne: ${averageValue}${yAxisLabel}`,
+                  fillStyle: averageLineColor,
+                  strokeStyle: averageLineColor,
+                  lineWidth: 2,
+                  lineDash: [5, 5],
+                  pointStyle: 'line'
+                });
+              }
+              return original;
+            }
+          }
+        },
         tooltip: { 
           callbacks: { 
             label: (context) => `${context.raw}${showTooltipPercentage ? yAxisLabel : ""}` 
@@ -1241,12 +1279,11 @@ export default function RapportSortantsEntrants({
         },
       },
     };
-  }, [selectedValues, showTooltipPercentage, yAxisLabel]);
+  }, [selectedValues, showTooltipPercentage, yAxisLabel, showAverage, dataValues, averageValue, averageLineColor]);
 
   // Structure des données pour ChartJS
-  const chartData = {
-    labels,
-    datasets: [
+  const chartData = useMemo(() => {
+    const datasets = [
       {
         label: title,
         data: dataValues,
@@ -1254,9 +1291,36 @@ export default function RapportSortantsEntrants({
         backgroundColor: backgroundColor,
         fill: enableFill,
         tension: lineTension,
-      },
-    ],
-  };
+      }
+    ];
+
+    // ---- NOUVEAU : Ajouter la ligne de moyenne si activée ----
+if (showAverage && dataValues.length > 0) {
+  const avgValue = parseFloat(averageValue);
+  datasets.push({
+    label: `Moyenne`,
+    data: Array(dataValues.length).fill(avgValue),
+    borderColor: averageLineColor,
+    backgroundColor: 'transparent',
+    borderDash: [5, 5],
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    fill: false,
+    tension: 0,
+    // ---- AJOUTER CES LIGNES POUR MASQUER LES VALEURS ----
+    pointLabel: false,
+    datalabels: {
+      display: false
+    }
+  });
+}
+
+    return {
+      labels,
+      datasets
+    };
+  }, [labels, dataValues, title, lineColor, backgroundColor, enableFill, lineTension, showAverage, averageValue, averageLineColor]);
 
   if (loading) {
     return <p className="text-center text-gray-500">Chargement des données...</p>;
@@ -1309,6 +1373,12 @@ export default function RapportSortantsEntrants({
             <p className="text-sm text-gray-500">
               {viewMode !== "day" && selectedYear ? `Année : ${selectedYear} - ` : ''}
               {periodeLabel}
+              {/* ---- NOUVEAU : Affichage de la moyenne ---- */}
+              {showAverage && dataValues.length > 0 && (
+                <span className="ml-2 font-medium" style={{ color: averageLineColor }}>
+                  | Moyenne: {averageValue}{yAxisLabel}
+                </span>
+              )}
             </p>
           </div>
           <div className="flex gap-2 no-export">
@@ -1369,6 +1439,27 @@ export default function RapportSortantsEntrants({
                 >
                   Semestre
                 </button>
+              </div>
+              
+              {/* ---- NOUVEAU : Option pour activer/désactiver la ligne de moyenne ---- */}
+              <div className="mb-3 p-2 bg-gray-50 rounded">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="show-average"
+                    checked={showAverage}
+                    onChange={(e) => setShowAverage(e.target.checked)}
+                  />
+                  <label htmlFor="show-average" className="text-sm text-gray-600">
+                    Afficher la ligne de moyenne
+                  </label>
+                </div>
+                {showAverage && dataValues.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Moyenne actuelle: <span style={{ color: averageLineColor }}>{averageValue}{yAxisLabel}</span>
+                    {parseFloat(averageValue) >= averageThreshold ? " (≥ seuil)" : " (< seuil)"}
+                  </p>
+                )}
               </div>
               
               {viewMode === "day" ? (
@@ -1479,6 +1570,12 @@ export default function RapportSortantsEntrants({
               <p className="text-sm text-gray-500 mt-1">
                 {viewMode !== "day" && selectedYear ? `Année : ${selectedYear} - ` : ''}
                 {periodeLabel}
+                {/* ---- NOUVEAU : Affichage de la moyenne dans la modal ---- */}
+                {showAverage && dataValues.length > 0 && (
+                  <span className="ml-2 font-medium" style={{ color: averageLineColor }}>
+                    | Moyenne: {averageValue}{yAxisLabel}
+                  </span>
+                )}
               </p>
             </div>
             <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>

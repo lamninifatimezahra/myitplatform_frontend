@@ -76,7 +76,7 @@ export default function KPIBacklogJ1({
     return vals.reduce((a, b) => a + b, 0) / vals.length;
   };
 
-  // ---------- fetch (sans AbortController) ----------
+  // ---------- fetch ----------
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -121,73 +121,71 @@ export default function KPIBacklogJ1({
 
   const fmt = (n) => (Number.isFinite(n) ? n.toLocaleString("fr-FR") : "—");
 
-  // ---------- thème dynamique ----------
+  // ---------- logique couleur et labels ----------
   const isDanger = currentValue >= 100; // ≥100 rouge, sinon vert
-  const palette = isDanger
-    ? { bg: "#dc2626", fg: "#ffffff", fgSoft: "rgba(255,255,255,.92)", dot: "#7f1d1d" }
-    : { bg: "#059669", fg: "#ffffff", fgSoft: "rgba(255,255,255,.92)", dot: "#064e3b" };
-
   const hasFilter = !!(globalStartDate && globalEndDate);
   const displayTitle = hasFilter ? "Moyenne KPI" : "KPI du Jour";
+  
+  // Format des dates pour l'affichage
+  const formatDateRange = () => {
+    if (!hasFilter) return "Dernière valeur disponible";
+    // Format cohérent avec le filtrage
+    const startStr = globalStartDate instanceof Date ? 
+      globalStartDate.toISOString().slice(0, 10) : 
+      globalStartDate.toString().slice(0, 10);
+    const endStr = globalEndDate instanceof Date ? 
+      globalEndDate.toISOString().slice(0, 10) : 
+      globalEndDate.toString().slice(0, 10);
+    return `Du ${startStr} au ${endStr}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="visualisation relative w-64" data-id="kpi-backlog-j1">
+        <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+          <h3 className="text-gray-800 text-lg font-medium">{displayTitle}</h3>
+          <div className="flex items-center justify-center w-full mt-4">
+            <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="visualisation relative w-64" data-id="kpi-backlog-j1">
+        <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+          <h3 className="text-gray-800 text-lg font-medium">{displayTitle}</h3>
+          <p className="text-red-500 text-sm mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
       id="kpi-backlog-j1"
-      className="visualisation relative rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300 overflow-hidden min-h-[120px]"
+      className="visualisation relative w-64"
       data-id="kpi-backlog-j1"
       data-graph-label="KPI Backlog J-1"
       whileHover={{ scale: 1.05 }}
     >
-      {/* calque de fond qui recouvre 100% (bypass tout bg blanc global) */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 rounded-lg z-0 pointer-events-none"
-        style={{ backgroundColor: palette.bg }}
-      />
-
-      {/* contenu */}
-      <div className="relative z-10 flex flex-col h-full" style={{ color: palette.fg }}>
-        {/* Header (titre + plage + icône cible à droite) */}
-        <div className="flex justify-between items-center h-5">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold leading-none whitespace-nowrap">{displayTitle}</h3>
-            {hasFilter && (
-              <>
-                <span className="select-none leading-none" style={{ color: palette.fgSoft }}>{"------"}</span>
-                <span
-                  className="text-[12px] font-medium leading-none whitespace-nowrap"
-                  style={{ color: palette.fgSoft }}
-                >
-                  Du {toISO(globalStartDate)} au {toISO(globalEndDate)}
-                </span>
-              </>
-            )}
-          </div>
-          <BullseyeIcon color={palette.fgSoft} size={20} />
+      <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+        <div className="flex justify-between items-start w-full mb-2">
+          <h3 className="text-gray-800 text-lg font-medium">{displayTitle}</h3>
+          <BullseyeIcon color="#374151" size={20} />
         </div>
+        
+        <p className="text-xs text-gray-500 mb-1">{formatDateRange()}</p>
+        
+        <p className={`text-3xl font-bold ${isDanger ? 'text-red-600' : 'text-green-600'}`}>
+          {fmt(currentValue)}
+        </p>
 
-        {/* Zone centrale : valeur centrée + légère descente */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center translate-y-[4px] sm:translate-y-[6px]">
-            <p className="text-4xl sm:text-5xl font-bold leading-none tabular-nums tracking-tight">
-              {fmt(currentValue)}
-            </p>
-            <span
-              className="block text-lg leading-none mt-1 select-none"
-              style={{ color: palette.dot }}
-              aria-hidden="true"
-            >
-              .
-            </span>
-          </div>
-        </div>
-
-        {/* messages optionnels */}
-        {error ? (
-          <p className="mt-1 text-sm">{error}</p>
-        ) : dataHint ? (
-          <p className="mt-1 text-xs" style={{ color: palette.fgSoft }}>{dataHint}</p>
-        ) : null}
+        {dataHint && (
+          <p className="text-xs text-gray-500 mt-1">{dataHint}</p>
+        )}
       </div>
     </motion.div>
   );

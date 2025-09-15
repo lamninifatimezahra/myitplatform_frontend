@@ -10,7 +10,7 @@ import { GlobalFilterProvider } from "../components/GlobalFilterContext"; // Ass
 import KPIBacklogJ1 from "./components/KPIBacklogJ1";
 import KPIBacklogJ from "./components/KPIBacklogJ";
 import KPISPA from "./components/KPISPA";
-import KPIRules14Days from "./components/KPIRules14Days"; // << ajouté
+import KPIRules14Days from "./components/KPIRules14Days";
 import GraphVueEnsemble from "./components/GraphVueEnsemble";
 import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
 import GraphTopRegles from "./components/GraphTopRegles";
@@ -18,7 +18,6 @@ import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
 import GraphEntrantsSortants from "./components/GraphEntrantsSortants";
 import GraphTraitementEmails from "./components/GraphTraitementEmails";
 import GraphRepartitionEmails from "./components/GraphRepartitionEmails";
-import GraphTicketsItsSfr from "./components/GraphTicketsItsSfr";
 import NewsTickerReglesFTTH from "./components/NewsTickerReglesFTTH";
 import KpiTicketTraite from "../components/KPITicketTraite";
 import KpiReentrant from "../components/KpiReentrant";
@@ -36,6 +35,7 @@ import TicketsEnCoursTable from "../components/TicketsEncoursTable";
 import TranticiteCriticite from "../components/TranticiteCriticite";
 import NewsTickerRetard from "../components/NewsTickerRetard14";
 import SectionRail from "./components/SectionRail";
+import BacklogJ from "./components/GraphBacklogJ";
 
 // Configuration API
 const API_FTTH_TICKETING_BASE = "https://api.606510.xyz/dashboard/api";
@@ -52,9 +52,10 @@ export default function DashboardFTTH() {
   const [globalModifiedAt, setGlobalModifiedAt] = useState(0); // Timestamp pour forcer les mises à jour
 
   const handleGlobalFilter = (start, end) => {
+    // On s'assure de gérer les dates nulles correctement
     setGlobalStartDate(start ? new Date(start) : null);
     setGlobalEndDate(end ? new Date(end) : null);
-    setGlobalModifiedAt(Date.now());
+    setGlobalModifiedAt(Date.now()); // On met à jour le timestamp pour signaler un changement
   };
 
   // Conteneur scrollable + refs sections
@@ -77,7 +78,8 @@ export default function DashboardFTTH() {
     );
   }
 
-  // 2. Valeur du Provider pour le filtre global
+  // 2. On prépare l'objet `value` à passer au Provider.
+  // Il contient les dates de notre état local et la fonction pour les changer.
   const filterContextValue = {
     globalStartDate,
     globalEndDate,
@@ -86,6 +88,8 @@ export default function DashboardFTTH() {
   };
 
   return (
+    // 3. On passe notre état local au Provider via la prop `value`.
+    // C'est ici que la connexion est faite.
     <GlobalFilterProvider value={filterContextValue}>
       <div className="flex h-screen w-full overflow-hidden relative bg-gray-50">
         <button
@@ -98,14 +102,17 @@ export default function DashboardFTTH() {
         <Sidebar sidebarOpen={isSidebarOpen} setSidebarOpen={setIsSidebarOpen} />
 
         <div className="flex-1 flex flex-col relative">
-          {/* Header */}
+          {/* Le Header continue de mettre à jour l'état local de cette page via la prop */}
           <Header onGlobalFilter={handleGlobalFilter} setSidebarOpen={setIsSidebarOpen} />
 
           <main
             ref={mainRef}
             className="flex-1 p-6 space-y-6 overflow-y-auto relative z-10"
           >
-            {/* Titre + ticker manuel */}
+            {/* 
+              Tous les composants ci-dessous liront maintenant les bonnes dates 
+              car le Provider a été mis à jour avec les valeurs de cette page.
+            */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-1 h-8 bg-sky-500 rounded-full"></div>
               <h2 className="text-2xl font-bold text-gray-800">Manuel FTTH</h2>
@@ -113,13 +120,11 @@ export default function DashboardFTTH() {
             <div className="w-full overflow-hidden border-b border-gray-200 bg-gray-100 rounded-md">
               <NewsTickerReglesFTTH />
             </div>
-
-            {/* Ligne des KPI (4 colonnes en lg) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <KPIBacklogJ1 />
               <KPIBacklogJ />
               <KPISPA />
-              <KPIRules14Days /> {/* << nouvelle carte KPI */}
+              <KPIRules14Days />
             </div>
 
             {/* ======= SECTION : MANUEL ======= */}
@@ -154,13 +159,13 @@ export default function DashboardFTTH() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <GroupedBarChart apiUrl={API_FTTH_TICKETING_DATA} />
+                  <BacklogJ/>
                   <TranticiteCriticite apiUrl={API_FTTH_TICKETING_DATA} />
                   <SlaAnciennete apiUrl={API_FTTH_TICKETING_DATA} />
                   <VolumeTicketsDivision apiUrl={API_FTTH_TICKETING_DATA} />
                   <RapportSortantsEntrants apiUrl={API_FTTH_TICKETING_DATA} />
                   <TauxReentrants apiUrl={API_FTTH_TICKETING_DATA} />
                   <VolumeReentrant apiUrl={API_FTTH_TICKETING_DATA} />
-                  <GraphTicketsItsSfr />
                 </div>
                 <TicketsReentrantsTable apiUrl={API_FTTH_TICKETING_DATA} commentApiUrl={API_FTTH_COMMENT_UPDATE} tableType="ftth" />
                 <TicketsEnCoursTable

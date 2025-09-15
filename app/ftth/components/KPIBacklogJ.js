@@ -49,43 +49,43 @@ export default function KPIBacklogJ({ onComponentReady }) {
     fetchStockData();
   }, [isReady, onComponentReady]);
 
+  if (loading) {
+    return (
+      <div className="visualisation relative w-64" data-id="kpi-backlog-j">
+        <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+          <div className="flex justify-center items-center w-full h-24">
+            <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
-      id="kpi-backlog-j"
-      className="visualisation relative kpi-card bg-white rounded-lg shadow-md p-4 hover:shadow-xl transition-all duration-300"
+      className="visualisation relative w-64"
       data-id="kpi-backlog-j"
       data-graph-label="KPI Backlog J"
       whileHover={{ scale: 1.05 }}
     >
-      {/* Chargement */}
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 backdrop-blur-sm z-50 rounded-lg">
-          <div className="flex flex-col items-center">
-            <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-            <p className="mt-2 text-sm text-blue-700 font-semibold">
-              Chargement <span className="text-blue-500">MyIT</span>...
-            </p>
-          </div>
+      <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+        <div className="flex justify-between items-start w-full mb-2">
+          <h3 className="text-gray-800 text-lg font-medium">Backlog FTTH J</h3>
+          {isPositive ? (
+            <TrendingUp className="text-gray-800 w-5 h-5" />
+          ) : (
+            <TrendingDown className="text-gray-800 w-5 h-5" />
+          )}
         </div>
-      )}
-
-      {/* Contenu */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-gray-700 text-sm font-semibold">Backlog FTTH J</h3>
-        {isPositive ? (
-          <TrendingUp className="text-gray-400 w-5 h-5" />
-        ) : (
-          <TrendingDown className="text-gray-400 w-5 h-5" />
-        )}
+                
+        <p className="text-3xl font-bold text-black">{todayValue}</p>
+        
+        <p className="text-xs text-gray-500 mt-1">
+          {isPositive ? "+" : "-"}
+          {percent}% ({isPositive ? "+" : "-"}
+          {diff} commandes)
+        </p>
       </div>
-
-      <p className="text-3xl font-bold">{todayValue}</p>
-
-      <p className="text-sm text-gray-400">
-        {isPositive ? "+" : "-"}
-        {percent}% ({isPositive ? "+" : "-"}
-        {diff} commandes)
-      </p>
     </motion.div>
   );
 }

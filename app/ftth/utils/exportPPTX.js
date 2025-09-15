@@ -41,21 +41,63 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
     dateRangeText = `Période : ${weekStr} | Du ${start.toLocaleDateString()} au ${end.toLocaleDateString()}`;
   }
 
-  // Tableau fixe des KPI à exclure des slides (seront dans la slide KPI)
-  const fixedKpiLabels = [
-    "KPI Backlog J",
-    "KPI Backlog J1"
-  ];
-  const normalizedFixedLabels = fixedKpiLabels.map(label => label.trim().toLowerCase());
+  // Fonction helper pour trouver une image par son ID
+  function findImageById(id) {
+    return imageList.find(item => {
+      const currentId = (item.id || item.label || "").toString().toLowerCase();
+      const currentLabel = (item.label || item.id || "").toString().toLowerCase();
+      const searchId = id.toLowerCase();
+      
+      // Recherche exacte par ID ou label
+      return currentId === searchId || currentLabel === searchId;
+    });
+  }
 
-  // Extraction des images graphiques qui ne sont pas des KPI
-  const graphImagesList = imageList.filter(item => {
-    const currentLabel = (item.label != null ? item.label : item.id);
-    return !normalizedFixedLabels.includes(currentLabel.trim().toLowerCase());
-  });
-
-  console.log("DEBUG FTTH PPT: Graphiques filtrés (sans KPI) :", graphImagesList);
-
+  // Définition des sections et leurs composants
+  const sections = {
+    manuel: {
+      title: "Manuel FTTH",
+      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-manuel-7j"],
+      singles: [
+        "vue-ensemble-backlog",
+        "repartition-manuelle", 
+        "top-5-regles",
+        "top-regles-par-jour",
+        "graph-entrants-sortants"
+      ]
+    },
+    ticketing: {
+      title: "Ticketing FTTH",
+      kpis: [
+        "KPI Tickets Entrants",
+        "KPI Tickets Traités",
+        "KPI Tickets Réentrants",
+        "KPI Tickets en Cours",
+        "KPI Tickets en Cours +Semaine"
+      ],
+      singles: [
+        "Tickets Entrants/Sortants",
+        "Backlog J",
+        "Transité / Criticité",
+        "Ancienneté des Tickets Traités",
+        "Volume des Tickets par Division",
+        "Rapport Sortants/Entrants",
+        "Taux des Réentrants",
+        "Volume des Réentrants"
+      ],
+      noComments: [
+        "Détail des Réitérations des Tickets",
+        "Tickets en cours - Plus de une semaine"
+      ]
+    },
+    mailing: {
+      title: "Mailing FTTH",
+      singles: [
+        "Traitement des E-mails",
+        "Répartition des E-mails par type"
+      ]
+    }
+  };
   // Slide 1 – Intro
   const cover = pptx.addSlide();
   cover.addImage({ path: introBackground, x: 0, y: 0, w: "100%", h: "100%" });
@@ -74,40 +116,139 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
     x: 7.0, y: 5.2, w: 2.8, h: 0.3, align: "right", fontSize: 10, color: "D0D0D0"
   });
 
-  // Slide 2 – KPI Title
-  const kpiTitle = pptx.addSlide();
-  kpiTitle.addImage({ path: kpiTitleBackground, x: 0, y: 0, w: "100%", h: "100%" });
-  kpiTitle.addText("KPIs Opérationnels", {
-    x: 1, y: 2.3, w: 9, h: 1, align: "center", fontSize: 60, bold: true, color: "FFFFFF"
-  });
+  // Fonction pour créer une slide de titre de section
+  function createSectionTitleSlide(sectionTitle) {
+    const titleSlide = pptx.addSlide();
+    titleSlide.addImage({ path: kpiTitleBackground, x: 0, y: 0, w: "100%", h: "100%" });
+    titleSlide.addText(sectionTitle, {
+      x: 1, y: 2.3, w: 9, h: 1, align: "center", fontSize: 60, bold: true, color: "FFFFFF"
+    });
+  }
 
-  // Fonction pour créer une slide à partir d'une image capturée
-  function createSlideFromImage(imageItem, defaultTitle = "") {
+  // Fonction pour créer une slide avec plusieurs KPI (inspirée du code Hispeed)
+  function createMultiKpiSlide(kpiIds, sectionTitle) {
     const slide = pptx.addSlide();
     slide.addImage({ path: contentBackground, x: 0, y: 0, w: "100%", h: "100%" });
     
-    const title = imageItem.label || imageItem.id || defaultTitle;
-    
-    // Titre de la slide
-    slide.addText(title, {
-      x: 0.5, y: 0.7, w: 9.0, h: 0.4, 
+    const titleY = 0.7;
+    slide.addText(`KPIs ${sectionTitle}`, {
+      x: 0.5, y: titleY, w: 9.0, h: 0.4, 
       fontSize: 18, bold: true, color: blue, align: "left"
     });
 
-    // Image du graphique
-    slide.addShape(pptx.ShapeType.rect, {
-      x: 0.7, y: 1.4, w: 5.2, h: 3.1,
-      fill: { color: "#ffffff" }, line: { color: "#d1d5db", width: 1 }
-    });
-    
-    slide.addImage({ 
-      data: imageItem.image, 
-      x: 0.8, y: 1.5, w: 5.0, h: 2.9 
+    if (dateRangeText) { 
+      slide.addText(dateRangeText.split(': ')[1] || dateRangeText, { 
+        x: 6.5, y: titleY + 0.1, w: 3, h: 0.25, 
+        fontSize: 9, color: "#4B5563", align: "right" 
+      }); 
+    }
+
+    // Zone de contenu centrée pour les KPIs (comme dans Hispeed)
+    const contentStartY = titleY + 0.6; 
+    const contentEndY = 5.2;
+    const contentStartX = 0.5; 
+    const contentEndX = 9.5;
+    const availableWidth = Math.max(0.1, contentEndX - contentStartX);
+    const availableHeight = Math.max(0.1, contentEndY - contentStartY);
+
+    // Zone KPI centrée (layout 2/3 pour KPIs, 1/3 pour commentaires)
+    const kpiContainerWidth = availableWidth * 2/3 - 0.1;
+    const kpiContainerHeight = availableHeight - 0.2;
+    const kpiContainerX = contentStartX;
+    const kpiContainerY = contentStartY;
+    const kpiStartX = kpiContainerX + 0.2;
+    const kpiStartY = kpiContainerY + 0.15;
+
+    // Fonction createKPI (inspirée du code Hispeed)
+    const createKPI = (kpiImage, posX, posY, kpiWidth, kpiHeight) => {
+      const kpiBoxW = kpiWidth; 
+      const kpiBoxH = kpiHeight;
+      const kpiTitleH = 0.3; 
+      const kpiImgH = kpiBoxH - kpiTitleH - 0.15;
+      const kpiLabel = kpiImage?.label || kpiImage?.id || "KPI Inconnu"; 
+      const kpiImageData = kpiImage?.image;
+      
+      // Boîte principale du KPI
+      slide.addShape(pptx.ShapeType.rect, { 
+        x: posX, y: posY, w: kpiBoxW, h: kpiBoxH, 
+        fill: { color: "#ffffff" }, 
+        line: { color: "#dddddd", width: 1 } 
+      });
+      
+      // En-tête colorée du KPI
+      slide.addShape(pptx.ShapeType.rect, { 
+        x: posX, y: posY, w: kpiBoxW, h: kpiTitleH, 
+        fill: { color: kpiImageData ? "#00AEEF" : "#6C757D" } 
+      });
+      
+      // Titre du KPI
+      slide.addText(kpiLabel, { 
+        x: posX, y: posY + 0.02, w: kpiBoxW, h: kpiTitleH, 
+        align: "center", fontSize: 8, bold: true, color: "#ffffff" 
+      });
+      
+      // Image ou placeholder
+      if (kpiImageData) { 
+        slide.addImage({ 
+          data: kpiImageData, 
+          x: posX + 0.1, y: posY + kpiTitleH + 0.1, 
+          w: kpiBoxW - 0.2, h: kpiImgH 
+        }); 
+      } else { 
+        slide.addText("⚠️ Image N/D", { 
+          x: posX + 0.1, y: posY + kpiTitleH + 0.1, 
+          w: kpiBoxW - 0.2, h: kpiImgH, 
+          align: "center", valign: "middle", 
+          fontSize: 8, color: "#ff0000", bold: true 
+        }); 
+      }
+    };
+
+    // Disposition des KPIs (inspirée du layout Hispeed)
+    const kpiWidth = 1.6; 
+    const kpiHeight = 1.2;
+    const kpiMarginX = 0.1;
+    const kpiMarginY = 0.1;
+
+    // Calcul pour centrer les KPIs dans leur zone
+    const totalKpiWidth = 3 * kpiWidth + 2 * kpiMarginX; 
+    const centerOffsetX = Math.max(0, (kpiContainerWidth - totalKpiWidth) / 2);
+
+    // Récupération des images KPI
+    const kpiImages = kpiIds.map(kpiId => findImageById(kpiId));
+
+    // Positions des KPIs (layout similaire à Hispeed: 2 en haut, 3 en bas)
+    const kpiPositions = [
+      // Première ligne - 2 KPIs centrés
+      { index: 0, x: kpiStartX + centerOffsetX + (kpiWidth + kpiMarginX) / 2, y: kpiStartY },
+      { index: 1, x: kpiStartX + centerOffsetX + (kpiWidth + kpiMarginX) / 2 + kpiWidth + kpiMarginX, y: kpiStartY },
+      
+      // Deuxième ligne - 3 KPIs centrés
+      { index: 2, x: kpiStartX + centerOffsetX, y: kpiStartY + kpiHeight + kpiMarginY },
+      { index: 3, x: kpiStartX + centerOffsetX + kpiWidth + kpiMarginX, y: kpiStartY + kpiHeight + kpiMarginY },
+      { index: 4, x: kpiStartX + centerOffsetX + 2 * (kpiWidth + kpiMarginX), y: kpiStartY + kpiHeight + kpiMarginY }
+    ];
+
+    // Créer chaque KPI
+    kpiPositions.forEach(pos => {
+      if (pos.index < kpiImages.length) {
+        const kpiData = kpiImages[pos.index];
+        console.log(`Création KPI index ${pos.index}:`, kpiData ? kpiData.label || kpiData.id : "Non trouvé");
+        
+        if (typeof pos.x === 'number' && typeof pos.y === 'number' && !isNaN(pos.x) && !isNaN(pos.y)) {
+          createKPI(kpiData, pos.x, pos.y, kpiWidth, kpiHeight);
+        } else {
+          console.error(`Coordonnées invalides pour KPI index ${pos.index}: x=${pos.x}, y=${pos.y}`);
+        }
+      }
     });
 
-    // Zone de commentaire
+    // Zone de commentaire (à droite, comme dans le layout original)
+    const commentStartX = kpiContainerX + kpiContainerWidth + 0.2;
+    const commentWidth = availableWidth - kpiContainerWidth - 0.3;
+    
     slide.addShape(pptx.ShapeType.roundRect, {
-      x: 6.0, y: 1.4, w: 3.0, h: 3.2,
+      x: commentStartX, y: kpiContainerY, w: commentWidth, h: kpiContainerHeight,
       fill: { color: "#f9fafb" },
       line: { color: "#DDEEFF", width: 1 },
       shadow: { type: "outer", blur: 1, offset: 1, angle: 45, color: "E0E0E0" }
@@ -118,21 +259,113 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
       { text: "• ", options: { fontSize: 11, color: "#4B5563" } },
       { text: "[Aucune observation ajoutée]", options: { fontSize: 11, color: "#4B5563" } }
     ], {
-      x: 6.2, y: 1.9, w: 2.6, h: 2.6, valign: "top"
+      x: commentStartX + 0.2, y: kpiContainerY + 0.5, 
+      w: commentWidth - 0.4, h: kpiContainerHeight - 1, 
+      valign: "top"
+    });
+  }
+
+  // Fonction pour créer une slide standard
+  function createSingleSlide(imageId, showComments = true) {
+    const imageItem = findImageById(imageId);
+    if (!imageItem) {
+      console.warn(`Image non trouvée pour l'ID: ${imageId}`);
+      return;
+    }
+
+    const slide = pptx.addSlide();
+    slide.addImage({ path: contentBackground, x: 0, y: 0, w: "100%", h: "100%" });
+    
+    const title = imageItem.label || imageItem.id || imageId;
+    
+    // Titre de la slide
+    slide.addText(title, {
+      x: 0.5, y: 0.7, w: 9.0, h: 0.4, 
+      fontSize: 18, bold: true, color: blue, align: "left"
     });
 
-    // Affichage de la plage de dates sous le graphe
-    if (dateRangeText) {
-      slide.addText(dateRangeText, {
-        x: 0.7, y: 4.7, w: 5.2, h: 0.4,
-        align: "center", fontSize: 12, color: "#6b7280"
+    if (showComments) {
+      // Image du graphique (avec commentaires)
+      slide.addShape(pptx.ShapeType.rect, {
+        x: 0.7, y: 1.4, w: 5.2, h: 3.1,
+        fill: { color: "#ffffff" }, line: { color: "#d1d5db", width: 1 }
       });
+      
+      slide.addImage({ 
+        data: imageItem.image, 
+        x: 0.8, y: 1.5, w: 5.0, h: 2.9 
+      });
+
+      // Zone de commentaire
+      slide.addShape(pptx.ShapeType.roundRect, {
+        x: 6.0, y: 1.4, w: 3.0, h: 3.2,
+        fill: { color: "#f9fafb" },
+        line: { color: "#DDEEFF", width: 1 },
+        shadow: { type: "outer", blur: 1, offset: 1, angle: 45, color: "E0E0E0" }
+      });
+
+      slide.addText([
+        { text: "Observations clés:", options: { fontSize: 11, color: blue, bold: true, breakLine: true } },
+        { text: "• ", options: { fontSize: 11, color: "#4B5563" } },
+        { text: "[Aucune observation ajoutée]", options: { fontSize: 11, color: "#4B5563" } }
+      ], {
+        x: 6.2, y: 1.9, w: 2.6, h: 2.6, valign: "top"
+      });
+
+      // Affichage de la plage de dates
+      if (dateRangeText) {
+        slide.addText(dateRangeText, {
+          x: 0.7, y: 4.7, w: 5.2, h: 0.4,
+          align: "center", fontSize: 12, color: "#6b7280"
+        });
+      }
+    } else {
+      // Image du graphique (sans commentaires, pleine largeur)
+      slide.addShape(pptx.ShapeType.rect, {
+        x: 0.7, y: 1.4, w: 8.5, h: 3.1,
+        fill: { color: "#ffffff" }, line: { color: "#d1d5db", width: 1 }
+      });
+      
+      slide.addImage({ 
+        data: imageItem.image, 
+        x: 0.8, y: 1.5, w: 8.3, h: 2.9 
+      });
+
+      // Affichage de la plage de dates
+      if (dateRangeText) {
+        slide.addText(dateRangeText, {
+          x: 0.7, y: 4.7, w: 8.5, h: 0.4,
+          align: "center", fontSize: 12, color: "#6b7280"
+        });
+      }
     }
   }
 
-  // Créer les slides pour tous les graphiques (pas les KPI)
-  graphImagesList.forEach(imageItem => {
-    createSlideFromImage(imageItem);
+  // Génération des sections
+  let sectionCounter = 1;
+  Object.values(sections).forEach(section => {
+    // Slide de titre de section
+    createSectionTitleSlide(section.title, sectionCounter);
+    sectionCounter++;
+
+    // Slide des KPIs si elle existe
+    if (section.kpis && section.kpis.length > 0) {
+      createMultiKpiSlide(section.kpis, section.title);
+    }
+
+    // Slides individuelles
+    if (section.singles) {
+      section.singles.forEach(imageId => {
+        createSingleSlide(imageId, true);
+      });
+    }
+
+    // Slides sans commentaires
+    if (section.noComments) {
+      section.noComments.forEach(imageId => {
+        createSingleSlide(imageId, false);
+      });
+    }
   });
 
   // Slides fixes du template FTTH

@@ -56,74 +56,109 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
       </p>`;
   }
 
-  // Tableau fixe des KPI à inclure dans tous les compte-rendus FTTH
-  const fixedKpiLabels = [
-    "KPI Backlog J",
-    "KPI Backlog J-1",
-    "KPI Volume Entrant",
-    "KPI Volume Sortant",
-    "KPI Taux de Traitement"
-  ];
-
-  // Création d'une version normalisée des labels (trim + lowercase)
-  const normalizedFixedLabels = fixedKpiLabels.map(label => label.trim().toLowerCase());
-
-  // Extraction des images KPI depuis l'imageList en utilisant item.label si disponible sinon item.id
-  const kpiImages = fixedKpiLabels.map(label => {
-    const normalizedLabel = label.trim().toLowerCase();
-    const found = imageList.find(item => {
-      // Utiliser label si présent, sinon id
-      const currentLabel = (item.label != null ? item.label : item.id);
-      return currentLabel.trim().toLowerCase() === normalizedLabel;
+  // Fonction helper pour trouver une image par son ID (même logique que PPTX)
+  function findImageById(id) {
+    return imageList.find(item => {
+      const currentId = (item.id || item.label || "").toString().toLowerCase();
+      const currentLabel = (item.label || item.id || "").toString().toLowerCase();
+      const searchId = id.toLowerCase();
+      
+      // Recherche exacte par ID ou label
+      return currentId === searchId || currentLabel === searchId;
     });
-    return found ? found : { label, image: null };
-  });
-
-  // Extraction des images graphiques qui ne font pas partie des KPI fixes
-  const graphImagesList = imageList.filter(item => {
-    const currentLabel = (item.label != null ? item.label : item.id);
-    return !normalizedFixedLabels.includes(currentLabel.trim().toLowerCase());
-  });
-
-  // Disposition des KPI - strictement 3 par ligne pour FTTH aussi
-  let kpiHtml = '';
-  const numRows = Math.ceil(kpiImages.length / 3);
-  
-  for (let row = 0; row < numRows; row++) {
-    kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
-    
-    for (let col = 0; col < 3; col++) {
-      const index = row * 3 + col;
-      if (index < kpiImages.length) {
-        const kpi = kpiImages[index];
-        const imageHtml = kpi.image
-          ? `<img src="${kpi.image}" width="200" height="120" style="width:200px; height:120px; object-fit:contain;" />`
-          : `<div style="width:200px; height:120px; border:1px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center;">N/A</div>`;
-          
-        kpiHtml += `
-          <td width="33.33%" align="center" valign="middle" style="padding:5pt;">
-            ${imageHtml}
-          </td>
-        `;
-      } else {
-        // Cellule vide pour maintenir 3 colonnes
-        kpiHtml += '<td width="33.33%"></td>';
-      }
-    }
-    
-    kpiHtml += '</tr></table>';
   }
 
-  // Génération des pages graphiques avec une page complète par graphique
-  let graphPagesHtml = '';
-  
-  // Traiter chaque graphique individuellement (une page par graphique)
-  graphImagesList.forEach((item, index) => {
-    const currentLabel = item.label != null ? item.label : item.id;
+  // Définition des sections et leurs composants (exactement comme dans PPTX)
+  const sections = {
+    manuel: {
+      title: "Manuel FTTH",
+      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-manuel-7j"],
+      singles: [
+        "vue-ensemble-backlog",
+        "repartition-manuelle", 
+        "top-5-regles",
+        "top-regles-par-jour",
+        "graph-entrants-sortants"
+      ]
+    },
+    ticketing: {
+      title: "Ticketing FTTH",
+      kpis: [
+        "KPI Tickets Entrants",
+        "KPI Tickets Traités",
+        "KPI Tickets Réentrants",
+        "KPI Tickets en Cours",
+        "KPI Tickets en Cours +Semaine"
+      ],
+      singles: [
+        "Tickets Entrants/Sortants",
+        "Backlog J",
+        "Transité / Criticité",
+        "Ancienneté des Tickets Traités",
+        "Volume des Tickets par Division",
+        "Rapport Sortants/Entrants",
+        "Taux des Réentrants",
+        "Volume des Réentrants"
+      ],
+      noComments: [
+        "Détail des Réitérations des Tickets",
+        "Tickets en cours - Plus de une semaine"
+      ]
+    },
+    mailing: {
+      title: "Mailing FTTH",
+      singles: [
+        "Traitement des E-mails",
+        "Répartition des E-mails par type"
+      ]
+    }
+  };
+
+  // Fonction pour générer le HTML des KPI d'une section
+  function generateKpiSectionHtml(kpiIds, sectionTitle) {
+    if (!kpiIds || kpiIds.length === 0) return '';
+
+    // Récupération des images KPI
+    const kpiImages = kpiIds.map(kpiId => {
+      const found = findImageById(kpiId);
+      return found ? found : { label: kpiId, image: null };
+    });
+
+    // Disposition des KPI - 3 par ligne
+    let kpiHtml = '';
+    const numRows = Math.ceil(kpiImages.length / 3);
     
-    // Forcer un saut de page pour chaque nouveau graphique
-    graphPagesHtml += `
-      <div style="page-break-before: always; page-break-after: always; height: 26cm; overflow: hidden; display: block;">
+    for (let row = 0; row < numRows; row++) {
+      kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8pt;"><tr>';
+      
+      for (let col = 0; col < 3; col++) {
+        const index = row * 3 + col;
+        if (index < kpiImages.length) {
+          const kpi = kpiImages[index];
+          const kpiLabel = kpi.label || kpi.id || "KPI Inconnu";
+          const imageHtml = kpi.image
+            ? `<img src="${kpi.image}" width="200" height="120" style="width:200px; height:120px; object-fit:contain;" />`
+            : `<div style="width:200px; height:120px; border:1px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:10pt;">KPI N/A<br/>${kpiLabel}</div>`;
+            
+          kpiHtml += `
+            <td width="33.33%" align="center" valign="middle" style="padding:5pt;">
+              <div style="text-align:center; margin-bottom:4pt;">
+                <strong style="font-size:9pt; color:#004aad;">${kpiLabel}</strong>
+              </div>
+              ${imageHtml}
+            </td>
+          `;
+        } else {
+          // Cellule vide pour maintenir 3 colonnes
+          kpiHtml += '<td width="33.33%"></td>';
+        }
+      }
+      
+      kpiHtml += '</tr></table>';
+    }
+
+    return `
+      <div style="page-break-after: always; height: 26cm; overflow: hidden; display: block;">
         <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm;">
           <tr><td style="padding:14pt 24pt; vertical-align: top;">
             <table class="header-logos"><tr>
@@ -132,14 +167,12 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
             </tr></table>
             <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
             ${periodLine}
-            <p class="subtitle">📊 ${currentLabel}</p>
-            <div style="margin-top:4pt; text-align:center;">
-              <div style="margin-bottom:6pt;">
-                <img src="${item.image}" width="700" height="500" style="width:700px; height:500px; object-fit:contain; display:block; margin:0 auto;" />
-              </div>
+            <p class="subtitle">📊 KPIs ${sectionTitle}</p>
+            <div style="margin-top:10pt;">
+              ${kpiHtml}
             </div>
             <div class="comment-block" style="margin-top:8pt; min-height: 100px;">
-              <div class="comment-block-title">💬 Votre commentaire</div>
+              <div class="comment-block-title">💬 Votre commentaire sur les KPIs</div>
               <div class="comment-text" style="min-height: 100px; padding-top: 10px; padding-bottom: 10px;">
                 ___________________________________________<br/>
                 ___________________________________________<br/>
@@ -152,7 +185,121 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         </table>
       </div>
     `;
+  }
+
+  // Fonction pour générer le HTML d'un graphique individuel
+  function generateSingleGraphHtml(imageId, showComments = true) {
+    const imageItem = findImageById(imageId);
+    if (!imageItem) {
+      console.warn(`Image non trouvée pour l'ID: ${imageId}`);
+      return '';
+    }
+
+    const title = imageItem.label || imageItem.id || imageId;
+    const commentSection = showComments ? `
+      <div class="comment-block" style="margin-top:8pt; min-height: 100px;">
+        <div class="comment-block-title">💬 Votre commentaire</div>
+        <div class="comment-text" style="min-height: 100px; padding-top: 10px; padding-bottom: 10px;">
+          ___________________________________________<br/>
+          ___________________________________________<br/>
+          ___________________________________________<br/>
+          ___________________________________________<br/>
+          ___________________________________________<br/>
+        </div>
+      </div>
+    ` : '';
+
+    return `
+      <div style="page-break-before: always; page-break-after: always; height: 26cm; overflow: hidden; display: block;">
+        <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm;">
+          <tr><td style="padding:14pt 24pt; vertical-align: top;">
+            <table class="header-logos"><tr>
+              <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
+              <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+            </tr></table>
+            <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
+            ${periodLine}
+            <p class="subtitle">📊 ${title}</p>
+            <div style="margin-top:4pt; text-align:center;">
+              <div style="margin-bottom:6pt;">
+                <img src="${imageItem.image}" width="700" height="500" style="width:700px; height:500px; object-fit:contain; display:block; margin:0 auto;" />
+              </div>
+            </div>
+            ${commentSection}
+          </td></tr>
+        </table>
+      </div>
+    `;
+  }
+
+  // Génération du contenu par sections
+  let sectionsHtml = '';
+
+  Object.values(sections).forEach(section => {
+    // Page de titre de section
+    sectionsHtml += `
+      <div style="page-break-after: always; height: 26cm; overflow: hidden; display: block;">
+        <table style="width:99.8%; border:2.8pt solid #004aad; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+          <tr><td style="padding:14pt 24pt; vertical-align: middle; text-align: center;">
+            <h1 style="font-size:48pt; font-weight:bold; color:#ffffff; margin:0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+              ${section.title}
+            </h1>
+          </td></tr>
+        </table>
+      </div>
+    `;
+
+    // Page des KPIs si elle existe
+    if (section.kpis && section.kpis.length > 0) {
+      sectionsHtml += generateKpiSectionHtml(section.kpis, section.title);
+    }
+
+    // Pages des graphiques individuels avec commentaires
+    if (section.singles) {
+      section.singles.forEach(imageId => {
+        sectionsHtml += generateSingleGraphHtml(imageId, true);
+      });
+    }
+
+    // Pages des graphiques sans commentaires
+    if (section.noComments) {
+      section.noComments.forEach(imageId => {
+        sectionsHtml += generateSingleGraphHtml(imageId, false);
+      });
+    }
   });
+
+  // Page d'introduction/couverture
+  const coverHtml = `
+    <div style="page-break-after: always; height: 30cm; overflow: hidden; display: block;">
+      <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 35cm; max-height: 35cm; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+        <tr><td style="padding:14pt 24pt; vertical-align: top;">
+          <table class="header-logos"><tr>
+            <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
+            <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+          </tr></table>
+          <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
+          
+          <div style="text-align:center; margin-top:60pt;">
+            <h1 style="font-size:36pt; font-weight:bold; color:#004aad; margin:20pt 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
+              Comité Opérationnel Bimensuel<br/>
+              EA FTTH
+            </h1>
+            ${periodLine}
+            
+            <div style="margin-top:40pt; padding:20pt; background:#ffffff; border-radius:15pt; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              <h2 style="font-size:16pt; color:#1f2937; margin-bottom:15pt;">📋 Sections du rapport :</h2>
+              <ul style="text-align:left; font-size:14pt; color:#4b5563; line-height:1.8; list-style:none; padding:0;">
+                <li style="margin:8pt 0;">🔧 <strong>Manuel FTTH</strong> - KPIs et analyses du traitement manuel</li>
+                <li style="margin:8pt 0;">🎫 <strong>Ticketing FTTH</strong> - Gestion et suivi des tickets</li>
+                <li style="margin:8pt 0;">📧 <strong>Mailing FTTH</strong> - Traitement des e-mails</li>
+              </ul>
+            </div>
+          </div>
+        </td></tr>
+      </table>
+    </div>
+  `;
 
   // Construction complète du document Word
   const html = `
@@ -171,11 +318,12 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
       margin: 2pt 0 2pt 0;
     }
     .subtitle {
-      font-size: 13pt;
+      font-size: 16pt;
       font-weight: bold;
-      color: #69b3d4;
+      color: #004aad;
       text-align: center;
       margin-top: 14pt;
+      margin-bottom: 10pt;
     }
     .header-logos { width: 100%; border-collapse: collapse; margin: 2pt 0 0 0; }
     .header-logos td { vertical-align: top; }
@@ -204,41 +352,11 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
 </head>
 <body>
 
-  <!-- PAGE 1 - KPI -->
-  <div style="page-break-after: always; height: 30cm; overflow: hidden; display: block;">
-    <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 35cm; max-height: 35cm;">
-      <tr><td style="padding:14pt 24pt; vertical-align: top;">
-        <table class="header-logos"><tr>
-          <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-          <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-        </tr></table>
-        <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-        <h1 class="title" style="font-size:20pt;">Compte-rendu FTTH</h1>
-        ${periodLine}
-        
-        <!-- Section des KPI -->
-        <p class="subtitle" style="margin-top:10pt; margin-bottom:5pt;">📊 KPI – Key Performance Indicators</p>
-        <div style="margin-top:5pt;">
-          ${kpiHtml}
-        </div>
-        
-        <div class="comment-block" style="margin-top:8pt; min-height: 100px;">
-          <div class="comment-block-title">💬 Votre commentaire</div>
-          <div class="comment-text" style="min-height: 100px; padding-top: 10px; padding-bottom: 10px;">
-            ___________________________________________<br/>
-            ___________________________________________<br/>
-            ___________________________________________<br/>
-            ___________________________________________<br/>
-            ___________________________________________<br/>
-            ___________________________________________<br/>
-          </div>
-        </div>
-      </td></tr>
-    </table>
-  </div>
+  <!-- PAGE COUVERTURE -->
+  ${coverHtml}
 
-  <!-- Pages des graphiques -->
-  ${graphPagesHtml}
+  <!-- SECTIONS ORGANISÉES -->
+  ${sectionsHtml}
 
   <!-- Pied de page esthétique -->
   <div style="
@@ -265,13 +383,13 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
 </html>
   `;
 
-  console.log("DEBUG FTTH: HTML final :", html);
+  console.log("DEBUG FTTH: HTML final généré avec sections organisées");
 
   const blob = htmlDocx.asBlob(html);
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Compte-rendu_FTTH_${todayStr.replace(/\//g, "-")}.docx`;
+  a.download = `Compte-rendu_FTTH_${weekPart}_${todayStr.replace(/\//g, "-")}.docx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

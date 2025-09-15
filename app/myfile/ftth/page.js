@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from "react";
@@ -16,11 +15,11 @@ export default function UploadFTTHPage() {
 
   const [showUserPopup, setShowUserPopup] = useState(false);
   
-  // États pour les 5 fichiers
+  // États pour les 4 fichiers (suppression de productiviteFile)
   const [stockFile, setStockFile] = useState(null);
   const [regleFile, setRegleFile] = useState(null);
   const [ftthDataFile, setFtthDataFile] = useState(null);
-  const [productiviteFile, setProductiviteFile] = useState(null);
+  const [manuelFile, setManuelFile] = useState(null);
   const [mailFtthFile, setMailFtthFile] = useState(null);
   
   // États pour les messages d'upload
@@ -28,18 +27,18 @@ export default function UploadFTTHPage() {
   const [uploadStatuses, setUploadStatuses] = useState({});
   const [isUploading, setIsUploading] = useState({});
 
-  // Refs pour les inputs
+  // Refs pour les inputs (suppression de productiviteInputRef)
   const stockInputRef = useRef(null);
   const regleInputRef = useRef(null);
   const ftthDataInputRef = useRef(null);
-  const productiviteInputRef = useRef(null);
+  const manuelInputRef = useRef(null);
   const mailFtthInputRef = useRef(null);
 
-  // Handlers pour parcourir les fichiers
+  // Handlers pour parcourir les fichiers (suppression de handleBrowseProductivite)
   const handleBrowseStock = () => stockInputRef.current?.click();
   const handleBrowseRegle = () => regleInputRef.current?.click();
   const handleBrowseFtthData = () => ftthDataInputRef.current?.click();
-  const handleBrowseProductivite = () => productiviteInputRef.current?.click();
+  const handleBrowseManuel = () => manuelInputRef.current?.click();
   const handleBrowseMailFtth = () => mailFtthInputRef.current?.click();
 
   const handleFileChange = (setter) => (e) => {
@@ -124,9 +123,9 @@ export default function UploadFTTHPage() {
     }
   };
 
-  // Handlers spécifiques pour chaque nouveau fichier
+  // Handlers spécifiques pour chaque nouveau fichier (suppression de handleUploadProductivite)
   const handleUploadFtthData = () => handleGenericUpload(ftthDataFile, "api/ftth-data/upload/", "document", "ftthData", setFtthDataFile);
-  const handleUploadProductivite = () => handleGenericUpload(productiviteFile, "api/ftth-productivite/upload/", "document", "productivite", setProductiviteFile);
+  const handleUploadManuel = () => handleGenericUpload(manuelFile, "api/manuel/upload/", "document", "manuel", setManuelFile);
   const handleUploadMailFtth = () => handleGenericUpload(mailFtthFile, "api/mail-ftth/upload/", "document", "mailFtth", setMailFtthFile);
 
   const handleLogout = async () => {
@@ -401,23 +400,23 @@ export default function UploadFTTHPage() {
               </div>
             </div>
 
-            {/* Section 3: Productivité FTTH */}
+            {/* Section 3: FTTH Manuel */}
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-              <h2 className="text-xl font-semibold text-[#31327e] mb-4">Productivité FTTH</h2>
+              <h2 className="text-xl font-semibold text-[#31327e] mb-4">FTTH Manuel</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Fichier Productivité (.xlsx):</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Fichier FTTH Manuel (.xlsx):</label>
                   <div className="flex items-center gap-3">
                     <input
                       type="text"
                       readOnly
-                      value={productiviteFile ? productiviteFile.name : ""}
+                      value={manuelFile ? manuelFile.name : ""}
                       placeholder="Aucun fichier sélectionné"
                       className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     />
                     <button
                       type="button"
-                      onClick={handleBrowseProductivite}
+                      onClick={handleBrowseManuel}
                       className="px-4 py-2 border border-[#31327e] text-[#31327e] font-semibold rounded-lg hover:bg-[#31327e] hover:text-white transition text-sm"
                     >
                       Parcourir
@@ -425,25 +424,25 @@ export default function UploadFTTHPage() {
                     <input
                       type="file"
                       accept=".xlsx,.csv"
-                      onChange={handleFileChange(setProductiviteFile)}
-                      ref={productiviteInputRef}
+                      onChange={handleFileChange(setManuelFile)}
+                      ref={manuelInputRef}
                       className="hidden"
                     />
                   </div>
                 </div>
 
                 <button
-                  onClick={handleUploadProductivite}
-                  disabled={isUploading.productivite}
+                  onClick={handleUploadManuel}
+                  disabled={isUploading.manuel}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#31327e] hover:bg-[#4547b3] text-white font-semibold rounded-lg transition"
                 >
-                  {isUploading.productivite ? <AiOutlineLoading3Quarters className="animate-spin" size={18} /> : <AiOutlineUpload size={18} />}
-                  {isUploading.productivite ? "Upload en cours..." : "Uploader Productivité"}
+                  {isUploading.manuel ? <AiOutlineLoading3Quarters className="animate-spin" size={18} /> : <AiOutlineUpload size={18} />}
+                  {isUploading.manuel ? "Upload en cours..." : "Uploader FTTH Manuel"}
                 </button>
 
-                {uploadMessages.productivite && (
-                  <div className={`text-center p-3 rounded-lg text-sm font-semibold ${uploadStatuses.productivite === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                    {uploadMessages.productivite}
+                {uploadMessages.manuel && (
+                  <div className={`text-center p-3 rounded-lg text-sm font-semibold ${uploadStatuses.manuel === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                    {uploadMessages.manuel}
                   </div>
                 )}
               </div>

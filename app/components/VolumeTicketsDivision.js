@@ -54,12 +54,15 @@ const palette = [
   "#2ecc71", // Vert
 ];
 
+// Couleur pour la catégorie "Autres"
+const AUTRES_COLOR = "#808080"; // Gris
+
 // Fonction qui retourne la couleur en fonction de l'index de manière déterministe
 function getColorForIndex(index) {
   if (index < palette.length) {
     return palette[index];
   }
-  // Générer une couleur basée sur l'index (pour une bonne dispersion, on peut multiplier par un nombre premier)
+  // Générer une couleur basée sur l'index
   const hue = (index * 37) % 360;
   return `hsl(${hue}, 70%, 50%)`;
 }
@@ -73,28 +76,15 @@ export default function VolumeTicketsDivision({
   divisionField = "division",
   dateField = "date_derniere_maj",
   weekField = "semaine",
-  // Ici on ne se base plus sur un objet de couleurs par division
-  // Personnalisation des noms de mois
   monthNames = {
-    1: "Janvier",
-    2: "Février",
-    3: "Mars",
-    4: "Avril",
-    5: "Mai",
-    6: "Juin",
-    7: "Juillet",
-    8: "Août",
-    9: "Septembre",
-    10: "Octobre",
-    11: "Novembre",
-    12: "Décembre"
+    1: "Janvier", 2: "Février", 3: "Mars", 4: "Avril", 5: "Mai", 6: "Juin",
+    7: "Juillet", 8: "Août", 9: "Septembre", 10: "Octobre", 11: "Novembre", 12: "Décembre"
   },
   // Autres options de configuration
   defaultViewMode = "week",
   defaultVisibleItems = 5,
   chartCutoutPercentage = "40%",
 }) {
-  // Gestion de l'absence de prop apiUrl
   if (!apiUrl) {
     return (
       <div className="visualisation relative" data-id={id}>
@@ -128,22 +118,10 @@ export default function VolumeTicketsDivision({
   const [comments, setComments] = useState([]);
 
   // Etats pour mémoriser les sélections pour chaque vue
-  const [weekViewSelection, setWeekViewSelection] = useState({
-    values: [],
-    year: null
-  });
-  const [monthViewSelection, setMonthViewSelection] = useState({
-    values: [],
-    year: null
-  });
-  const [quarterViewSelection, setQuarterViewSelection] = useState({
-    values: [],
-    year: null
-  });
-  const [semesterViewSelection, setSemesterViewSelection] = useState({
-    values: [],
-    year: null
-  });
+  const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
+  const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
+  const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
+  const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
 
   // État pour gérer la priorisation des vues
   const [weekSelectionModifiedAt, setWeekSelectionModifiedAt] = useState(0);
@@ -156,229 +134,65 @@ export default function VolumeTicketsDivision({
   const semesterNames = { 1: "S1", 2: "S2" };
 
   // Gestion des commentaires
-  const handleAddComment = (comment) => {
-    setComments(prevComments => [...prevComments, comment]);
-  };
+  const handleAddComment = (comment) => setComments(prev => [...prev, comment]);
+  const handleUpdateComment = (updated) => setComments(prev => prev.map(c => c.id === updated.id ? updated : c));
+  const handleDeleteComment = (id) => setComments(prev => prev.filter(c => c.id !== id));
 
-  const handleUpdateComment = (updatedComment) => {
-    setComments(prevComments => 
-      prevComments.map(c => c.id === updatedComment.id ? updatedComment : c)
-    );
-  };
-
-  const handleDeleteComment = (commentId) => {
-    setComments(prevComments => prevComments.filter(c => c.id !== commentId));
-  };
-
-  // Récupération du filtre global
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
-  // Effet pour gérer les clics extérieurs au panneau de filtre
   useEffect(() => {
     function handleClickOutside(event) {
-      // Si le panneau est ouvert et que le clic est en dehors du panneau et du bouton de filtre
-      if (isOpen && 
-          filterPanelRef.current && 
-          !filterPanelRef.current.contains(event.target) &&
-          !event.target.closest('button[data-filter-toggle]')) {
+      if (isOpen && filterPanelRef.current && !filterPanelRef.current.contains(event.target) && !event.target.closest('button[data-filter-toggle]')) {
         setIsOpen(false);
       }
     }
-    
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  // Fonction pour générer toutes les semaines entre deux dates
-  function getAllWeeksBetween(startDate, endDate) {
-    if (!startDate || !endDate) return [];
-    const weeksArray = [];
-    const startWeek = getWeekNumber(startDate);
-    const endWeek = getWeekNumber(endDate);
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-    if (startYear === endYear) {
-      for (let week = startWeek; week <= endWeek; week++) {
-        weeksArray.push(week);
-      }
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        const maxWeeks = year === endYear ? endWeek : 52;
-        const minWeeks = year === startYear ? startWeek : 1;
-        for (let week = minWeeks; week <= maxWeeks; week++) {
-          weeksArray.push(week);
-        }
-      }
-    }
-    return weeksArray;
-  }
+  // Fonctions pour générer des listes de périodes
+  function getAllWeeksBetween(startDate, endDate) { if (!startDate || !endDate) return []; const weeks = []; let currentDate = new Date(startDate); while (currentDate <= endDate) { weeks.push(getWeekNumber(currentDate)); currentDate.setDate(currentDate.getDate() + 7); } return [...new Set(weeks)]; }
+  function getAllMonthsBetween(startDate, endDate) { if (!startDate || !endDate) return []; const months = []; let currentDate = new Date(startDate); while (currentDate <= endDate) { months.push(currentDate.getMonth() + 1); currentDate.setMonth(currentDate.getMonth() + 1); } return [...new Set(months)]; }
+  function getAllQuartersBetween(startDate, endDate) { if (!startDate || !endDate) return []; const quarters = []; let currentDate = new Date(startDate); while (currentDate <= endDate) { quarters.push(getQuarter(currentDate)); currentDate.setMonth(currentDate.getMonth() + 3); } return [...new Set(quarters)]; }
+  function getAllSemestersBetween(startDate, endDate) { if (!startDate || !endDate) return []; const semesters = []; let currentDate = new Date(startDate); while (currentDate <= endDate) { semesters.push(getSemester(currentDate)); currentDate.setMonth(currentDate.getMonth() + 6); } return [...new Set(semesters)]; }
 
-  // Fonction pour générer tous les mois entre deux dates
-  function getAllMonthsBetween(startDate, endDate) {
-    if (!startDate || !endDate) return [];
-    const monthsArray = [];
-    const startMonth = startDate.getMonth() + 1;
-    const endMonth = endDate.getMonth() + 1;
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-    if (startYear === endYear) {
-      for (let month = startMonth; month <= endMonth; month++) {
-        monthsArray.push(month);
-      }
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        const maxMonth = year === endYear ? endMonth : 12;
-        const minMonth = year === startYear ? startMonth : 1;
-        for (let month = minMonth; month <= maxMonth; month++) {
-          monthsArray.push(month);
-        }
-      }
-    }
-    return monthsArray;
-  }
-
-  // Fonction pour générer tous les trimestres entre deux dates
-  function getAllQuartersBetween(startDate, endDate) {
-    if (!startDate || !endDate) return [];
-    const quartersArray = [];
-    const startQuarter = getQuarter(startDate);
-    const endQuarter = getQuarter(endDate);
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-    if (startYear === endYear) {
-      for (let quarter = startQuarter; quarter <= endQuarter; quarter++) {
-        quartersArray.push(quarter);
-      }
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        const maxQuarter = year === endYear ? endQuarter : 4;
-        const minQuarter = year === startYear ? startQuarter : 1;
-        for (let quarter = minQuarter; quarter <= maxQuarter; quarter++) {
-          quartersArray.push(quarter);
-        }
-      }
-    }
-    return quartersArray;
-  }
-
-  // Fonction pour générer tous les semestres entre deux dates
-  function getAllSemestersBetween(startDate, endDate) {
-    if (!startDate || !endDate) return [];
-    const semestersArray = [];
-    const startSemester = getSemester(startDate);
-    const endSemester = getSemester(endDate);
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-    if (startYear === endYear) {
-      for (let semester = startSemester; semester <= endSemester; semester++) {
-        semestersArray.push(semester);
-      }
-    } else {
-      for (let year = startYear; year <= endYear; year++) {
-        const maxSemester = year === endYear ? endSemester : 2;
-        const minSemester = year === startYear ? startSemester : 1;
-        for (let semester = minSemester; semester <= maxSemester; semester++) {
-          semestersArray.push(semester);
-        }
-      }
-    }
-    return semestersArray;
-  }
-
-  // Fonction pour appliquer le filtre global à toutes les vues
   const applyGlobalFilter = () => {
     if (!globalStartDate || !globalEndDate) return;
-    const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
-    setWeekViewSelection({
-      values: weekList,
-      year: globalStartDate.getFullYear()
-    });
-    const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
-    setMonthViewSelection({
-      values: monthList,
-      year: globalStartDate.getFullYear()
-    });
-    const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
-    setQuarterViewSelection({
-      values: quarterList,
-      year: globalStartDate.getFullYear()
-    });
-    const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
-    setSemesterViewSelection({
-      values: semesterList,
-      year: globalStartDate.getFullYear()
-    });
+    const commonProps = { year: globalStartDate.getFullYear() };
+    const weekList = getAllWeeksBetween(globalStartDate, globalEndDate); setWeekViewSelection({ values: weekList, ...commonProps });
+    const monthList = getAllMonthsBetween(globalStartDate, globalEndDate); setMonthViewSelection({ values: monthList, ...commonProps });
+    const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate); setQuarterViewSelection({ values: quarterList, ...commonProps });
+    const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate); setSemesterViewSelection({ values: semesterList, ...commonProps });
 
-    if (viewMode === "week") {
-      setSelectedValues(weekList);
-      setSelectedYear(globalStartDate.getFullYear());
-    } else if (viewMode === "month") {
-      setSelectedValues(monthList);
-      setSelectedYear(globalStartDate.getFullYear());
-    } else if (viewMode === "quarter") {
-      setSelectedValues(quarterList);
-      setSelectedYear(globalStartDate.getFullYear());
-    } else if (viewMode === "semester") {
-      setSelectedValues(semesterList);
-      setSelectedYear(globalStartDate.getFullYear());
-    }
+    const setters = { week: setSelectedValues, month: setSelectedValues, quarter: setSelectedValues, semester: setSelectedValues };
+    const lists = { week: weekList, month: monthList, quarter: quarterList, semester: semesterList };
+    setters[viewMode](lists[viewMode]);
+    setSelectedYear(globalStartDate.getFullYear());
     setHasGlobalFilter(true);
   };
 
-  // Gestion du changement de vue et conservation de l'état précédent
   useEffect(() => {
-    if (!prevViewMode.current) {
-      prevViewMode.current = viewMode;
-      return;
-    }
-    if (prevViewMode.current === "week") {
-      setWeekViewSelection({
-        values: selectedValues,
-        year: selectedYear
-      });
-    } else if (prevViewMode.current === "month") {
-      setMonthViewSelection({
-        values: selectedValues,
-        year: selectedYear
-      });
-    } else if (prevViewMode.current === "quarter") {
-      setQuarterViewSelection({
-        values: selectedValues,
-        year: selectedYear
-      });
-    } else if (prevViewMode.current === "semester") {
-      setSemesterViewSelection({
-        values: selectedValues,
-        year: selectedYear
-      });
-    }
-
-    if (viewMode === "week" && weekViewSelection.values.length > 0) {
-      setSelectedValues(weekViewSelection.values);
-      setSelectedYear(weekViewSelection.year || selectedYear);
-    } else if (viewMode === "month" && monthViewSelection.values.length > 0) {
-      setSelectedValues(monthViewSelection.values);
-      setSelectedYear(monthViewSelection.year || selectedYear);
-    } else if (viewMode === "quarter" && quarterViewSelection.values.length > 0) {
-      setSelectedValues(quarterViewSelection.values);
-      setSelectedYear(quarterViewSelection.year || selectedYear);
-    } else if (viewMode === "semester" && semesterViewSelection.values.length > 0) {
-      setSelectedValues(semesterViewSelection.values);
-      setSelectedYear(semesterViewSelection.year || selectedYear);
+    if (!prevViewMode.current) { prevViewMode.current = viewMode; return; }
+    const selections = { week: weekViewSelection, month: monthViewSelection, quarter: quarterViewSelection, semester: semesterViewSelection };
+    const currentSelection = { values: selectedValues, year: selectedYear };
+    if (prevViewMode.current === "week") setWeekViewSelection(currentSelection);
+    else if (prevViewMode.current === "month") setMonthViewSelection(currentSelection);
+    else if (prevViewMode.current === "quarter") setQuarterViewSelection(currentSelection);
+    else if (prevViewMode.current === "semester") setSemesterViewSelection(currentSelection);
+    
+    if (selections[viewMode].values.length > 0) {
+      setSelectedValues(selections[viewMode].values);
+      setSelectedYear(selections[viewMode].year || selectedYear);
     }
     prevViewMode.current = viewMode;
   }, [viewMode]);
 
-  // Récupération initiale des données et extraction des années disponibles
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await fetchWithAuth(apiUrl);
         const result = await response.json();
         setData(result);
-
         const years = [...new Set(result.map(ticket => new Date(ticket[dateField]).getFullYear()))].sort();
         setAvailableYears(years);
         setMultipleYearsExist(years.length > 1);
@@ -386,47 +200,21 @@ export default function VolumeTicketsDivision({
         setSelectedYear(latestYear);
 
         if (!initializationCompleted.current) {
-          const filteredByYear = result.filter(ticket =>
-            new Date(ticket[dateField]).getFullYear() === latestYear
-          );
-          if (viewMode === "week") {
-            const weeks = [...new Set(filteredByYear.map(ticket => ticket[weekField]))]
-              .filter(week => !isNaN(Number(week)))
-              .sort((a, b) => a - b);
-            const lastWeeks = weeks.slice(-defaultVisibleItems);
-            setSelectedValues(lastWeeks);
-            setWeekViewSelection({
-              values: lastWeeks,
-              year: latestYear
-            });
-          } else if (viewMode === "month") {
-            const months = [...new Set(filteredByYear.map(ticket => new Date(ticket[dateField]).getMonth() + 1))]
-              .sort((a, b) => a - b);
-            const lastMonths = months.slice(-defaultVisibleItems);
-            setSelectedValues(lastMonths);
-            setMonthViewSelection({
-              values: lastMonths,
-              year: latestYear
-            });
-          } else if (viewMode === "quarter") {
-            const quarters = [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket[dateField]))))]
-              .sort((a, b) => a - b);
-            const lastQuarters = quarters.slice(-defaultVisibleItems);
-            setSelectedValues(lastQuarters);
-            setQuarterViewSelection({
-              values: lastQuarters,
-              year: latestYear
-            });
-          } else if (viewMode === "semester") {
-            const semesters = [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket[dateField]))))]
-              .sort((a, b) => a - b);
-            const lastSemesters = semesters.slice(-defaultVisibleItems);
-            setSelectedValues(lastSemesters);
-            setSemesterViewSelection({
-              values: lastSemesters,
-              year: latestYear
-            });
-          }
+          const filteredByYear = result.filter(t => new Date(t[dateField]).getFullYear() === latestYear);
+          const periodExtractors = {
+            week: t => t[weekField],
+            month: t => new Date(t[dateField]).getMonth() + 1,
+            quarter: t => getQuarter(new Date(t[dateField])),
+            semester: t => getSemester(new Date(t[dateField])),
+          };
+          const periods = [...new Set(filteredByYear.map(periodExtractors[viewMode]))].filter(p => !isNaN(Number(p))).sort((a, b) => a - b);
+          const lastPeriods = periods.slice(-defaultVisibleItems);
+          setSelectedValues(lastPeriods);
+          const selections = {
+            week: setWeekViewSelection, month: setMonthViewSelection,
+            quarter: setQuarterViewSelection, semester: setSemesterViewSelection
+          };
+          selections[viewMode]({ values: lastPeriods, year: latestYear });
           initializationCompleted.current = true;
         }
         if (globalStartDate && globalEndDate && !globalFilterApplied.current) {
@@ -434,273 +222,135 @@ export default function VolumeTicketsDivision({
           globalFilterApplied.current = true;
         }
         setLoading(false);
-      } catch (error) {
-        console.error("Erreur fetch :", error);
-        setLoading(false);
-      }
+      } catch (error) { console.error("Erreur fetch :", error); setLoading(false); }
     }
     fetchData();
   }, [apiUrl, dateField, weekField, defaultVisibleItems]);
 
-  // Forcer la sélection des périodes à partir du filtre global
   useEffect(() => {
-    if (globalStartDate && globalEndDate && globalModifiedAt > 0) {
-      applyGlobalFilter();
-    }
+    if (globalStartDate && globalEndDate && globalModifiedAt > 0) applyGlobalFilter();
   }, [globalStartDate, globalEndDate, globalModifiedAt]);
 
   if (loading) return <p className="text-center text-gray-500">Chargement des données...</p>;
 
-  // Obtenir les périodes disponibles pour l'année sélectionnée
   const getAvailablePeriodsForYear = (year) => {
-    const filteredByYear = data.filter(ticket =>
-      new Date(ticket[dateField]).getFullYear() === year
-    );
-    if (viewMode === "week") {
-      return [...new Set(filteredByYear.map(ticket => ticket[weekField]))]
-        .filter(week => !isNaN(Number(week)))
-        .sort((a, b) => a - b);
-    } else if (viewMode === "month") {
-      return [...new Set(filteredByYear.map(ticket => new Date(ticket[dateField]).getMonth() + 1))]
-        .sort((a, b) => a - b);
-    } else if (viewMode === "quarter") {
-      return [...new Set(filteredByYear.map(ticket => getQuarter(new Date(ticket[dateField]))))]
-        .sort((a, b) => a - b);
-    } else if (viewMode === "semester") {
-      return [...new Set(filteredByYear.map(ticket => getSemester(new Date(ticket[dateField]))))]
-        .sort((a, b) => a - b);
-    }
-    return [];
+    const filtered = data.filter(t => new Date(t[dateField]).getFullYear() === year);
+    const extractors = {
+      week: t => t[weekField], month: t => new Date(t[dateField]).getMonth() + 1,
+      quarter: t => getQuarter(new Date(t[dateField])), semester: t => getSemester(new Date(t[dateField]))
+    };
+    return [...new Set(filtered.map(extractors[viewMode]))].filter(p => !isNaN(Number(p))).sort((a, b) => a - b);
   };
 
   const availablePeriods = getAvailablePeriodsForYear(selectedYear);
-
-  // Bouton "Tout sélectionner / Tout désélectionner"
-  const allPeriodsSelected =
-    availablePeriods.length > 0 &&
-    availablePeriods.every(period => selectedValues.includes(period));
+  const allPeriodsSelected = availablePeriods.length > 0 && availablePeriods.every(p => selectedValues.includes(p));
 
   const toggleSelectAll = () => {
-    const newSelectedValues = allPeriodsSelected ? [] : [...availablePeriods];
-    setSelectedValues(newSelectedValues);
-    if (viewMode === "week") {
-      setWeekViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setWeekSelectionModifiedAt(Date.now());
-    } else if (viewMode === "month") {
-      setMonthViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setMonthSelectionModifiedAt(Date.now());
-    } else if (viewMode === "quarter") {
-      setQuarterViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setQuarterSelectionModifiedAt(Date.now());
-    } else if (viewMode === "semester") {
-      setSemesterViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setSemesterSelectionModifiedAt(Date.now());
-    }
+    const newValues = allPeriodsSelected ? [] : [...availablePeriods];
+    setSelectedValues(newValues);
+    const setters = {
+      week: setWeekViewSelection, month: setMonthViewSelection, quarter: setQuarterViewSelection, semester: setSemesterViewSelection
+    };
+    const timeSetters = {
+      week: setWeekSelectionModifiedAt, month: setMonthSelectionModifiedAt, quarter: setQuarterSelectionModifiedAt, semester: setSemesterSelectionModifiedAt
+    };
+    setters[viewMode]({ values: newValues, year: selectedYear });
+    timeSetters[viewMode](Date.now());
     setHasGlobalFilter(false);
   };
-
+  
   const handleSelectionChange = (value) => {
-    const newSelectedValues = selectedValues.includes(value) 
-      ? selectedValues.filter(v => v !== value) 
-      : [...selectedValues, value];
-    
-    setSelectedValues(newSelectedValues);
-    
-    if (viewMode === "week") {
-      setWeekViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setWeekSelectionModifiedAt(Date.now());
-    } else if (viewMode === "month") {
-      setMonthViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setMonthSelectionModifiedAt(Date.now());
-    } else if (viewMode === "quarter") {
-      setQuarterViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setQuarterSelectionModifiedAt(Date.now());
-    } else if (viewMode === "semester") {
-      setSemesterViewSelection({
-        values: newSelectedValues,
-        year: selectedYear
-      });
-      setSemesterSelectionModifiedAt(Date.now());
-    }
+    const newValues = selectedValues.includes(value) ? selectedValues.filter(v => v !== value) : [...selectedValues, value];
+    setSelectedValues(newValues);
+    const setters = { week: setWeekViewSelection, month: setMonthViewSelection, quarter: setQuarterViewSelection, semester: setSemesterViewSelection };
+    const timeSetters = { week: setWeekSelectionModifiedAt, month: setMonthSelectionModifiedAt, quarter: setQuarterSelectionModifiedAt, semester: setSemesterSelectionModifiedAt };
+    setters[viewMode]({ values: newValues, year: selectedYear });
+    timeSetters[viewMode](Date.now());
     setHasGlobalFilter(false);
   };
 
-  // Changer de vue (semaine, mois, trimestre, semestre)
-  const handleViewModeChange = (newMode) => {
-    setViewMode(newMode);
-  };
+  const handleViewModeChange = (newMode) => setViewMode(newMode);
 
   const handleYearChange = (year) => {
     setSelectedYear(year);
-    const availablePeriods = getAvailablePeriodsForYear(year);
-    if (viewMode === "week") {
-      if (hasGlobalFilter && globalStartDate && globalEndDate) {
-        const weekList = getAllWeeksBetween(globalStartDate, globalEndDate)
-          .filter(w => availablePeriods.includes(w));
-        setSelectedValues(weekList);
-        setWeekViewSelection({
-          values: weekList,
-          year: year
-        });
-      } else {
-        const intersection = weekViewSelection.values.filter(w => availablePeriods.includes(w));
-        if (intersection.length > 0) {
-          setSelectedValues(intersection);
-          setWeekViewSelection({
-            values: intersection,
-            year: year
-          });
-        } else {
-          const lastWeeks = availablePeriods.slice(-defaultVisibleItems);
-          setSelectedValues(lastWeeks);
-          setWeekViewSelection({
-            values: lastWeeks,
-            year: year
-          });
-        }
-      }
-    } else if (viewMode === "month") {
-      if (hasGlobalFilter && globalStartDate && globalEndDate) {
-        const monthList = getAllMonthsBetween(globalStartDate, globalEndDate)
-          .filter(m => availablePeriods.includes(m));
-        setSelectedValues(monthList);
-        setMonthViewSelection({
-          values: monthList,
-          year: year
-        });
-      } else {
-        const intersection = monthViewSelection.values.filter(m => availablePeriods.includes(m));
-        if (intersection.length > 0) {
-          setSelectedValues(intersection);
-          setMonthViewSelection({
-            values: intersection,
-            year: year
-          });
-        } else {
-          const lastMonths = availablePeriods.slice(-defaultVisibleItems);
-          setSelectedValues(lastMonths);
-          setMonthViewSelection({
-            values: lastMonths,
-            year: year
-          });
-        }
-      }
-    } else if (viewMode === "quarter") {
-      if (hasGlobalFilter && globalStartDate && globalEndDate) {
-        const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate)
-          .filter(q => availablePeriods.includes(q));
-        setSelectedValues(quarterList);
-        setQuarterViewSelection({
-          values: quarterList,
-          year: year
-        });
-      } else {
-        const intersection = quarterViewSelection.values.filter(q => availablePeriods.includes(q));
-        if (intersection.length > 0) {
-          setSelectedValues(intersection);
-          setQuarterViewSelection({
-            values: intersection,
-            year: year
-          });
-        } else {
-          const lastQuarters = availablePeriods.slice(-defaultVisibleItems);
-          setSelectedValues(lastQuarters);
-          setQuarterViewSelection({
-            values: lastQuarters,
-            year: year
-          });
-        }
-      }
-    } else if (viewMode === "semester") {
-      if (hasGlobalFilter && globalStartDate && globalEndDate) {
-        const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate)
-          .filter(s => availablePeriods.includes(s));
-        setSelectedValues(semesterList);
-        setSemesterViewSelection({
-          values: semesterList,
-          year: year
-        });
-      } else {
-        const intersection = semesterViewSelection.values.filter(s => availablePeriods.includes(s));
-        if (intersection.length > 0) {
-          setSelectedValues(intersection);
-          setSemesterViewSelection({
-            values: intersection,
-            year: year
-          });
-        } else {
-          const lastSemesters = availablePeriods.slice(-defaultVisibleItems);
-          setSelectedValues(lastSemesters);
-          setSemesterViewSelection({
-            values: lastSemesters,
-            year: year
-          });
-        }
-      }
+    const periods = getAvailablePeriodsForYear(year);
+    let newValues = [];
+    if (hasGlobalFilter && globalStartDate && globalEndDate) {
+      const globalPeriodFunctions = { week: getAllWeeksBetween, month: getAllMonthsBetween, quarter: getAllQuartersBetween, semester: getAllSemestersBetween };
+      newValues = globalPeriodFunctions[viewMode](globalStartDate, globalEndDate).filter(p => periods.includes(p));
+    } else {
+      const selections = { week: weekViewSelection, month: monthViewSelection, quarter: quarterViewSelection, semester: semesterViewSelection };
+      const intersection = selections[viewMode].values.filter(v => periods.includes(v));
+      newValues = intersection.length > 0 ? intersection : periods.slice(-defaultVisibleItems);
     }
+    setSelectedValues(newValues);
+    const setters = { week: setWeekViewSelection, month: setMonthViewSelection, quarter: setQuarterViewSelection, semester: setSemesterViewSelection };
+    setters[viewMode]({ values: newValues, year: year });
   };
-
-  // Filtrer les tickets en fonction de l'année et des périodes sélectionnées
+  
   const filteredData = data.filter(ticket => {
     const ticketYear = new Date(ticket[dateField]).getFullYear();
     let ticketPeriod;
-    
-    if (viewMode === "week") {
-      ticketPeriod = ticket[weekField];
-    } else if (viewMode === "month") {
-      ticketPeriod = new Date(ticket[dateField]).getMonth() + 1;
-    } else if (viewMode === "quarter") {
-      ticketPeriod = getQuarter(new Date(ticket[dateField]));
-    } else if (viewMode === "semester") {
-      ticketPeriod = getSemester(new Date(ticket[dateField]));
-    }
-    
+    if (viewMode === "week") ticketPeriod = ticket[weekField];
+    else if (viewMode === "month") ticketPeriod = new Date(ticket[dateField]).getMonth() + 1;
+    else if (viewMode === "quarter") ticketPeriod = getQuarter(new Date(ticket[dateField]));
+    else if (viewMode === "semester") ticketPeriod = getSemester(new Date(ticket[dateField]));
     return ticketYear === selectedYear && selectedValues.includes(ticketPeriod);
   });
-
-  // Calculer les statistiques par division
+  
+  // ====================================================================
+  // MODIFICATION : Calculer et regrouper les divisions de moins de 2%
+  // ====================================================================
   const divisionCounts = {};
   filteredData.forEach(ticket => {
     const division = ticket[divisionField];
     divisionCounts[division] = (divisionCounts[division] || 0) + 1;
   });
+
   const totalTickets = Object.values(divisionCounts).reduce((sum, val) => sum + val, 0);
+
+  const finalDivisionData = {};
+  let autresCount = 0;
+
+  // Séparer les divisions principales de celles à regrouper
+  Object.entries(divisionCounts).forEach(([division, count]) => {
+    if (totalTickets > 0 && (count / totalTickets) * 100 < 2) {
+      autresCount += count;
+    } else {
+      finalDivisionData[division] = count;
+    }
+  });
+
+  // Ajouter la catégorie "Autres" si nécessaire
+  if (autresCount > 0) {
+    finalDivisionData["Autres"] = autresCount;
+  }
+  
+  const sortedDivisions = Object.keys(finalDivisionData).sort((a, b) => {
+    if (a === "Autres") return 1; // Toujours placer "Autres" à la fin
+    if (b === "Autres") return -1;
+    return finalDivisionData[b] - finalDivisionData[a];
+  });
+  
   const divisionPercentages = Object.fromEntries(
-    Object.entries(divisionCounts).map(([division, count]) => [
-      division, ((count / totalTickets) * 100).toFixed(2)
+    Object.entries(finalDivisionData).map(([division, count]) => [
+      division, totalTickets > 0 ? ((count / totalTickets) * 100).toFixed(2) : "0.00"
     ])
   );
-  const sortedDivisions = Object.keys(divisionCounts).sort((a, b) => divisionCounts[b] - divisionCounts[a]);
+  // ====================================================================
+  // FIN DE LA MODIFICATION
+  // ====================================================================
 
   const chartData = {
     labels: sortedDivisions,
     datasets: [
       {
         data: sortedDivisions.map(d =>
-          disabledDivisions.includes(d) ? 0 : divisionCounts[d]
+          disabledDivisions.includes(d) ? 0 : finalDivisionData[d]
         ),
-        backgroundColor: sortedDivisions.map((_, i) => getColorForIndex(i)),
+        backgroundColor: sortedDivisions.map((division, i) => 
+            division === "Autres" ? AUTRES_COLOR : getColorForIndex(i)
+        ),
         borderWidth: 1,
         cutout: chartCutoutPercentage,
         rotation: -90,
@@ -713,90 +363,66 @@ export default function VolumeTicketsDivision({
       prev.includes(division) ? prev.filter(d => d !== division) : [...prev, division]
     );
   };
-
+  
   const periodeLabel = selectedValues.length > 0
-    ? viewMode === "week"
-      ? `Semaine(s) : ${selectedValues.join(", ")}`
-      : viewMode === "month"
-        ? `Mois : ${selectedValues.map(m => monthNames[m]).join(", ")}`
-        : viewMode === "quarter"
-          ? `Trimestre(s) : ${selectedValues.map(q => quarterNames[q]).join(", ")}`
-          : `Semestre(s) : ${selectedValues.map(s => semesterNames[s]).join(", ")}`
+    ? viewMode === "week" ? `Semaine(s) : ${selectedValues.join(", ")}`
+    : viewMode === "month" ? `Mois : ${selectedValues.map(m => monthNames[m]).join(", ")}`
+    : viewMode === "quarter" ? `Trimestre(s) : ${selectedValues.map(q => quarterNames[q]).join(", ")}`
+    : `Semestre(s) : ${selectedValues.map(s => semesterNames[s]).join(", ")}`
     : "Aucune période sélectionnée";
 
     const chartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          position: 'right',
-          align: 'center',
-          labels: {
-            color: "black",
-            font: { size: 8 },
-            boxWidth: 10,
-            padding: 10,
-            generateLabels: (chart) => {
-              const labels = chart.data.labels || [];
-              return labels.map((label, i) => ({
-                text: label,
-                fillStyle: getColorForIndex(i),
-                hidden: disabledDivisions.includes(label)
-              }));
-            }
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'right',
+            align: 'center',
+            labels: {
+              color: "black", font: { size: 8 }, boxWidth: 10, padding: 10,
+              generateLabels: (chart) => {
+                const labels = chart.data.labels || [];
+                return labels.map((label, i) => ({
+                  text: label,
+                  fillStyle: chart.data.datasets[0].backgroundColor[i], // Utiliser la couleur du dataset
+                  hidden: disabledDivisions.includes(label),
+                  strokeStyle: 'transparent' // Assurez-vous qu'il n'y a pas de bordure
+                }));
+              }
+            },
+            onClick: (_, legendItem) => {
+              toggleDivision(legendItem.text);
+            },
           },
-          onClick: (_, legendItem) => {
-            toggleDivision(legendItem.text);
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const division = ctx.label;
+                const value = ctx.raw;
+                if (disabledDivisions.includes(division)) return null;
+                const percent = totalTickets ? ((value / totalTickets) * 100).toFixed(2) : "0.0";
+                return `${division}: ${value} tickets (${percent}%)`;
+              }
+            },
           },
-        // Ajoutez ces propriétés pour éloigner la légende
-      rtl: true,
-      title: {
-        display: true
-      },
-      // Augmentez la marge entre la légende et le graphique
-      padding: 10,
-      // Ou utilisez margins pour un contrôle plus précis
-      margin: {
-        left: 20,
-        right: 20,
-        top: 0,
-        bottom: 0
-      }
+          datalabels: {
+            color: "black", anchor: "end", align: "end", offset: 10, font: { size: 9 },
+            formatter: (value, ctx) => {
+              const division = ctx.chart.data.labels[ctx.dataIndex];
+              const pct = divisionPercentages[division];
+              return value > 0 && pct ? `${value} (${pct}%)` : "";
+            },
+            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+          }
         },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const division = ctx.label;
-              const value = ctx.raw;
-              if (disabledDivisions.includes(division)) return null;
-              const percent = totalTickets ? ((value / totalTickets) * 100).toFixed(2) : "0.0";
-              return `${division}: ${value} tickets (${percent}%)`;
-            }
-          },
-        },
-        datalabels: {
-          color: "black",
-          anchor: "end",
-          align: "end",
-          offset: 10,
-          font: { size: 9 },
-          formatter: (value, ctx) => {
-            const division = ctx.chart.data.labels[ctx.dataIndex];
-            const pct = divisionPercentages[division];
-            return value > 0 ? `${value} (${pct}%)` : "";
-          },
-          display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-        }
-      },
-      layout: { padding: { top: 50, right: 50, bottom: 20, left: 70 } },
-    };
+        layout: { padding: { top: 50, right: 50, bottom: 20, left: 70 } },
+      };
 
 
     return (
       <div className="visualisation relative" data-id={id}>
         <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
-          {/* Header avec titre, sous-titre et boutons */}
           <div className="flex justify-between items-start mb-4 relative">
             <div>
               <h3 className="no-export text-lg font-semibold text-gray-800">{title}</h3>
@@ -806,22 +432,11 @@ export default function VolumeTicketsDivision({
               </p>
             </div>
             <div className="no-export flex gap-2">
-              <button 
-                className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
-                onClick={() => setIsOpen(!isOpen)}
-                data-filter-toggle="true">
+              <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setIsOpen(!isOpen)} data-filter-toggle="true">
                 <AiOutlineFilter size={20} className="text-gray-600" />
               </button>
-              <CommentButton 
-                containerRef={chartContainerRef} 
-                comments={comments}
-                onAddComment={handleAddComment}
-                onUpdateComment={handleUpdateComment}
-                onDeleteComment={handleDeleteComment}
-              />
-              <button 
-                className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" 
-                onClick={() => setModalIsOpen(true)}>
+              <CommentButton containerRef={chartContainerRef} comments={comments} onAddComment={handleAddComment} onUpdateComment={handleUpdateComment} onDeleteComment={handleDeleteComment} />
+              <button className="bg-gray-300 p-2 rounded-full hover:bg-gray-400 transition" onClick={() => setModalIsOpen(true)}>
                 <FaExpand size={18} className="text-gray-600" />
               </button>
             </div>
@@ -829,41 +444,17 @@ export default function VolumeTicketsDivision({
               <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50">
                 <h4 className="font-semibold text-gray-500">Filtrer par :</h4>
                 <div className="flex space-x-2 mb-2 mt-2 flex-wrap">
-                  <button
-                    className={`px-3 py-1 rounded-md mb-2 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                    onClick={() => handleViewModeChange("week")}
-                  >
-                    Semaine
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-md mb-2 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                    onClick={() => handleViewModeChange("month")}
-                  >
-                    Mois
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-md mb-2 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                    onClick={() => handleViewModeChange("quarter")}
-                  >
-                    Trimestre
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-md mb-2 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`}
-                    onClick={() => handleViewModeChange("semester")}
-                  >
-                    Semestre
-                  </button>
+                  <button className={`px-3 py-1 rounded-md mb-2 ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => handleViewModeChange("week")}>Semaine</button>
+                  <button className={`px-3 py-1 rounded-md mb-2 ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => handleViewModeChange("month")}>Mois</button>
+                  <button className={`px-3 py-1 rounded-md mb-2 ${viewMode === "quarter" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => handleViewModeChange("quarter")}>Trimestre</button>
+                  <button className={`px-3 py-1 rounded-md mb-2 ${viewMode === "semester" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-500"}`} onClick={() => handleViewModeChange("semester")}>Semestre</button>
                 </div>
                 {multipleYearsExist && (
                   <div className="mb-3">
                     <h5 className="text-sm font-medium text-gray-500 mb-1">Années :</h5>
                     <div className="flex flex-wrap gap-1">
                       {availableYears.map(year => (
-                        <button
-                          key={year}
-                          onClick={() => handleYearChange(year)}
-                          className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-                        >
+                        <button key={year} onClick={() => handleYearChange(year)} className={`px-2 py-1 text-xs rounded-md ${selectedYear === year ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}>
                           {year}
                         </button>
                       ))}
@@ -871,30 +462,16 @@ export default function VolumeTicketsDivision({
                   </div>
                 )}
                 <div className="mb-2">
-                  <button
-                    onClick={toggleSelectAll}
-                    className={`text-xs px-2 py-1 rounded-md w-full ${allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
-                  >
+                  <button onClick={toggleSelectAll} className={`text-xs px-2 py-1 rounded-md w-full ${allPeriodsSelected ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}>
                     {allPeriodsSelected ? "Tout désélectionner" : "Tout sélectionner"}
                   </button>
                 </div>
                 <div className="max-h-32 overflow-y-auto border p-2 rounded-md">
                   {availablePeriods.map((value) => (
                     <div key={value} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedValues.includes(value)}
-                        onChange={() => handleSelectionChange(value)}
-                      />
+                      <input type="checkbox" checked={selectedValues.includes(value)} onChange={() => handleSelectionChange(value)} />
                       <span className="text-gray-500">
-                        {viewMode === "week" 
-                          ? `Semaine ${value}` 
-                          : viewMode === "month"
-                            ? monthNames[value]
-                            : viewMode === "quarter"
-                              ? quarterNames[value]
-                              : semesterNames[value]
-                        }
+                        {viewMode === "week" ? `Semaine ${value}` : viewMode === "month" ? monthNames[value] : viewMode === "quarter" ? quarterNames[value] : semesterNames[value]}
                       </span>
                     </div>
                   ))}
@@ -903,43 +480,24 @@ export default function VolumeTicketsDivision({
             )}
           </div>
           <div className="flex-grow flex justify-center items-center w-full" style={{ padding: '10px 0 0 0' }} ref={chartContainerRef}>
-            <Doughnut
-              data={chartData}
-              options={chartOptions}
-            />
+            <Doughnut data={chartData} options={chartOptions} />
           </div>
         </div>
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={() => setModalIsOpen(false)}
-          className="flex items-center justify-center fixed inset-0 z-50"
-          overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-        >
+        <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)} className="flex items-center justify-center fixed inset-0 z-50" overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-11/12 md:w-3/4 lg:w-2/3 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  {selectedYear && `Année : ${selectedYear} - `}{periodeLabel}
-                </p>
+                <p className="text-sm text-gray-500 mt-1">{selectedYear && `Année : ${selectedYear} - `}{periodeLabel}</p>
               </div>
               <button onClick={() => setModalIsOpen(false)} className="text-gray-500 hover:text-red-500">❌</button>
             </div>
             <div className="relative h-[400px] flex items-center justify-center" ref={modalChartContainerRef}>
-              <Doughnut
-                data={chartData}
-                options={chartOptions}
-              />
-              <CommentButton 
-                containerRef={modalChartContainerRef} 
-                hideButton={true} 
-                comments={comments}
-                onAddComment={handleAddComment}
-                onUpdateComment={handleUpdateComment}
-                onDeleteComment={handleDeleteComment}
-              />
+              <Doughnut data={chartData} options={chartOptions} />
+              <CommentButton containerRef={modalChartContainerRef} hideButton={true} comments={comments} onAddComment={handleAddComment} onUpdateComment={handleUpdateComment} onDeleteComment={handleDeleteComment} />
             </div>
           </div>
         </Modal>
       </div>
-    );}
+    );
+}

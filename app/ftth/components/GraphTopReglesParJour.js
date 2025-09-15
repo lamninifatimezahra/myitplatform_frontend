@@ -237,7 +237,6 @@ export default function GraphTopReglesParJour({
   chartTitle = "Top 5 RÈGLES par jour",
   defaultViewMode = "day",
   defaultNumPeriods = 5,
-  // SUPPRIMÉ: externalStartDate, externalEndDate, globalStartDate, globalEndDate
   holidays = [],
   exportMode = false,
   selectedGraphs = [],
@@ -250,7 +249,6 @@ export default function GraphTopReglesParJour({
   const editorRef = useRef(null);
   const initializationCompleted = useRef(false);
   const globalFilterApplied = useRef(false);
-  const prevViewMode = useRef(null);
 
   // palette stable
   const colorMapRef = useRef({});
@@ -263,7 +261,7 @@ export default function GraphTopReglesParJour({
     return colorMapRef.current[rule];
   }
 
-  // AJOUT: Accès au filtre global via le contexte
+  // Accès au filtre global via le contexte
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
   // ui
@@ -283,19 +281,8 @@ export default function GraphTopReglesParJour({
   const [selectedValues, setSelectedValues] = useState([]);
   const [chartKey, setChartKey] = useState(0);
 
-  // AJOUT: États pour mémoriser les sélections par vue (inspiré de TauxReentrants)
-  const [dayViewSelection, setDayViewSelection] = useState({ dates: [null, null], values: [] });
-  const [weekViewSelection, setWeekViewSelection] = useState({ values: [], year: null });
-  const [monthViewSelection, setMonthViewSelection] = useState({ values: [], year: null });
-  const [quarterViewSelection, setQuarterViewSelection] = useState({ values: [], year: null });
-  const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
-
-  // AJOUT: États pour la gestion de la priorisation des filtres locaux vs globaux
+  // État pour la gestion du filtre global
   const [hasGlobalFilter, setHasGlobalFilter] = useState(false);
-  const [weekSelectionModifiedAt, setWeekSelectionModifiedAt] = useState(0);
-  const [monthSelectionModifiedAt, setMonthSelectionModifiedAt] = useState(0);
-  const [quarterSelectionModifiedAt, setQuarterSelectionModifiedAt] = useState(0);
-  const [semesterSelectionModifiedAt, setSemesterSelectionModifiedAt] = useState(0);
 
   // Jours fériés FR + MA
   const holidaySet = useMemo(() => {
@@ -319,45 +306,25 @@ export default function GraphTopReglesParJour({
   const quarterNames = ["T1", "T2", "T3", "T4"];
   const semesterNames = ["S1", "S2"];
 
-  // AJOUT: Fonction pour appliquer le filtre global (inspirée de TauxReentrants)
+  // Fonction pour appliquer le filtre global
   const applyGlobalFilter = () => {
     if (!globalStartDate || !globalEndDate) return;
     
-    const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
-    setWeekViewSelection({
-      values: weekList,
-      year: globalStartDate.getFullYear()
-    });
-    
-    const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
-    setMonthViewSelection({
-      values: monthList,
-      year: globalStartDate.getFullYear()
-    });
-    
-    const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
-    setQuarterViewSelection({
-      values: quarterList,
-      year: globalStartDate.getFullYear()
-    });
-    
-    const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
-    setSemesterViewSelection({
-      values: semesterList,
-      year: globalStartDate.getFullYear()
-    });
-    
     // Appliquer au mode actuel
     if (viewMode === "week") {
+      const weekList = getAllWeeksBetween(globalStartDate, globalEndDate);
       setSelectedValues(weekList);
       setSelectedYear(globalStartDate.getFullYear());
     } else if (viewMode === "month") {
+      const monthList = getAllMonthsBetween(globalStartDate, globalEndDate);
       setSelectedValues(monthList);
       setSelectedYear(globalStartDate.getFullYear());
     } else if (viewMode === "quarter") {
+      const quarterList = getAllQuartersBetween(globalStartDate, globalEndDate);
       setSelectedValues(quarterList);
       setSelectedYear(globalStartDate.getFullYear());
     } else if (viewMode === "semester") {
+      const semesterList = getAllSemestersBetween(globalStartDate, globalEndDate);
       setSelectedValues(semesterList);
       setSelectedYear(globalStartDate.getFullYear());
     } else {
@@ -365,7 +332,6 @@ export default function GraphTopReglesParJour({
       const dayList = allWorkingDaysBetween(globalStartDate, globalEndDate, holidaySet);
       setSelectedDates([globalStartDate, globalEndDate]);
       setSelectedValues(dayList);
-      setDayViewSelection({ dates: [globalStartDate, globalEndDate], values: dayList });
     }
     
     setHasGlobalFilter(true);
@@ -392,61 +358,7 @@ export default function GraphTopReglesParJour({
     
     return Array.from(periodsSet).sort((a, b) => a - b);
   }, []);
-
-  // AJOUT: Gestion des changements de vue (inspirée de TauxReentrants)
-  useEffect(() => {
-    if (!prevViewMode.current) {
-      prevViewMode.current = viewMode;
-      return;
-    }
-    if (prevViewMode.current === "day") {
-      setDayViewSelection({
-        dates: selectedDates,
-        values: selectedValues,
-      });
-    } else if (prevViewMode.current === "week") {
-      setWeekViewSelection({
-        values: selectedValues,
-        year: selectedYear,
-      });
-    } else if (prevViewMode.current === "month") {
-      setMonthViewSelection({
-        values: selectedValues,
-        year: selectedYear,
-      });
-    } else if (prevViewMode.current === "quarter") {
-      setQuarterViewSelection({
-        values: selectedValues,
-        year: selectedYear,
-      });
-    } else if (prevViewMode.current === "semester") {
-      setSemesterViewSelection({
-        values: selectedValues,
-        year: selectedYear,
-      });
-    }
-    
-    // Restaurer la sélection pour le nouveau mode
-    if (viewMode === "day" && dayViewSelection.values.length > 0) {
-      setSelectedDates(dayViewSelection.dates);
-      setSelectedValues(dayViewSelection.values);
-    } else if (viewMode === "week" && weekViewSelection.values.length > 0) {
-      setSelectedValues(weekViewSelection.values);
-      setSelectedYear(weekViewSelection.year || selectedYear);
-    } else if (viewMode === "month" && monthViewSelection.values.length > 0) {
-      setSelectedValues(monthViewSelection.values);
-      setSelectedYear(monthViewSelection.year || selectedYear);
-    } else if (viewMode === "quarter" && quarterViewSelection.values.length > 0) {
-      setSelectedValues(quarterViewSelection.values);
-      setSelectedYear(quarterViewSelection.year || selectedYear);
-    } else if (viewMode === "semester" && semesterViewSelection.values.length > 0) {
-      setSelectedValues(semesterViewSelection.values);
-      setSelectedYear(semesterViewSelection.year || selectedYear);
-    }
-    
-    prevViewMode.current = viewMode;
-  }, [viewMode]);
-
+  
   /* ------------- fetch ------------- */
   const reload = () => {
     setErrorText(""); 
@@ -489,8 +401,6 @@ export default function GraphTopReglesParJour({
         setMultipleYearsExist(years.length > 1);
 
         // Initialisation par défaut
-        const latestYear = years.length ? years[years.length - 1] : new Date().getFullYear();
-        
         if (!initializationCompleted.current) {
           if (defaultViewMode === "day") {
             const all = [...new Set(mapped.map((x) => x.dateISO))].filter((iso) => {
@@ -503,29 +413,22 @@ export default function GraphTopReglesParJour({
               const endDate = parseISO(last[last.length - 1]);
               setSelectedDates([startDate, endDate]);
               setSelectedValues(last);
-              setDayViewSelection({ dates: [startDate, endDate], values: last });
             } else {
               setSelectedDates([null, null]);
               setSelectedValues([]);
-              setDayViewSelection({ dates: [null, null], values: [] });
             }
           } else {
+            const latestYear = years.length ? years[years.length - 1] : new Date().getFullYear();
             setSelectedYear(latestYear);
             const availablePeriods = getAvailablePeriodsForYear(mapped, latestYear, defaultViewMode);
             const lastPeriods = availablePeriods.slice(-defaultNumPeriods);
             setSelectedValues(lastPeriods);
-            
-            // Mémoriser la sélection par défaut
-            if (defaultViewMode === "week") setWeekViewSelection({ values: lastPeriods, year: latestYear });
-            else if (defaultViewMode === "month") setMonthViewSelection({ values: lastPeriods, year: latestYear });
-            else if (defaultViewMode === "quarter") setQuarterViewSelection({ values: lastPeriods, year: latestYear });
-            else if (defaultViewMode === "semester") setSemesterViewSelection({ values: lastPeriods, year: latestYear });
           }
           
           initializationCompleted.current = true;
         }
 
-        // AJOUT: Application du filtre global si présent
+        // Application du filtre global si présent
         if (globalStartDate && globalEndDate && !globalFilterApplied.current) {
           applyGlobalFilter();
           globalFilterApplied.current = true;
@@ -545,7 +448,7 @@ export default function GraphTopReglesParJour({
   };
   useEffect(reload, [apiUrl]);
 
-  // AJOUT: useEffect pour réagir aux changements du filtre global
+  // useEffect pour réagir aux changements du filtre global
   useEffect(() => {
     if (globalStartDate && globalEndDate && globalModifiedAt > 0) {
       applyGlobalFilter();
@@ -594,22 +497,47 @@ export default function GraphTopReglesParJour({
     setSelectedValues([]);
     setErrorText("");
     setChartKey((k) => k + 1);
-    
-    // Reset des sélections mémorisées
-    setDayViewSelection({ dates: [null, null], values: [] });
-    setWeekViewSelection({ values: [], year: null });
-    setMonthViewSelection({ values: [], year: null });
-    setQuarterViewSelection({ values: [], year: null });
-    setSemesterViewSelection({ values: [], year: null });
     setHasGlobalFilter(false);
     
     reload();
   };
-
-  /* ----------------- filtres MODIFIÉS ----------------- */
+  
+  /* ==================================================================== */
+  /* MODIFICATION : Logique de changement de vue pour sélectionner le dernier élément */
+  /* ==================================================================== */
   const handleViewModeChange = (newMode) => {
-    if (newMode === viewMode) return;
+    if (newMode === viewMode || !records.length) return;
+
+    const latestYear = availableYears.length > 0
+        ? Math.max(...availableYears)
+        : new Date().getFullYear();
+
+    if (newMode === "day") {
+        const allISODates = [...new Set(records.map(r => r.dateISO))];
+        const lastDayArray = lastNWorkingDays(allISODates, 1, holidaySet);
+        
+        if (lastDayArray.length > 0) {
+            const lastDateObj = parseISO(lastDayArray[0]);
+            setSelectedDates([lastDateObj, lastDateObj]);
+            setSelectedValues(lastDayArray);
+        } else {
+            setSelectedDates([null, null]);
+            setSelectedValues([]);
+        }
+    } else {
+        setSelectedYear(latestYear);
+        const availablePeriods = getAvailablePeriodsForYear(records, latestYear, newMode);
+        
+        if (availablePeriods.length > 0) {
+            const latestPeriod = availablePeriods[availablePeriods.length - 1];
+            setSelectedValues([latestPeriod]);
+        } else {
+            setSelectedValues([]);
+        }
+    }
+
     setViewMode(newMode);
+    setHasGlobalFilter(false);
   };
 
   const handleDayRangeChange = (dates) => {
@@ -617,50 +545,21 @@ export default function GraphTopReglesParJour({
     setSelectedDates(dates);
     const dayList = a && b ? allWorkingDaysBetween(a, b, holidaySet) : [];
     setSelectedValues(dayList);
-    setDayViewSelection({ dates: [a, b], values: dayList });
-    setHasGlobalFilter(false); // AJOUT: Désactiver le filtre global
+    setHasGlobalFilter(false);
   };
-
+  
   const handleYearChange = (year) => {
     if (viewMode === "day" || year === selectedYear) return;
     
     setSelectedYear(year);
     const newAvailablePeriods = getAvailablePeriodsForYear(records, year, viewMode);
     
-    // Logique de restauration ou valeur par défaut
-    let selectionToRestore = { values: [], year: null };
-    if (viewMode === "week") selectionToRestore = weekViewSelection;
-    else if (viewMode === "month") selectionToRestore = monthViewSelection;
-    else if (viewMode === "quarter") selectionToRestore = quarterViewSelection;
-    else if (viewMode === "semester") selectionToRestore = semesterViewSelection;
-    
-    let newSelectedValues = [];
-    if (hasGlobalFilter && globalStartDate && globalEndDate) {
-      // Appliquer le filtre global pour la nouvelle année
-      let globalList = [];
-      if (viewMode === "week") globalList = getAllWeeksBetween(globalStartDate, globalEndDate);
-      else if (viewMode === "month") globalList = getAllMonthsBetween(globalStartDate, globalEndDate);
-      else if (viewMode === "quarter") globalList = getAllQuartersBetween(globalStartDate, globalEndDate);
-      else if (viewMode === "semester") globalList = getAllSemestersBetween(globalStartDate, globalEndDate);
-      
-      newSelectedValues = globalList.filter(v => newAvailablePeriods.includes(v));
-    } else {
-      // Logique normale de restauration
-      if (selectionToRestore.year === year && selectionToRestore.values.length > 0) {
-        const validValues = selectionToRestore.values.filter(v => newAvailablePeriods.includes(v));
-        newSelectedValues = validValues.length > 0 ? validValues : newAvailablePeriods.slice(-defaultNumPeriods);
-      } else {
-        newSelectedValues = newAvailablePeriods.slice(-defaultNumPeriods);
-      }
-    }
+    const newSelectedValues = newAvailablePeriods.length > 0
+        ? [newAvailablePeriods[newAvailablePeriods.length - 1]]
+        : [];
     
     setSelectedValues(newSelectedValues);
-    
-    // Mettre à jour l'état mémorisé
-    if (viewMode === "week") setWeekViewSelection({ values: newSelectedValues, year: year });
-    else if (viewMode === "month") setMonthViewSelection({ values: newSelectedValues, year: year });
-    else if (viewMode === "quarter") setQuarterViewSelection({ values: newSelectedValues, year: year });
-    else if (viewMode === "semester") setSemesterViewSelection({ values: newSelectedValues, year: year });
+    setHasGlobalFilter(false);
   };
 
   const availablePeriodsForFilter = viewMode === "day" || !selectedYear ? [] : 
@@ -675,22 +574,6 @@ export default function GraphTopReglesParJour({
     if (viewMode === "day" || !selectedYear) return;
     const newSelectedValues = allSelected ? [] : [...availablePeriodsForFilter];
     setSelectedValues(newSelectedValues);
-    
-    // Mettre à jour l'état mémorisé et désactiver le filtre global
-    const currentYear = selectedYear;
-    if (viewMode === "week") {
-      setWeekViewSelection({ values: newSelectedValues, year: currentYear });
-      setWeekSelectionModifiedAt(Date.now());
-    } else if (viewMode === "month") {
-      setMonthViewSelection({ values: newSelectedValues, year: currentYear });
-      setMonthSelectionModifiedAt(Date.now());
-    } else if (viewMode === "quarter") {
-      setQuarterViewSelection({ values: newSelectedValues, year: currentYear });
-      setQuarterSelectionModifiedAt(Date.now());
-    } else if (viewMode === "semester") {
-      setSemesterViewSelection({ values: newSelectedValues, year: currentYear });
-      setSemesterSelectionModifiedAt(Date.now());
-    }
     setHasGlobalFilter(false);
   };
 
@@ -701,22 +584,6 @@ export default function GraphTopReglesParJour({
       : [...selectedValues, v].sort((a, b) => a - b);
     
     setSelectedValues(newSelectedValues);
-    
-    // Mettre à jour l'état mémorisé et désactiver le filtre global
-    const currentYear = selectedYear;
-    if (viewMode === "week") {
-      setWeekViewSelection({ values: newSelectedValues, year: currentYear });
-      setWeekSelectionModifiedAt(Date.now());
-    } else if (viewMode === "month") {
-      setMonthViewSelection({ values: newSelectedValues, year: currentYear });
-      setMonthSelectionModifiedAt(Date.now());
-    } else if (viewMode === "quarter") {
-      setQuarterViewSelection({ values: newSelectedValues, year: currentYear });
-      setQuarterSelectionModifiedAt(Date.now());
-    } else if (viewMode === "semester") {
-      setSemesterViewSelection({ values: newSelectedValues, year: currentYear });
-      setSemesterSelectionModifiedAt(Date.now());
-    }
     setHasGlobalFilter(false);
   };
 
