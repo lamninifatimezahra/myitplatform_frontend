@@ -43,8 +43,21 @@ export default function KPIBacklogJ1({
   const readySentRef = useRef(false);
 
   // ---------- utils ----------
-  const normalizeDate = (d) => { const dt = new Date(d); dt.setHours(0,0,0,0); return dt; };
-  const toISO = (d) => normalizeDate(d).toISOString().slice(0, 10);
+  const normalizeDate = (d) => { 
+    const dt = new Date(d); 
+    dt.setHours(0,0,0,0); 
+    return dt; 
+  };
+  
+  // FIX: Use local date formatting instead of UTC
+  const toISO = (d) => {
+    const date = new Date(d);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
   const fmtISO = (d) => (d ? toISO(d) : "");
 
   const isWorkingDay = (dateLike) => {
@@ -63,7 +76,8 @@ export default function KPIBacklogJ1({
 
   const filterByRangeInclusiveWorkingDays = (arr, start, end) => {
     if (!start || !end) return [];
-    const s = normalizeDate(start), e = normalizeDate(end);
+    const s = normalizeDate(start);
+    const e = normalizeDate(end);
     return arr.filter((x) => {
       const dx = normalizeDate(x.date);
       return dx >= s && dx <= e && isWorkingDay(dx);
@@ -80,7 +94,9 @@ export default function KPIBacklogJ1({
   useEffect(() => {
     let alive = true;
     (async () => {
-      setLoading(true); setError(""); setDataHint("");
+      setLoading(true); 
+      setError(""); 
+      setDataHint("");
       try {
         const res = await fetchWithAuth(apiUrl);
         if (!res?.ok) throw new Error(`HTTP ${res?.status ?? "??"}`);
@@ -92,7 +108,8 @@ export default function KPIBacklogJ1({
         if (alive) {
           setLoading(false);
           if (!readySentRef.current && typeof onComponentReady === "function") {
-            readySentRef.current = true; onComponentReady();
+            readySentRef.current = true; 
+            onComponentReady();
           }
         }
       }
@@ -102,19 +119,32 @@ export default function KPIBacklogJ1({
 
   // ---------- calcul valeur ----------
   useEffect(() => {
-    if (!data.length) { setCurrentValue(0); setDataHint("Aucune donnée disponible."); return; }
+    if (!data.length) { 
+      setCurrentValue(0); 
+      setDataHint("Aucune donnée disponible."); 
+      return; 
+    }
     const sorted = sortByDateDesc(data);
 
     if (globalStartDate && globalEndDate) {
       const cur = filterByRangeInclusiveWorkingDays(sorted, globalStartDate, globalEndDate);
       const avg = meanOnField(cur, fieldName);
-      if (avg === null) { setCurrentValue(0); setDataHint("Aucune donnée dans la période filtrée."); }
-      else { setCurrentValue(Math.round(avg)); setDataHint(""); }
+      if (avg === null) { 
+        setCurrentValue(0); 
+        setDataHint("Aucune donnée dans la période filtrée."); 
+      } else { 
+        setCurrentValue(Math.round(avg)); 
+        setDataHint(""); 
+      }
       return;
     }
 
     const latestWorking = sorted.find((e) => isWorkingDay(e.date));
-    if (!latestWorking) { setCurrentValue(0); setDataHint("Aucun jour ouvré trouvé dans les données."); return; }
+    if (!latestWorking) { 
+      setCurrentValue(0); 
+      setDataHint("Aucun jour ouvré trouvé dans les données."); 
+      return; 
+    }
     setCurrentValue(Number(latestWorking?.[fieldName] ?? 0));
     setDataHint("");
   }, [data, globalStartDate, globalEndDate, fieldName]);
@@ -126,16 +156,12 @@ export default function KPIBacklogJ1({
   const hasFilter = !!(globalStartDate && globalEndDate);
   const displayTitle = hasFilter ? "Moyenne KPI" : "KPI du Jour";
   
-  // Format des dates pour l'affichage
+  // Format des dates pour l'affichage - also fixed to use local dates
   const formatDateRange = () => {
     if (!hasFilter) return "Dernière valeur disponible";
-    // Format cohérent avec le filtrage
-    const startStr = globalStartDate instanceof Date ? 
-      globalStartDate.toISOString().slice(0, 10) : 
-      globalStartDate.toString().slice(0, 10);
-    const endStr = globalEndDate instanceof Date ? 
-      globalEndDate.toISOString().slice(0, 10) : 
-      globalEndDate.toString().slice(0, 10);
+    // Use the toISO function which now properly handles local dates
+    const startStr = toISO(globalStartDate);
+    const endStr = toISO(globalEndDate);
     return `Du ${startStr} au ${endStr}`;
   };
 

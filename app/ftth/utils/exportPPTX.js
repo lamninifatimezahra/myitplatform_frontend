@@ -63,7 +63,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
         "repartition-manuelle", 
         "top-5-regles",
         "top-regles-par-jour",
-        "graph-entrants-sortants"
+        "Entrants – Sortants – Nouveaux cas"
       ]
     },
     ticketing: {

@@ -136,6 +136,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         if (index < kpiImages.length) {
           const kpi = kpiImages[index];
           const kpiLabel = kpi.label || kpi.id || "KPI Inconnu";
+          // 🎯 PARAMÈTRES DIMENSIONS KPI: width="200" height="120" et style="width:200px; height:120px;"
           const imageHtml = kpi.image
             ? `<img src="${kpi.image}" width="200" height="120" style="width:200px; height:120px; object-fit:contain;" />`
             : `<div style="width:200px; height:120px; border:1px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:10pt;">KPI N/A<br/>${kpiLabel}</div>`;
@@ -172,13 +173,16 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
               ${kpiHtml}
             </div>
             <div class="comment-block" style="margin-top:8pt; min-height: 100px;">
-              <div class="comment-block-title">💬 Votre commentaire sur les KPIs</div>
+              <div class="comment-block-title"></div>
               <div class="comment-text" style="min-height: 100px; padding-top: 10px; padding-bottom: 10px;">
-                ___________________________________________<br/>
-                ___________________________________________<br/>
-                ___________________________________________<br/>
-                ___________________________________________<br/>
-                ___________________________________________<br/>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+
+
               </div>
             </div>
           </td></tr>
@@ -198,13 +202,16 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     const title = imageItem.label || imageItem.id || imageId;
     const commentSection = showComments ? `
       <div class="comment-block" style="margin-top:8pt; min-height: 100px;">
-        <div class="comment-block-title">💬 Votre commentaire</div>
+        <div class="comment-block-title"></div>
         <div class="comment-text" style="min-height: 100px; padding-top: 10px; padding-bottom: 10px;">
-          ___________________________________________<br/>
-          ___________________________________________<br/>
-          ___________________________________________<br/>
-          ___________________________________________<br/>
-          ___________________________________________<br/>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+            <p>-</p>
+
+      
         </div>
       </div>
     ` : '';
@@ -222,7 +229,8 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
             <p class="subtitle">📊 ${title}</p>
             <div style="margin-top:4pt; text-align:center;">
               <div style="margin-bottom:6pt;">
-                <img src="${imageItem.image}" width="700" height="500" style="width:700px; height:500px; object-fit:contain; display:block; margin:0 auto;" />
+                <!-- 🎯 PARAMÈTRES DIMENSIONS GRAPHIQUES: width="700" height="500" et style="width:700px; height:500px;" -->
+                <img src="${imageItem.image}" width="700" height="400" style="width:700px; height:400px; object-fit:contain; display:block; margin:0 auto;" />
               </div>
             </div>
             ${commentSection}
@@ -232,22 +240,10 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     `;
   }
 
-  // Génération du contenu par sections
+  // Génération du contenu par sections - SANS LES PAGES DE TITRES DE SECTIONS
   let sectionsHtml = '';
 
   Object.values(sections).forEach(section => {
-    // Page de titre de section
-    sectionsHtml += `
-      <div style="page-break-after: always; height: 26cm; overflow: hidden; display: block;">
-        <table style="width:99.8%; border:2.8pt solid #004aad; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
-          <tr><td style="padding:14pt 24pt; vertical-align: middle; text-align: center;">
-            <h1 style="font-size:48pt; font-weight:bold; color:#ffffff; margin:0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-              ${section.title}
-            </h1>
-          </td></tr>
-        </table>
-      </div>
-    `;
 
     // Page des KPIs si elle existe
     if (section.kpis && section.kpis.length > 0) {
@@ -355,7 +351,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   <!-- PAGE COUVERTURE -->
   ${coverHtml}
 
-  <!-- SECTIONS ORGANISÉES -->
+  <!-- SECTIONS ORGANISÉES (SANS TITRES DE SECTIONS) -->
   ${sectionsHtml}
 
   <!-- Pied de page esthétique -->
@@ -383,7 +379,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
 </html>
   `;
 
-  console.log("DEBUG FTTH: HTML final généré avec sections organisées");
+  console.log("DEBUG FTTH: HTML final généré SANS titres de sections");
 
   const blob = htmlDocx.asBlob(html);
   const url = URL.createObjectURL(blob);
