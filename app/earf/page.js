@@ -48,7 +48,6 @@ export default function EARFDashboard() {
     <ExportProvider>
       <GlobalFilterProvider>
         <div className="flex h-screen w-full overflow-hidden relative">
-          {/* ☰ bouton mobile */}
           <button
             onClick={() => setIsSidebarOpen(true)}
             className="sm:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white shadow p-2 rounded-md"
