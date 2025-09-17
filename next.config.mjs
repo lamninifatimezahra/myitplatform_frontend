@@ -21,7 +21,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['127.0.0.1', 'localhost','myit-backend-its-c20c9354ce42.herokuapp.com'],
+    domains: ['127.0.0.1', 'localhost','api.606510.xyz'],
   },
 };
 
