@@ -60,7 +60,6 @@ export default function EARFTDashboard() {
             ☰
           </button>
 
-          {/* ✅ Sidebar FTTH-style */}
           <SidebarFTTHStyled
             sidebarOpen={isSidebarOpen}
             setSidebarOpen={setIsSidebarOpen}
@@ -88,7 +87,6 @@ export default function EARFTDashboard() {
                 animationDuration={40}
               />
 
-              {/* 🔢 KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <KpiTicketsEntrants apiUrl={API_EARFT_DATA} dateFilterField="date_derniere_maj" />
               <KpiTicketTraite apiUrl={API_EARFT_DATA} dateSortieField="date_sortie" />
