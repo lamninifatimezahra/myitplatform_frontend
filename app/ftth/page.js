@@ -36,6 +36,7 @@ import TranticiteCriticite from "../components/TranticiteCriticite";
 import NewsTickerRetard from "../components/NewsTickerRetard14";
 import SectionRail from "./components/SectionRail";
 import BacklogJ from "./components/GraphBacklogJ";
+import BacklogChart from "./components/BacklogChart";
 
 // Configuration API
 const API_FTTH_TICKETING_BASE = "https://api.606510.xyz/dashboard/api";
@@ -160,6 +161,7 @@ export default function DashboardFTTH() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <GroupedBarChart apiUrl={API_FTTH_TICKETING_DATA} />
                   <BacklogJ/>
+                  <BacklogChart apiUrl={API_FTTH_TICKETING_DATA} />
                   <TranticiteCriticite apiUrl={API_FTTH_TICKETING_DATA} />
                   <SlaAnciennete apiUrl={API_FTTH_TICKETING_DATA} />
                   <VolumeTicketsDivision apiUrl={API_FTTH_TICKETING_DATA} />
