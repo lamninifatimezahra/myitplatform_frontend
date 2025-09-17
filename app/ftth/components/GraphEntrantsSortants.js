@@ -176,7 +176,7 @@ function getAllSemestersBetween(startDate, endDate) {
 
 /* ====================== styles / config ====================== */
 const COLORS = ["#68bddd", "#6f80ac", "#4B5563"]; // Stock veille / Fermé hier / Nouveaux cas
-const labelStyle = { fill: "#374151", fontSize: 12, fontWeight: "bold" };
+const labelStyle = { fill: "#374151", fontSize: 15, fontWeight: "bold" };
 
 /* ===== Légende style Chart.js (top, centrée) ===== */
 function LegendInline({ visibleKeys, onClick }) {
@@ -941,21 +941,21 @@ export default function GraphEntrantsSortants({
                   angle={-35}
                   textAnchor="end"
                   height={85}
-                  tick={{ fontSize: 11, fill: "#1f2937" }}
+                  tick={{ fontSize: 14, fill: "#1f2937" }}
                   interval={0}
                   axisLine={false}
                   tickLine={false}
                 >
-                  <Label value={xAxisTitleFor(viewMode, selectedYear)} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                  <Label value={xAxisTitleFor(viewMode, selectedYear)} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                 </XAxis>
                 <YAxis
                   domain={[0, maxY]}
                   axisLine={false}
                   tickLine={false}
                   allowDecimals={false}
-                  tick={{ fontSize: 12, fill: "#1f2937", padding: 10 }}
+                  tick={{ fontSize: 15, fill: "#1f2937", padding: 10 }}
                 >
-                  <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                  <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                 </YAxis>
                 <Tooltip />
                 {visibleKeys.includes("stock") && (
@@ -1095,21 +1095,21 @@ export default function GraphEntrantsSortants({
                     angle={-35}
                     textAnchor="end"
                     height={85}
-                    tick={{ fontSize: 11, fill: "#1f2937" }}
+                    tick={{ fontSize: 15, fill: "#1f2937" }}
                     interval={0}
                     axisLine={false}
                     tickLine={false}
                   >
-                    <Label value={xAxisTitleFor(viewMode, selectedYear)} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                    <Label value={xAxisTitleFor(viewMode, selectedYear)} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                   </XAxis>
                   <YAxis
                     domain={[0, maxY]}
                     axisLine={false}
                     tickLine={false}
                     allowDecimals={false}
-                    tick={{ fontSize: 12, fill: "#1f2937" }}
+                    tick={{ fontSize: 15, fill: "#1f2937" }}
                   >
-                    <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                    <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                   </YAxis>
                   <Tooltip />
                   {visibleKeys.includes("stock") && (

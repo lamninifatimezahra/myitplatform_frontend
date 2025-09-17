@@ -224,7 +224,7 @@ const PercentLabel = ({ cx, cy, midAngle, outerRadius, percent }) => {
       x={x}
       y={y}
       fill="#374151"
-      fontSize={14}
+      fontSize={16}
       fontWeight={700}
       textAnchor={x > cx ? "start" : "end"}
       dominantBaseline="central"

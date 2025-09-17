@@ -858,7 +858,7 @@ const chartOptions = useMemo(() => ({
       },
       color: "#1f2937",
       font: {
-        size: 11,
+        size: 14,
         weight: "600",
       },
       formatter: (value) => value,
@@ -874,8 +874,8 @@ const chartOptions = useMemo(() => ({
       mode: "index", 
       intersect: false, 
       padding: 10, 
-      titleFont: { size: 13 }, 
-      bodyFont: { size: 12 },
+      titleFont: { size: 14 }, 
+      bodyFont: { size: 13 },
       // SUPPRIMÉ le filter qui masquait les tooltips sur les jours fériés
     },
     title: { display: false },
@@ -889,7 +889,7 @@ const chartOptions = useMemo(() => ({
         maxRotation: viewMode === "day" ? 45 : 0, 
         minRotation: viewMode === "day" ? 45 : 0, 
         padding: 10, 
-        font: { size: 11 }
+        font: { size: 14 }
       },
       title: {
         display: true,
@@ -899,7 +899,7 @@ const chartOptions = useMemo(() => ({
           viewMode === "month" ? `Mois ${selectedYear ?? ""}` :
           viewMode === "quarter" ? `Trimestres ${selectedYear ?? ""}` :
           `Semestres ${selectedYear ?? ""}`,
-        font: { size: 12 },
+        font: { size: 14 },
         padding: { top: 10 },
       },
     },
@@ -907,7 +907,7 @@ const chartOptions = useMemo(() => ({
       beginAtZero: true,
       grid: { drawBorder: false },
       ticks: { precision: 0, padding: 10 },
-      title: { display: true, text: "Volume", font: { size: 12 }, padding: { bottom: 10 } },
+      title: { display: true, text: "Volume", font: { size: 14 }, padding: { bottom: 10 } },
       grace: "5%",
     },
   },
@@ -1313,7 +1313,7 @@ const chartOptions = useMemo(() => ({
                 data={chartData}
                 options={{
                   ...chartOptions,
-                  plugins: { ...chartOptions.plugins, datalabels: { ...chartOptions.plugins.datalabels, font: { size: 11, weight: "bold" } } }
+                  plugins: { ...chartOptions.plugins, datalabels: { ...chartOptions.plugins.datalabels, font: { size: 13, weight: "bold" } } }
                 }}
                 plugins={[ChartDataLabels]}
               />

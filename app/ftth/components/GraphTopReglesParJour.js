@@ -1086,7 +1086,7 @@ export default function GraphTopReglesParJour({
                   angle={-35}
                   textAnchor="end"
                   height={85}
-                  tick={{ fontSize: 13, fill: "#1f2937", fontWeight: 600 }}
+                  tick={{ fontSize: 15, fill: "#1f2937", fontWeight: 600 }}
                   interval={0}
                   axisLine={false}
                   tickLine={false}
@@ -1097,7 +1097,7 @@ export default function GraphTopReglesParJour({
                   axisLine={false} 
                   tickLine={false}
                   tickFormatter={formatYAxisTick}
-                  tick={{ fontSize: 12, fill: "#374151" }}
+                  tick={{ fontSize: 15, fill: "#374151" }}
                   allowDataOverflow={false}
                 />
                 <Tooltip content={<CustomTooltip needsLogScale={needsLogScale} />} />
@@ -1107,7 +1107,7 @@ export default function GraphTopReglesParJour({
                     dataKey="value"
                     position="top"
                     offset={5}
-                    style={{ fill: "#374151", fontSize: 11, fontWeight: "bold" }}
+                    style={{ fill: "#374151", fontSize: 15, fontWeight: "bold" }}
                     formatter={(value) => value > 0 ? value : ""}
                   />
                   {/* Nom de la règle à l'intérieur de la barre, centré */}
@@ -1115,7 +1115,7 @@ export default function GraphTopReglesParJour({
                     dataKey="rule"
                     position="center"
                     angle={-90}
-                    style={{ fill: "white", fontSize: 10, fontWeight: "600", textAnchor: "middle" }}
+                    style={{ fill: "white", fontSize: 13, fontWeight: "600", textAnchor: "middle" }}
                     formatter={(rule) => {
                       // Afficher seulement si la règle existe et n'est pas vide
                       return rule && rule.trim() ? rule : "";
@@ -1254,7 +1254,7 @@ export default function GraphTopReglesParJour({
                     axisLine={false} 
                     tickLine={false}
                     tickFormatter={formatYAxisTick}
-                    tick={{ fontSize: 12, fill: "#374151" }}
+                    tick={{ fontSize: 14, fill: "#374151" }}
                     allowDataOverflow={false}
                   />
                   <Tooltip content={<CustomTooltip needsLogScale={needsLogScale} />} />
@@ -1264,7 +1264,7 @@ export default function GraphTopReglesParJour({
                       dataKey="value"
                       position="top"
                       offset={5}
-                      style={{ fill: "#374151", fontSize: 11, fontWeight: "bold" }}
+                      style={{ fill: "#374151", fontSize: 13, fontWeight: "bold" }}
                       formatter={(value) => value > 0 ? value : ""}
                     />
                     {/* Nom de la règle à l'intérieur de la barre, centré */}
@@ -1272,7 +1272,7 @@ export default function GraphTopReglesParJour({
                       dataKey="rule"
                       position="center"
                       angle={-90}
-                      style={{ fill: "white", fontSize: 10, fontWeight: "600", textAnchor: "middle" }}
+                      style={{ fill: "white", fontSize: 13, fontWeight: "600", textAnchor: "middle" }}
                       formatter={(rule) => {
                         // Afficher seulement si la règle existe et n'est pas vide
                         return rule && rule.trim() ? rule : "";

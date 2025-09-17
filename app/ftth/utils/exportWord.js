@@ -66,7 +66,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const sections = {
     manuel: {
       title: "Manuel FTTH",
-      kpis: ["kpi-backlog-j1", "kpi-backlog-j"], // seulement ces 2 KPI
+      kpis: ["kpi-backlog-j1", "kpi-backlog-j"],
       singles: [
         "vue-ensemble-backlog",
         "repartition-manuelle",
@@ -106,21 +106,20 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     },
   };
 
-  /* --- Zone commentaire : centrée, claire, démarre sur 1 ligne (grandit) --- */
+  /* --- Zone commentaire --- */
   function renderCommentBox(minLines = 1) {
-    const minHeightPx = Math.max(1, minLines) * 28; // ~1 ligne
     return `
       <table style="
         width: 94%;
         margin: 12pt auto 8pt auto;
-        border: 1.6pt dashed #93c5fd;   /* bleu clair */
+        border: 1.6pt dashed #93c5fd;
         border-radius: 6pt;
         border-collapse: separate;
       ">
         <tr>
           <td style="
             padding: 10pt 12pt;
-            background: #f8fafc;        /* gris très clair */
+            background: #f8fafc;
           ">
             <p style="margin:0; line-height:1.6; color:#111827;">&nbsp;</p>
           </td>
@@ -129,23 +128,48 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     `;
   }
 
-  /* --- Page KPIs (une seule zone commentaire pour toutes les cartes KPI) --- */
-  function generateKpiSectionHtml(kpiIds, sectionTitle) {
+  /* --- Page titre de section (nouvelle page dédiée) --- */
+  function generateSectionTitlePage(sectionTitle) {
+    return `
+      <div style="page-break-before: always; page-break-after: always; height: 29.7cm; display: flex; align-items: center; justify-content: center;">
+        <div style="text-align: center; width: 100%;">
+          <h1 style="
+            font-size: 48pt;
+            font-weight: bold;
+            color: #004aad;
+            margin: 0;
+            padding: 40pt 20pt;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-top: 4pt solid #004aad;
+            border-bottom: 4pt solid #004aad;
+          ">${escapeHtml(sectionTitle)}</h1>
+        </div>
+      </div>
+    `;
+  }
+
+  /* --- Page KPIs (tous regroupés sur une seule page) --- */
+  function generateKpiPages(kpiIds, sectionTitle) {
     if (!kpiIds || kpiIds.length === 0) return "";
 
-    const isManuel = sectionTitle === "Manuel FTTH";
     const kpiImages = kpiIds.map((kpiId) => {
       const found = findImageById(kpiId);
       return found ? found : { label: kpiId, id: kpiId, image: null };
     });
 
-    let kpiHtml = "";
+    let pagesHtml = "";
+
+    // Pour Manuel FTTH : 2 colonnes avec KPIs plus grands
+    const isManuel = sectionTitle === "Manuel FTTH";
+    
     if (isManuel) {
-      // 2 colonnes (grandes cartes)
-      const cols = 2, width = 340, height = 190;
+      // 2 colonnes pour Manuel FTTH
+      const cols = 2, width = 340, height = 200;
+      let kpiHtml = "";
       const numRows = Math.ceil(kpiImages.length / cols);
+      
       for (let row = 0; row < numRows; row++) {
-        kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:10pt 0;"><tr>';
+        kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:15pt;"><tr>';
         for (let col = 0; col < cols; col++) {
           const i = row * cols + col;
           if (i < kpiImages.length) {
@@ -153,11 +177,11 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
             const label = escapeHtml(k.label || k.id || "KPI");
             const img = k.image
               ? `<img src="${k.image}" width="${width}" height="${height}" style="display:block; margin:0 auto;" />`
-              : `<div style="width:${width}px; height:${height}px; border:1px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:10pt;">KPI N/A<br/>${label}</div>`;
+              : `<div style="width:${width}px; height:${height}px; border:2px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:11pt;">KPI N/A<br/>${label}</div>`;
             kpiHtml += `
-              <td width="50%" align="center" valign="middle" style="padding:8pt;">
-                <div style="text-align:center; margin-bottom:6pt;">
-                  <strong style="font-size:10pt; color:#004aad;">${label}</strong>
+              <td width="50%" align="center" valign="middle" style="padding:10pt;">
+                <div style="text-align:center; margin-bottom:8pt;">
+                  <strong style="font-size:12pt; color:#004aad;">${label}</strong>
                 </div>
                 ${img}
               </td>
@@ -168,12 +192,42 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         }
         kpiHtml += "</tr></table>";
       }
+
+      pagesHtml += `
+        <div style="page-break-before: always; page-break-after: always; height: 29.7cm; overflow: hidden; display: block;">
+          <table style="width:99%; border:3pt solid #d1d5db; border-radius:20pt; margin:10pt auto; height: 28cm;">
+            <tr><td style="padding:20pt 30pt; vertical-align: top;">
+              <!-- Logos -->
+              <table style="width:100%; margin-bottom:10pt;"><tr>
+                <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:35pt;"></td>
+                <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:35pt;"></td>
+              </tr></table>
+              
+              <p style="text-align:right; font-size:10pt; color:#6b7280; margin:5pt 0;">Généré le : ${todayStr}</p>
+              
+              ${periodLine}
+              
+              <h2 style="text-align:center; font-size:18pt; color:#004aad; margin:20pt 0;">
+                📊 KPIs ${escapeHtml(sectionTitle)}
+              </h2>
+              
+              <div style="margin-top:30pt;">
+                ${kpiHtml}
+              </div>
+              
+              ${renderCommentBox(1)}
+            </td></tr>
+          </table>
+        </div>
+      `;
     } else {
-      // 3 colonnes (format standard)
+      // Pour les autres sections : grille 3 colonnes
       const cols = 3, width = 200, height = 120;
+      let kpiHtml = "";
       const numRows = Math.ceil(kpiImages.length / cols);
+      
       for (let row = 0; row < numRows; row++) {
-        kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8pt;"><tr>';
+        kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:10pt;"><tr>';
         for (let col = 0; col < cols; col++) {
           const i = row * cols + col;
           if (i < kpiImages.length) {
@@ -183,9 +237,9 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
               ? `<img src="${k.image}" width="${width}" height="${height}" style="display:block; margin:0 auto;" />`
               : `<div style="width:${width}px; height:${height}px; border:1px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:10pt;">KPI N/A<br/>${label}</div>`;
             kpiHtml += `
-              <td width="33.33%" align="center" valign="middle" style="padding:5pt;">
-                <div style="text-align:center; margin-bottom:4pt;">
-                  <strong style="font-size:9pt; color:#004aad;">${label}</strong>
+              <td width="33.33%" align="center" valign="middle" style="padding:8pt;">
+                <div style="text-align:center; margin-bottom:6pt;">
+                  <strong style="font-size:10pt; color:#004aad;">${label}</strong>
                 </div>
                 ${img}
               </td>
@@ -196,31 +250,41 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         }
         kpiHtml += "</tr></table>";
       }
+
+      pagesHtml += `
+        <div style="page-break-before: always; page-break-after: always; height: 29.7cm; overflow: hidden; display: block;">
+          <table style="width:99%; border:3pt solid #d1d5db; border-radius:20pt; margin:10pt auto; height: 28cm;">
+            <tr><td style="padding:20pt 30pt; vertical-align: top;">
+              <!-- Logos -->
+              <table style="width:100%; margin-bottom:10pt;"><tr>
+                <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:35pt;"></td>
+                <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:35pt;"></td>
+              </tr></table>
+              
+              <p style="text-align:right; font-size:10pt; color:#6b7280; margin:5pt 0;">Généré le : ${todayStr}</p>
+              
+              ${periodLine}
+              
+              <h2 style="text-align:center; font-size:18pt; color:#004aad; margin:20pt 0;">
+                📊 KPIs ${escapeHtml(sectionTitle)}
+              </h2>
+              
+              <div style="margin-top:20pt;">
+                ${kpiHtml}
+              </div>
+              
+              ${renderCommentBox(1)}
+            </td></tr>
+          </table>
+        </div>
+      `;
     }
 
-    return `
-      <div style="page-break-after: always; height: 26cm; overflow: hidden; display: block;">
-        <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm;">
-          <tr><td style="padding:14pt 24pt; vertical-align: top;">
-            <table class="header-logos"><tr>
-              <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-              <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
-            </tr></table>
-            <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
-            ${periodLine}
-            <p class="subtitle" style="white-space:nowrap;">📊 KPIs ${escapeHtml(sectionTitle)}</p>
-            <div style="margin-top:10pt;">
-              ${kpiHtml}
-            </div>
-            ${renderCommentBox(1)}   <!-- 1 ligne au départ -->
-          </td></tr>
-        </table>
-      </div>
-    `;
+    return pagesHtml;
   }
 
-  /* --- Page graphe (1 par page) + zone commentaire systématique --- */
-  function generateSingleGraphHtml(imageId) {
+  /* --- Page graphe individuel --- */
+  function generateSingleGraphPage(imageId) {
     const item = findImageById(imageId);
     if (!item) {
       console.warn(`Image non trouvée pour l'ID: ${imageId}`);
@@ -228,133 +292,167 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     }
     const title = escapeHtml(item.label || imageId);
 
+    // Hauteurs spécifiques
+    const specialImages = [
+      "vue-ensemble-backlog",
+      "Top 5 RÈGLES", 
+      "top-regles-par-jour",
+      "Entrants – Sortants – Nouveaux cas"
+    ];
+    
+    const imageHeight = specialImages.includes(imageId) ? 320 : 420;
+    const imageWidth = 800;
+
     return `
-      <div style="page-break-before: always; page-break-after: always; height: 26cm; overflow: hidden; display: block;">
-        <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm;">
-          <tr><td style="padding:14pt 24pt; vertical-align: top;">
-            <table class="header-logos"><tr>
-              <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-              <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+      <div style="page-break-before: always; page-break-after: always; height: 29.7cm; overflow: hidden; display: block;">
+        <table style="width:99%; border:3pt solid #d1d5db; border-radius:20pt; margin:10pt auto; height: 28cm;">
+          <tr><td style="padding:20pt 30pt; vertical-align: top;">
+            <!-- Logos -->
+            <table style="width:100%; margin-bottom:10pt;"><tr>
+              <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:35pt;"></td>
+              <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:35pt;"></td>
             </tr></table>
-            <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
+            
+            <p style="text-align:right; font-size:10pt; color:#6b7280; margin:5pt 0;">Généré le : ${todayStr}</p>
+            
             ${periodLine}
-            <p class="subtitle" style="white-space:nowrap;">📊 ${title}</p>
-            <div style="margin-top:6pt; text-align:center;">
-              <img src="${item.image}" width="700" height="500" style="width:700px; height:500px; display:block; margin:0 auto;" />
+            
+            <h2 style="text-align:center; font-size:18pt; color:#004aad; margin:20pt 0;">
+              📊 ${title}
+            </h2>
+            
+            <div style="margin-top:20pt; text-align:center;">
+              <img src="${item.image}" width="${imageWidth}" height="${imageHeight}" style="max-width:100%; height:auto; display:block; margin:0 auto;" />
             </div>
-            ${renderCommentBox(1)}   <!-- 1 ligne au départ -->
+            
+            ${renderCommentBox(1)}
           </td></tr>
         </table>
       </div>
     `;
   }
 
-  /* --- Construction des sections --- */
-  let sectionsHtml = "";
+  /* --- Construction du document complet --- */
+  let documentHtml = "";
 
-  Object.values(sections).forEach((section) => {
-    // Page de titre
-    sectionsHtml += `
-      <div style="page-break-after: always; height: 26cm; overflow: hidden; display: block;">
-        <table style="width:99.8%; border:2.8pt solid #004aad; border-radius:22pt; margin-top:0; margin-bottom:0; height: 25cm; max-height: 25cm; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
-          <tr><td style="padding:14pt 24pt; vertical-align: middle; text-align: center;">
-            <h1 style="font-size:42pt; font-weight:bold; color:#004aad; margin:0; white-space:nowrap;">
-              ${escapeHtml(section.title)}
-            </h1>
-          </td></tr>
-        </table>
-      </div>
-    `;
-
-    if (section.kpis?.length) sectionsHtml += generateKpiSectionHtml(section.kpis, section.title);
-    if (section.singles) section.singles.forEach((id) => (sectionsHtml += generateSingleGraphHtml(id)));
-    if (section.noComments) section.noComments.forEach((id) => (sectionsHtml += generateSingleGraphHtml(id)));
-  });
-
-  /* --- Page de couverture --- */
-  const coverHtml = `
-    <div style="page-break-after: always; height: 30cm; overflow: hidden; display: block;">
-      <table style="width:99.8%; border:2.8pt solid #d1d5db; border-radius:22pt; margin-top:0; margin-bottom:0; height: 35cm; max-height: 35cm; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
-        <tr><td style="padding:14pt 24pt; vertical-align: top;">
-          <table class="header-logos"><tr>
-            <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:28pt;"></td>
-            <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:28pt;"></td>
+  // Page de couverture
+  documentHtml += `
+    <div style="page-break-after: always; height: 29.7cm; display: block;">
+      <table style="width:99%; border:3pt solid #d1d5db; border-radius:20pt; margin:10pt auto; height: 28cm; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+        <tr><td style="padding:30pt; vertical-align: middle;">
+          <!-- Logos -->
+          <table style="width:100%; margin-bottom:40pt;"><tr>
+            <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:40pt;"></td>
+            <td style="text-align:right;"><img src="https://myit-three.vercel.app/logo_sfr_small.png" style="height:40pt;"></td>
           </tr></table>
-          <table class="date-row"><tr><td class="date-cell">Généré le : ${todayStr}</td></tr></table>
 
-          <div style="text-align:center; margin-top:60pt;">
-            <h1 style="font-size:36pt; font-weight:bold; color:#004aad; margin:20pt 0; white-space:nowrap;">
+          <div style="text-align:center;">
+            <h1 style="font-size:42pt; font-weight:bold; color:#004aad; margin:30pt 0;">
               Compte-rendu FTTH<br/>EA FTTH
             </h1>
+            
             ${periodLine}
-            <div style="margin-top:40pt; padding:20pt; background:#ffffff; border-radius:12pt; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
-              <h2 style="font-size:16pt; color:#1f2937; margin-bottom:12pt; white-space:nowrap;">📋 Sections du rapport :</h2>
-              <ul style="text-align:left; font-size:14pt; color:#4b5563; line-height:1.7; list-style:none; padding:0; margin:0;">
-                <li style="margin:6pt 0;">🔧 <strong>Manuel FTTH</strong> - KPIs et analyses du traitement manuel</li>
-                <li style="margin:6pt 0;">🎫 <strong>Ticketing FTTH</strong> - Gestion et suivi des tickets</li>
-                <li style="margin:6pt 0;">📧 <strong>Mailing FTTH</strong> - Traitement des e-mails</li>
+            
+            <div style="margin-top:50pt; padding:25pt; background:#ffffff; border-radius:15pt; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+              <h2 style="font-size:18pt; color:#1f2937; margin-bottom:15pt;">📋 Sections du rapport</h2>
+              <ul style="text-align:left; font-size:14pt; color:#4b5563; line-height:2; list-style:none; padding:0 30pt;">
+                <li>🔧 <strong>Manuel FTTH</strong> - KPIs et analyses du traitement manuel</li>
+                <li>🎫 <strong>Ticketing FTTH</strong> - Gestion et suivi des tickets</li>
+                <li>📧 <strong>Mailing FTTH</strong> - Traitement des e-mails</li>
               </ul>
             </div>
+            
+            <p style="margin-top:40pt; font-size:10pt; color:#6b7280;">Généré le : ${todayStr}</p>
           </div>
         </td></tr>
       </table>
     </div>
   `;
 
-  /* --- HTML final --- */
+  // Génération des sections
+  Object.values(sections).forEach((section) => {
+    // Page titre de section
+    documentHtml += generateSectionTitlePage(section.title);
+    
+    // Pages KPIs
+    if (section.kpis?.length) {
+      documentHtml += generateKpiPages(section.kpis, section.title);
+    }
+    
+    // Pages graphiques individuels
+    if (section.singles) {
+      section.singles.forEach((id) => {
+        documentHtml += generateSingleGraphPage(id);
+      });
+    }
+    
+    // Pages sans commentaires
+    if (section.noComments) {
+      section.noComments.forEach((id) => {
+        documentHtml += generateSingleGraphPage(id);
+      });
+    }
+  });
+
+  // Footer final
+  documentHtml += `
+    <div style="page-break-before: always; padding: 30pt;">
+      <div style="
+        width: 90%;
+        margin: 40pt auto;
+        padding: 20pt;
+        background: #eef2f7;
+        border-radius: 12pt;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      ">
+        <p style="font-size:11pt; color:#1f2937; line-height:1.8; margin:0;">
+          Rapport généré automatiquement par <strong style="color:#004aad;">MyIT</strong><br/>
+          <a href="https://myit-three.vercel.app" target="_blank" style="text-decoration:none; color:#004aad; font-weight:bold;">
+            Dashboard FTTH - Plateforme MyIT
+          </a>
+        </p>
+      </div>
+    </div>
+  `;
+
+  /* --- HTML final avec styles globaux --- */
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <style>
-    @page { margin: 0pt; size: 21cm 29.7cm; }
-    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; color: #111827; }
-    .subtitle {
-      font-size: 16pt;
-      font-weight: bold;
-      color: #004aad;
-      text-align: center;
-      margin-top: 14pt;
-      margin-bottom: 10pt;
-      white-space: nowrap;
+    @page { 
+      margin: 0.5cm; 
+      size: A4;
     }
-    .header-logos { width: 100%; border-collapse: collapse; margin: 2pt 0 0 0; }
-    .header-logos td { vertical-align: top; }
-    .date-row { width: 100%; }
-    .date-cell { text-align: right; font-size: 9pt; color: #6b7280; padding: 1pt 24pt 1pt 0; }
+    body { 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      color: #111827;
+      line-height: 1.4;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
   </style>
 </head>
 <body>
-
-  ${coverHtml}
-  ${sectionsHtml}
-
-  <div style="
-    width: 96%;
-    margin: 20pt auto 0 auto;
-    padding: 10pt 16pt;
-    background: #eef2f7;
-    border-radius: 10pt;
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 9.8pt;
-    color: #1f2937;
-    text-align: center;
-    line-height: 1.5;
-    box-shadow: 0 0 2pt rgba(0, 0, 0, 0.05);
-  ">
-    Rapport généré automatiquement par 
-    <strong style="color:#004aad;">MyIT</strong><br/>
-    <a href="https://myit-three.vercel.app" target="_blank" style="text-decoration: none; color: #004aad; font-weight: bold;">
-      Dashboard FTTH, Plateforme <span style="font-family:'Segoe UI Black', sans-serif; color:#000;">MyIT</span>
-    </a>
-  </div>
-
+  ${documentHtml}
 </body>
 </html>
   `;
 
-  console.log("DEBUG FTTH: HTML final (commentaires centrés & light) prêt.");
+  console.log("DEBUG FTTH: Document Word avec pages séparées prêt.");
 
   const blob = htmlDocx.asBlob(html);
   const url = URL.createObjectURL(blob);
@@ -365,7 +463,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/* =============== Compat (ancienne signature) =============== */
+/* =============== Compatibilité avec l'ancienne signature =============== */
 export async function generateWordFromGraphs(
   selectedGraphIds = [],
   graphList = [],

@@ -231,7 +231,7 @@ const xAxisTitleFor = (viewMode, year) =>
 /* ============================ Composant ============================ */
 export default function GraphTopReglesParJour({
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/regle/",
-  id = "top-regles",
+  id = "Top 5 RÈGLES",
   chartTitle = "Top 5 RÈGLES",
   defaultViewMode = "day",
   defaultNumPeriods = 5,
@@ -893,25 +893,25 @@ export default function GraphTopReglesParJour({
                   angle={-35}
                   textAnchor="end"
                   height={85}
-                  tick={{ fontSize: 14, fill: "#1f2937", fontWeight: 600 }}
+                  tick={{ fontSize: 15, fill: "#1f2937", fontWeight: 600 }}
                   interval={0}
                   axisLine={false}
                   tickLine={false}
                 >
-                  <Label value={xAxisTitle} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                  <Label value={xAxisTitle} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                 </XAxis>
                 <YAxis
                   domain={[0, maxY]}
                   axisLine={false}
                   tickLine={false}
                   allowDecimals={false}
-                  tick={{ fontSize: 12, fill: "#1f2937" }}
+                  tick={{ fontSize: 15, fill: "#1f2937" }}
                 >
-                  <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                  <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                 </YAxis>
                 <Tooltip />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  <LabelList dataKey="value" position="top" style={{ fill: "#374151", fontSize: 12, fontWeight: "bold" }} />
+                  <LabelList dataKey="value" position="top" style={{ fill: "#374151", fontSize: 15, fontWeight: "bold" }} />
                   {top5Data.map((entry, i) => (
                     <Cell key={`cell-${i}`} fill={entry.color} />
                   ))}
@@ -1024,25 +1024,25 @@ export default function GraphTopReglesParJour({
                     angle={-35}
                     textAnchor="end"
                     height={85}
-                    tick={{ fontSize: 14, fill: "#1f2937", fontWeight: 600 }}
+                    tick={{ fontSize: 15, fill: "#1f2937", fontWeight: 600 }}
                     interval={0}
                     axisLine={false}
                     tickLine={false}
                   >
-                    <Label value={xAxisTitle} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                    <Label value={xAxisTitle} position="insideBottom" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                   </XAxis>
                   <YAxis
                     domain={[0, maxY]}
                     axisLine={false}
                     tickLine={false}
                     allowDecimals={false}
-                    tick={{ fontSize: 12, fill: "#1f2937" }}
+                    tick={{ fontSize: 15, fill: "#1f2937" }}
                   >
-                    <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 12 }} />
+                    <Label value="Volume" angle={-90} position="insideLeft" offset={-5} style={{ fill: "#374151", fontSize: 15 }} />
                   </YAxis>
                   <Tooltip />
                   <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    <LabelList dataKey="value" position="top" style={{ fill: "#374151", fontSize: 13, fontWeight: "bold" }} />
+                    <LabelList dataKey="value" position="top" style={{ fill: "#374151", fontSize: 15, fontWeight: "bold" }} />
                     {top5Data.map((entry, i) => (
                       <Cell key={`modal-cell-${i}`} fill={entry.color} />
                     ))}

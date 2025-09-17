@@ -172,7 +172,7 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
   angle={-35}
   textAnchor="end"
   height={85}
-  tick={{ fontSize: 14, fill: "#1f2937", fontWeight: 600 }}
+  tick={{ fontSize: 15, fill: "#1f2937", fontWeight: 600 }}
   interval={0}
 />
             <YAxis />
@@ -230,8 +230,7 @@ export default function GraphTicketsEntrantsSortants({ globalStartDate, globalEn
     <span>Sortants</span>
   </div>
 </div>
-
-          </div>
+    </div>
         </div>
       </Modal>
     </div>
