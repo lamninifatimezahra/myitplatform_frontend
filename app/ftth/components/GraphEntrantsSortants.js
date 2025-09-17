@@ -282,7 +282,7 @@ function DayOffLabel({ viewBox, payload }) {
 /* ============================ Composant ============================ */
 export default function GraphEntrantsSortants({
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/regle/",
-  id = "graph-entrants-sortants",
+  id = "Entrants – Sortants – Nouveaux cas",
   chartTitle = "Entrants – Sortants – Nouveaux cas",
   defaultViewMode = "day",
   defaultNumPeriods = 5,

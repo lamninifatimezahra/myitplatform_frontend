@@ -75,7 +75,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         "graph-entrants-sortants",
       ],
     },
-  ticketing: {
+    ticketing: {
       title: "Ticketing FTTH",
       kpis: [
         "KPI Tickets Entrants",
@@ -105,22 +105,21 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     },
   };
 
-  /* --- Zone commentaire : centrée, joli, gris très clair, 1 ligne au départ (s’agrandit dans Word) --- */
+  /* --- Zone commentaire : centrée, claire, démarre sur 1 ligne (grandit) --- */
   function renderCommentBox(minLines = 1) {
-    // une ligne ~ 18–22pt → on met ~28px pour le point de départ
-    const minHeightPx = Math.max(1, minLines) * 28;
+    const minHeightPx = Math.max(1, minLines) * 28; // ~1 ligne
     return `
       <table style="
         width: 94%;
         margin: 12pt auto 8pt auto;
         border: 1.6pt dashed #93c5fd;   /* bleu clair */
-        border-radius: 6pt;              /* léger arrondi pour la beauté */
+        border-radius: 6pt;
         border-collapse: separate;
       ">
         <tr>
           <td style="
             padding: 10pt 12pt;
-            background: #f8fafc;        /* gris TRÈS clair */
+            background: #f8fafc;        /* gris très clair */
           ">
             <p style="margin:0; line-height:1.6; color:#111827;">&nbsp;</p>
           </td>
@@ -267,8 +266,8 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     `;
 
     if (section.kpis?.length) sectionsHtml += generateKpiSectionHtml(section.kpis, section.title);
-    if (section.singles) section.singles.forEach((id) => sectionsHtml += generateSingleGraphHtml(id));
-    if (section.noComments) section.noComments.forEach((id) => sectionsHtml += generateSingleGraphHtml(id));
+    if (section.singles) section.singles.forEach((id) => (sectionsHtml += generateSingleGraphHtml(id)));
+    if (section.noComments) section.noComments.forEach((id) => (sectionsHtml += generateSingleGraphHtml(id)));
   });
 
   /* --- Page de couverture --- */
@@ -317,7 +316,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
       text-align: center;
       margin-top: 14pt;
       margin-bottom: 10pt;
-      white-space: nowrap; /* titre sur une seule ligne */
+      white-space: nowrap;
     }
     .header-logos { width: 100%; border-collapse: collapse; margin: 2pt 0 0 0; }
     .header-logos td { vertical-align: top; }
