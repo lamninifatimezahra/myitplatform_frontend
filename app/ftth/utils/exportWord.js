@@ -70,9 +70,9 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
       singles: [
         "vue-ensemble-backlog",
         "repartition-manuelle",
-        "top-5-regles",
+        "Top 5 RÈGLES",
         "top-regles-par-jour",
-        "graph-entrants-sortants",
+        "Entrants – Sortants – Nouveaux cas",
       ],
     },
     ticketing: {
@@ -87,6 +87,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
       singles: [
         "Tickets Entrants/Sortants",
         "Backlog J",
+        "Évolution du Backlog",
         "Transité / Criticité",
         "Ancienneté des Tickets Traités",
         "Volume des Tickets par Division",

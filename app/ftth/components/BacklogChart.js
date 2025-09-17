@@ -100,7 +100,7 @@ ChartJS.register(
 // =========================================
 export default function BacklogChart({
   apiUrl,
-  id = "Backlog-Evolution",
+  id = "Évolution du Backlog",
   chartTitle = "Évolution du Backlog",
   dateEntryField = "date_derniere_maj",
   dateExitField = "date_sortie",

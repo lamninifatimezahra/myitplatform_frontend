@@ -61,7 +61,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
       singles: [
         "vue-ensemble-backlog",
         "repartition-manuelle", 
-        "top-5-regles",
+        "Top 5 RÈGLES",
         "top-regles-par-jour",
         "Entrants – Sortants – Nouveaux cas"
       ]
@@ -78,6 +78,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
       singles: [
         "Tickets Entrants/Sortants",
         "Backlog J",
+        "Évolution du Backlog",
         "Transité / Criticité",
         "Ancienneté des Tickets Traités",
         "Volume des Tickets par Division",

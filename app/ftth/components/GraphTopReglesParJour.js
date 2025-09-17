@@ -65,6 +65,20 @@ function allWorkingDaysBetween(a, b, holidaySet) {
   }
   return res;
 }
+
+// AJOUT: Nouvelle fonction qui inclut les jours fériés pour le mode day
+function allWorkingDaysBetweenIncludingHolidays(a, b) {
+  const res = [];
+  const d = new Date(a); d.setHours(0, 0, 0, 0);
+  const end = new Date(b); end.setHours(0, 0, 0, 0);
+  while (d <= end) {
+    const iso = toISO(d);
+    if (isWorkingDay(d)) res.push(iso); // Inclure tous les jours ouvrés, y compris fériés
+    d.setDate(d.getDate() + 1);
+  }
+  return res;
+}
+
 function lastNWorkingDays(isoList, n, holidaySet) {
   return isoList
     .map((s) => ({ s, d: parseISO(s) }))
@@ -328,8 +342,8 @@ export default function GraphTopReglesParJour({
       setSelectedValues(semesterList);
       setSelectedYear(globalStartDate.getFullYear());
     } else {
-      // Mode day
-      const dayList = allWorkingDaysBetween(globalStartDate, globalEndDate, holidaySet);
+      // Mode day - UTILISER la nouvelle fonction qui inclut les jours fériés
+      const dayList = allWorkingDaysBetweenIncludingHolidays(globalStartDate, globalEndDate);
       setSelectedDates([globalStartDate, globalEndDate]);
       setSelectedValues(dayList);
     }
@@ -543,7 +557,8 @@ export default function GraphTopReglesParJour({
   const handleDayRangeChange = (dates) => {
     const [a, b] = dates;
     setSelectedDates(dates);
-    const dayList = a && b ? allWorkingDaysBetween(a, b, holidaySet) : [];
+    // MODIFIÉ: Utiliser la nouvelle fonction qui inclut les jours fériés
+    const dayList = a && b ? allWorkingDaysBetweenIncludingHolidays(a, b) : [];
     setSelectedValues(dayList);
     setHasGlobalFilter(false);
   };
@@ -616,15 +631,15 @@ export default function GraphTopReglesParJour({
     return `${selectedYear ? `Année ${selectedYear} - ` : ""}${prefix}: ${values.join(", ")}`;
   }, [viewMode, selectedDates, sortedSelectedValues, selectedYear, monthNames, quarterNames, semesterNames]);
 
-  /* ----------------- data pour Recharts ----------------- */
+  /* ----------------- data pour Recharts - MODIFIÉ ----------------- */
   const filteredDatesISO = useMemo(() => {
     if (!records.length) return [];
     
     if (viewMode === "day") {
-      // Mode jour : utiliser directement les dates sélectionnées
+      // Mode jour : utiliser directement les dates sélectionnées, INCLURE les jours fériés
       return sortedSelectedValues.filter(iso => {
         const d = parseISO(iso);
-        return d && isWorkingDay(d) && !holidaySet.has(iso);
+        return d && isWorkingDay(d); // SUPPRIMÉ && !holidaySet.has(iso)
       });
     } else if (selectedYear) {
       // Autres modes : filtrer par année et périodes sélectionnées
@@ -647,7 +662,7 @@ export default function GraphTopReglesParJour({
     }
     
     return [];
-  }, [records, viewMode, sortedSelectedValues, selectedYear, holidaySet]);
+  }, [records, viewMode, sortedSelectedValues, selectedYear]);
 
   const chartData = useMemo(() => {
     if (!records.length || !filteredDatesISO.length) return [];
@@ -657,7 +672,7 @@ export default function GraphTopReglesParJour({
       const group = new Map();
       records.forEach((r) => {
         if (!filteredDatesISO.includes(r.dateISO)) return;
-        if (holidaySet.has(r.dateISO)) return;
+        // SUPPRIMÉ: if (holidaySet.has(r.dateISO)) return;
         if (!group.has(r.dateISO)) group.set(r.dateISO, []);
         group.get(r.dateISO).push(r);
       });
@@ -669,10 +684,15 @@ export default function GraphTopReglesParJour({
           .sort((a, b) => (b.nouveau_cas || 0) - (a.nouveau_cas || 0))
           .slice(0, 5);
         
+        // AJOUTÉ: Gestion de l'icône pour les jours fériés
+        const isHoliday = holidaySet.has(iso);
+        const dateLabel = new Date(iso).toLocaleDateString("fr-FR");
+        const displayLabel = isHoliday ? `${dateLabel} 🏖️` : dateLabel;
+        
         top5.forEach((item, idx) => {
           rows.push({
-            group: new Date(iso).toLocaleDateString("fr-FR"),
-            compositeLabel: idx === 2 ? new Date(iso).toLocaleDateString("fr-FR") : "",
+            group: displayLabel,
+            compositeLabel: idx === 2 ? displayLabel : "",
             rule: item.regle,
             value: item.nouveau_cas || 0,
             color: colorForRule(item.regle),
@@ -698,6 +718,7 @@ export default function GraphTopReglesParJour({
       
       records.forEach((r) => {
         if (!filteredDatesISO.includes(r.dateISO)) return;
+        // GARDER cette condition pour les autres modes (week, month, quarter, semester)
         if (holidaySet.has(r.dateISO)) return;
         
         let periodKey = null;

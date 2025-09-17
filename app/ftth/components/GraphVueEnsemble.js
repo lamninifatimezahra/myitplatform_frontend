@@ -804,128 +804,114 @@ export default function GraphVueEnsemble({
   }, [records, sortedSelectedValues, selectedYear, viewMode, holidaySet]);
 
   // datasets avec "hidden" piloté par visibleKeys
-  const chartData = useMemo(() => {
-    const holidayFlags = sortedSelectedValues.map((v) => {
-      if (viewMode === "day") {
-        return holidaySet.has(v);
-      }
-      return false; // Pour les autres modes, pas de jour férié individuel
-    });
+// 1. Dans la section des datasets (ligne ~558), remplacez cette partie :
+const chartData = useMemo(() => {
+  const holidayFlags = sortedSelectedValues.map((v) => {
+    if (viewMode === "day") {
+      return holidaySet.has(v);
+    }
+    return false; // Pour les autres modes, pas de jour férié individuel
+  });
 
-    return {
-      labels,
-      datasets: [
-        { 
-          label: "Backlog FTTH J", 
-          data: sums.stockArr.map((value, index) => 
-            viewMode === "day" && holidayFlags[index] ? 0 : value
-          ), 
-          backgroundColor: COLORS[0], 
-          borderRadius: 6, 
-          hidden: !visibleKeys.includes("stock") 
-        },
-        { 
-          label: "Backlog FTTH J-1", 
-          data: sums.nonTraiteArr.map((value, index) => 
-            viewMode === "day" && holidayFlags[index] ? 0 : value
-          ), 
-          backgroundColor: COLORS[1], 
-          borderRadius: 6, 
-          hidden: !visibleKeys.includes("non_traite") 
-        },
-        { 
-          label: "Dossiers Traités", 
-          data: sums.traiteArr.map((value, index) => 
-            viewMode === "day" && holidayFlags[index] ? 0 : value
-          ), 
-          backgroundColor: COLORS[2], 
-          borderRadius: 6, 
-          hidden: !visibleKeys.includes("traite") 
-        },
-      ],
-      holidayFlags // Ajouter les flags pour le plugin
-    };
-  }, [labels, sums, visibleKeys, sortedSelectedValues, viewMode, holidaySet]);
+  return {
+    labels,
+    datasets: [
+      { 
+        label: "Backlog FTTH J", 
+        data: sums.stockArr, // SUPPRIMÉ le mapping qui mettait les valeurs à 0
+        backgroundColor: COLORS[0], 
+        borderRadius: 6, 
+        hidden: !visibleKeys.includes("stock") 
+      },
+      { 
+        label: "Backlog FTTH J-1", 
+        data: sums.nonTraiteArr, // SUPPRIMÉ le mapping qui mettait les valeurs à 0
+        backgroundColor: COLORS[1], 
+        borderRadius: 6, 
+        hidden: !visibleKeys.includes("non_traite") 
+      },
+      { 
+        label: "Dossiers Traités", 
+        data: sums.traiteArr, // SUPPRIMÉ le mapping qui mettait les valeurs à 0
+        backgroundColor: COLORS[2], 
+        borderRadius: 6, 
+        hidden: !visibleKeys.includes("traite") 
+      },
+    ],
+    holidayFlags // Garder les flags pour les tooltips et autres logiques
+  };
+}, [labels, sums, visibleKeys, sortedSelectedValues, viewMode, holidaySet]);
 
-  const chartOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      dayOffPlugin: {
-        display: viewMode === "day" // Seulement actif en mode jour
+
+// 3. Dans les options du graphique, modifiez le plugin datalabels pour ne pas masquer les jours fériés :
+const chartOptions = useMemo(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    dayOffPlugin: {
+      display: viewMode === "day"
+    },
+    datalabels: {
+      display: (context) => {
+        const value = context.dataset.data[context.dataIndex];
+        return value && value > 0; // SUPPRIMÉ la condition qui masquait les jours fériés
       },
-      datalabels: {
-        // Affiche l'étiquette uniquement si la valeur est supérieure à 0 et si ce n'est pas un jour férié
-       display: (context) => {
-                        const value = context.dataset.data[context.dataIndex];
-                        if (!value || value <= 0) return false;
-                        if (viewMode === "day" && context.chart.data.holidayFlags?.[context.dataIndex]) return false;
-                        return true;
-                      },
-        color: "#1f2937", // Une couleur un peu plus douce que le noir pur
-        font: {
-          size: 11, // Légèrement plus petit pour éviter les superpositions
-          weight: "600",
-        },
-        formatter: (value) => value,
-        
-        // === LA PARTIE IMPORTANTE ===
-        anchor: "end",     // L'ancrage est en haut de la barre.
-        align: "end",      // Aligne l'étiquette à la fin de l'ancre (au-dessus).
-        offset: 2,         // Espace (en pixels) au-dessus de la barre.
-        clip: false,      // TRES IMPORTANT: Permet à l'étiquette de dépasser de la zone du graphique.
+      color: "#1f2937",
+      font: {
+        size: 11,
+        weight: "600",
       },
-      legend: {
-        display: false,
-      },
-      tooltip: { 
-        mode: "index", 
-        intersect: false, 
+      formatter: (value) => value,
+      anchor: "end",
+      align: "end", 
+      offset: 2,
+      clip: false,
+    },
+    legend: {
+      display: false,
+    },
+    tooltip: { 
+      mode: "index", 
+      intersect: false, 
+      padding: 10, 
+      titleFont: { size: 13 }, 
+      bodyFont: { size: 12 },
+      // SUPPRIMÉ le filter qui masquait les tooltips sur les jours fériés
+    },
+    title: { display: false },
+  },
+  layout: { padding: { top: 25, right: 20, bottom: 10, left: 10 } },
+  animation: { duration: 250 },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { 
+        maxRotation: viewMode === "day" ? 45 : 0, 
+        minRotation: viewMode === "day" ? 45 : 0, 
         padding: 10, 
-        titleFont: { size: 13 }, 
-        bodyFont: { size: 12 },
-        filter: (tooltipItem) => {
-          // Ne pas afficher les tooltips sur les jours fériés
-          if (viewMode === "day" && tooltipItem.chart.data.holidayFlags) {
-            return !tooltipItem.chart.data.holidayFlags[tooltipItem.dataIndex];
-          }
-          return true;
-        }
+        font: { size: 11 }
       },
-      title: { display: false },
-    },
-    layout: { padding: { top: 25, right: 20, bottom: 10, left: 10 } }, // Plus d'espace en haut pour "DAY OFF"
-    animation: { duration: 250 },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { 
-          maxRotation: viewMode === "day" ? 45 : 0, 
-          minRotation: viewMode === "day" ? 45 : 0, 
-          padding: 10, 
-          font: { size: 11 }
-        },
-        title: {
-          display: true,
-          text:
-            viewMode === "day" ? "Jour" :
-            viewMode === "week" ? `Semaines ${selectedYear ?? ""}` :
-            viewMode === "month" ? `Mois ${selectedYear ?? ""}` :
-            viewMode === "quarter" ? `Trimestres ${selectedYear ?? ""}` :
-            `Semestres ${selectedYear ?? ""}`,
-          font: { size: 12 },
-          padding: { top: 10 },
-        },
-      },
-      y: {
-        beginAtZero: true,
-        grid: { drawBorder: false },
-        ticks: { precision: 0, padding: 10 },
-        title: { display: true, text: "Volume", font: { size: 12 }, padding: { bottom: 10 } },
-        grace: "5%",
+      title: {
+        display: true,
+        text:
+          viewMode === "day" ? "Jour" :
+          viewMode === "week" ? `Semaines ${selectedYear ?? ""}` :
+          viewMode === "month" ? `Mois ${selectedYear ?? ""}` :
+          viewMode === "quarter" ? `Trimestres ${selectedYear ?? ""}` :
+          `Semestres ${selectedYear ?? ""}`,
+        font: { size: 12 },
+        padding: { top: 10 },
       },
     },
-  }), [viewMode, selectedYear]);
+    y: {
+      beginAtZero: true,
+      grid: { drawBorder: false },
+      ticks: { precision: 0, padding: 10 },
+      title: { display: true, text: "Volume", font: { size: 12 }, padding: { bottom: 10 } },
+      grace: "5%",
+    },
+  },
+}), [viewMode, selectedYear]);
 
   // sous-titre
   const subtitle = useMemo(() => {

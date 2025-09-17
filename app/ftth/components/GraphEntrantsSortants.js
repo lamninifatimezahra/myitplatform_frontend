@@ -255,30 +255,6 @@ function IconButton({ title, ariaLabel, active = false, onClick, dataFilterToggl
   );
 }
 
-// NOUVEAU: Composant pour afficher "Day off" sur les jours fériés
-function DayOffLabel({ viewBox, payload }) {
-  if (!payload || !payload.isHoliday) return null;
-  
-  const { x, width } = viewBox;
-  const centerX = x + width / 2;
-  const centerY = viewBox.y + viewBox.height / 2;
-  
-  return (
-    <text
-      x={centerX}
-      y={centerY}
-      textAnchor="middle"
-      dominantBaseline="middle"
-      fill="#ef4444"
-      fontSize="10"
-      fontWeight="bold"
-      transform={`rotate(-45 ${centerX} ${centerY})`}
-    >
-      Day off
-    </text>
-  );
-}
-
 /* ============================ Composant ============================ */
 export default function GraphEntrantsSortants({
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/regle/",
@@ -413,17 +389,17 @@ export default function GraphEntrantsSortants({
         setAvailableYears(years);
         setMultipleYearsExist(years.length > 1);
 
-        // Initialisation seulement si pas encore fait
+        // MODIFIÉ: Initialisation incluant les jours fériés
         if (!initializationCompleted.current) {
           if (defaultViewMode === "day") {
             const all = [...new Set(mapped.map((x) => x.dateISO))].filter((iso) => {
               const d = parseISO(iso);
-              return isWorkingDay(d); // MODIFIÉ: Ne plus exclure les fériés
-            });
-            const last = lastNWorkingDays(all, 10, holidaySet);
-            if (last.length) {
-              setSelectedDates([parseISO(last[0]), parseISO(last[last.length - 1])]);
-              setSelectedValues(last);
+              return isWorkingDay(d); // SUPPRIMÉ: && !holidaySet.has(iso)
+            }).sort();
+            const last10 = all.slice(-10);
+            if (last10.length) {
+              setSelectedDates([parseISO(last10[0]), parseISO(last10[last10.length - 1])]);
+              setSelectedValues(last10);
             } else {
               setSelectedDates([null, null]);
               setSelectedValues([]);
@@ -521,13 +497,17 @@ export default function GraphEntrantsSortants({
         : new Date().getFullYear();
 
     if (newMode === "day") {
-        const allISODates = [...new Set(records.map(r => r.dateISO))];
-        const lastDayArray = lastNWorkingDays(allISODates, 1, holidaySet);
+        // MODIFIÉ: Inclure tous les jours ouvrés (y compris les jours fériés)
+        const allISODates = [...new Set(records.map(r => r.dateISO))].filter((iso) => {
+          const d = parseISO(iso);
+          return isWorkingDay(d); // SUPPRIMÉ: && !holidaySet.has(iso)
+        }).sort();
         
-        if (lastDayArray.length > 0) {
-            const lastDateObj = parseISO(lastDayArray[0]);
+        // Prendre le dernier jour disponible
+        if (allISODates.length > 0) {
+            const lastDateObj = parseISO(allISODates[allISODates.length - 1]);
             setSelectedDates([lastDateObj, lastDateObj]);
-            setSelectedValues(lastDayArray);
+            setSelectedValues([allISODates[allISODates.length - 1]]);
         } else {
             setSelectedDates([null, null]);
             setSelectedValues([]);
@@ -592,7 +572,7 @@ export default function GraphEntrantsSortants({
     setHasGlobalFilter(false);
   };
 
-  /* ----------------- dates retenues ----------------- */
+  /* ----------------- dates retenues - MODIFIÉ ----------------- */
   const acceptedDatesISO = useMemo(() => {
     if (!records.length) return [];
     const accepts = new Set();
@@ -610,12 +590,12 @@ export default function GraphEntrantsSortants({
     }
     const out = Array.from(accepts).filter((iso) => {
       const d = parseISO(iso);
-      return d && isWorkingDay(d); // Garder uniquement les jours ouvrés (lun-ven)
+      return d && isWorkingDay(d); // SUPPRIMÉ: && !holidaySet.has(iso)
     });
     return out.sort();
-  }, [records, viewMode, selectedValues, selectedYear, holidaySet]);
+  }, [records, viewMode, selectedValues, selectedYear]);
 
-  /* ----------------- agrégation -> lignes Recharts ----------------- */
+  /* ----------------- agrégation -> lignes Recharts - MODIFIÉ ----------------- */
   const chartRows = useMemo(() => {
     if (!records.length || !acceptedDatesISO.length) return [];
     const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -628,7 +608,11 @@ export default function GraphEntrantsSortants({
         const d = r.dateObj;
         const dd = String(d.getDate()).padStart(2,"0");
         const mm = String(d.getMonth()+1).padStart(2,"0");
-        return { key: r.dateISO, label: `${dd}/${mm} (S${weekNumber(d)})`, orderKey: r.dateISO };
+        // AJOUTÉ: Afficher l'icône 🏖️ pour les jours fériés
+        const isHoliday = holidaySet.has(r.dateISO);
+        const baseLabel = `${dd}/${mm} (S${weekNumber(d)})`;
+        const label = isHoliday ? `${baseLabel} 🏖️` : baseLabel;
+        return { key: r.dateISO, label, orderKey: r.dateISO };
       }
       if (viewMode === "week")     return { key: r.week,     label: `S${r.week}`,         orderKey: r.week };
       if (viewMode === "month")    return { key: r.month,    label: months[r.month-1]||`M${r.month}`, orderKey: r.month };
@@ -671,16 +655,10 @@ export default function GraphEntrantsSortants({
       if (!agg.has(key)) agg.set(key, { stock: 0, non_traite: 0, traite: 0, label, orderKey, isHoliday });
       const slot = agg.get(key);
       
-      // MODIFIÉ: Si c'est un jour férié, on met les valeurs à 0
-      if (isHoliday) {
-        slot.stock = 0;
-        slot.non_traite = 0;
-        slot.traite = 0;
-      } else {
-        slot.stock      += r.stock      || 0;
-        slot.non_traite += r.non_traite || 0;
-        slot.traite     += r.traite     || 0;
-      }
+      // MODIFIÉ: Afficher les vraies valeurs même pour les jours fériés
+      slot.stock      += r.stock      || 0;
+      slot.non_traite += r.non_traite || 0;
+      slot.traite     += r.traite     || 0;
     });
 
     const order = viewMode === "day"
@@ -694,7 +672,7 @@ export default function GraphEntrantsSortants({
   const maxVisible = useMemo(() => {
     let m = 0;
     chartRows.forEach((r) => {
-      if (r.isHoliday) return; // Ne pas compter les jours fériés pour le max
+      // MODIFIÉ: Compter aussi les jours fériés pour le max
       if (visibleKeys.includes("stock"))      m = Math.max(m, r.stock);
       if (visibleKeys.includes("non_traite")) m = Math.max(m, r.non_traite);
       if (visibleKeys.includes("traite"))     m = Math.max(m, r.traite);
@@ -983,7 +961,7 @@ export default function GraphEntrantsSortants({
                 {visibleKeys.includes("stock") && (
                   <Bar dataKey="stock" name="Stock de la veille" fill={COLORS[0]} radius={[6, 6, 0, 0]}>
                     <LabelList 
-                      dataKey={(entry) => entry.isHoliday ? "" : entry.stock} 
+                      dataKey="stock" 
                       position="top" 
                       style={labelStyle} 
                       formatter={(v) => (v > 0 ? v : "")} 
@@ -993,7 +971,7 @@ export default function GraphEntrantsSortants({
                 {visibleKeys.includes("non_traite") && (
                   <Bar dataKey="non_traite" name="Fermé hier" fill={COLORS[1]} radius={[6, 6, 0, 0]}>
                     <LabelList 
-                      dataKey={(entry) => entry.isHoliday ? "" : entry.non_traite} 
+                      dataKey="non_traite" 
                       position="top" 
                       style={labelStyle} 
                       formatter={(v) => (v > 0 ? v : "")} 
@@ -1003,40 +981,10 @@ export default function GraphEntrantsSortants({
                 {visibleKeys.includes("traite") && (
                   <Bar dataKey="traite" name="Nouveaux cas" fill={COLORS[2]} radius={[6, 6, 0, 0]}>
                     <LabelList 
-                      dataKey={(entry) => entry.isHoliday ? "" : entry.traite} 
+                      dataKey="traite" 
                       position="top" 
                       style={labelStyle} 
                       formatter={(v) => (v > 0 ? v : "")} 
-                    />
-                  </Bar>
-                )}
-                
-                {/* NOUVEAU: Ajouter les labels "Day off" pour les jours fériés */}
-                {viewMode === "day" && (
-                  <Bar dataKey="stock" fill="transparent">
-                    <LabelList 
-                      content={(props) => {
-                        const { payload, x, y, width, height } = props;
-                        if (!payload || !payload.isHoliday) return null;
-                        
-                        const centerX = x + width / 2;
-                        const centerY = y + height / 2;
-                        
-                        return (
-                          <text
-                            x={centerX}
-                            y={centerY}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            fill="#ef4444"
-                            fontSize="10"
-                            fontWeight="bold"
-                            transform={`rotate(-45 ${centerX} ${centerY})`}
-                          >
-                            Day off
-                          </text>
-                        );
-                      }}
                     />
                   </Bar>
                 )}
@@ -1167,7 +1115,7 @@ export default function GraphEntrantsSortants({
                   {visibleKeys.includes("stock") && (
                     <Bar dataKey="stock" fill={COLORS[0]} radius={[6, 6, 0, 0]}>
                       <LabelList 
-                        dataKey={(entry) => entry.isHoliday ? "" : entry.stock} 
+                        dataKey="stock" 
                         position="top" 
                         style={labelStyle} 
                         formatter={(v) => (v > 0 ? v : "")} 
@@ -1177,7 +1125,7 @@ export default function GraphEntrantsSortants({
                   {visibleKeys.includes("non_traite") && (
                     <Bar dataKey="non_traite" fill={COLORS[1]} radius={[6, 6, 0, 0]}>
                       <LabelList 
-                        dataKey={(entry) => entry.isHoliday ? "" : entry.non_traite} 
+                        dataKey="non_traite" 
                         position="top" 
                         style={labelStyle} 
                         formatter={(v) => (v > 0 ? v : "")} 
@@ -1187,42 +1135,10 @@ export default function GraphEntrantsSortants({
                   {visibleKeys.includes("traite") && (
                     <Bar dataKey="traite" fill={COLORS[2]} radius={[6, 6, 0, 0]}>
                       <LabelList 
-                        dataKey={(entry) => entry.isHoliday ? "" : entry.traite} 
+                        dataKey="traite" 
                         position="top" 
                         style={labelStyle} 
                         formatter={(v) => (v > 0 ? v : "")} 
-                      />
-                    </Bar>
-                  )}
-                  
-                  {/* NOUVEAU: Ajouter les labels "Day off" pour les jours fériés dans la modal */}
-                  {viewMode === "day" && chartRows.some(row => row.isHoliday) && (
-                    <Bar dataKey={() => 1} fill="transparent">
-                      <LabelList 
-                        content={(props) => {
-                          const { payload, x, y, width, height, index } = props;
-                          const rowData = chartRows[index];
-                          if (!rowData || !rowData.isHoliday) return null;
-                          
-                          const centerX = x + width / 2;
-                          const centerY = y + height / 2;
-                          
-                          return (
-                            <text
-                              key={`modal-dayoff-${index}`}
-                              x={centerX}
-                              y={centerY}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fill="#ef4444"
-                              fontSize="11"
-                              fontWeight="bold"
-                              transform={`rotate(-45 ${centerX} ${centerY})`}
-                            >
-                              Day off
-                            </text>
-                          );
-                        }}
                       />
                     </Bar>
                   )}
