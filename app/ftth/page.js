@@ -37,6 +37,7 @@ import NewsTickerRetard from "../components/NewsTickerRetard14";
 import SectionRail from "./components/SectionRail";
 import BacklogJ from "./components/GraphBacklogJ";
 import BacklogChart from "./components/BacklogChart";
+import VolumeReentrantsLineChart from "../components/VolumeReentrantLineChart";
 
 // Configuration API
 const API_FTTH_TICKETING_BASE = "https://api.606510.xyz/dashboard/api";
@@ -168,6 +169,8 @@ export default function DashboardFTTH() {
                   <RapportSortantsEntrants apiUrl={API_FTTH_TICKETING_DATA} />
                   <TauxReentrants apiUrl={API_FTTH_TICKETING_DATA} />
                   <VolumeReentrant apiUrl={API_FTTH_TICKETING_DATA} />
+                  <VolumeReentrantsLineChart apiUrl={API_FTTH_TICKETING_DATA} />
+                  
                 </div>
                 <TicketsReentrantsTable apiUrl={API_FTTH_TICKETING_DATA} commentApiUrl={API_FTTH_COMMENT_UPDATE} tableType="ftth" />
                 <TicketsEnCoursTable
@@ -189,7 +192,7 @@ export default function DashboardFTTH() {
                 <GraphRepartitionEmails />
               </div>
             </section>
-                      <SectionRail sections={sections} scrollContainerRef={mainRef} />
+                <SectionRail sections={sections} scrollContainerRef={mainRef} />
 
           </main>
 
