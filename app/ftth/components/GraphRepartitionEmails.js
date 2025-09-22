@@ -442,66 +442,82 @@ export default function GraphRepartitionParType() {
   const chartLabels = Object.keys(typeCounts).sort();
   const total = Object.values(typeCounts).reduce((a, b) => a + b, 0);
 
-  const chartData = {
-    labels: chartLabels,
-    datasets: [{
-      data: chartLabels.map(label => disabledCategories.includes(label) ? 0 : typeCounts[label]),
-      backgroundColor: chartLabels.map(label => COLORS[label] || COLORS["Autre"]),
-      cutout: "45%",
-      borderWidth: 1,
-    }],
-  };
+// Et aussi, modifiez légèrement la configuration de votre dataset :
+const chartData = {
+  labels: chartLabels,
+  datasets: [{
+    data: chartLabels.map(label => disabledCategories.includes(label) ? 0 : typeCounts[label]),
+    backgroundColor: chartLabels.map(label => COLORS[label] || COLORS["Autre"]),
+    cutout: "40%", // Réduire légèrement de 45% à 40% pour plus d'espace pour les étiquettes centrées
+    borderWidth: 1,
+  }],
+};
   
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: "right",
-        labels: {
-          color: "black",
-          font: { size: 11 },
-          boxWidth: 12,
-          padding: 8,
-          generateLabels: (chart) => chart.data.labels.map((label, i) => ({
-            text: label,
-            fillStyle: chart.data.datasets[0].backgroundColor[i],
-            hidden: disabledCategories.includes(label),
-            strokeStyle: 'transparent'
-          })),
-        },
-        onClick: (_, legendItem) => toggleCategory(legendItem.text),
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: true,
+      position: "right",
+      labels: {
+        color: "Black",
+        font: { size: 12 },
+        boxWidth: 12,
+        padding: 8,
+        generateLabels: (chart) => chart.data.labels.map((label, i) => ({
+          text: label,
+          fillStyle: chart.data.datasets[0].backgroundColor[i],
+          hidden: disabledCategories.includes(label),
+          strokeStyle: 'transparent'
+        })),
       },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const label = context.label;
-            const value = context.raw;
-            const currentTotal = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            if (disabledCategories.includes(label) || currentTotal === 0) return null;
-            const percent = ((value / currentTotal) * 100).toFixed(2);
-            return `${label}: ${value} (${percent}%)`;
-          },
-        },
-      },
-      datalabels: {
-        color: "black",
-        font: { size: 10 },
-        formatter: (value, context) => {
-          const label = context.chart.data.labels[context.dataIndex];
+      onClick: (_, legendItem) => toggleCategory(legendItem.text),
+    },
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const label = context.label;
+          const value = context.raw;
           const currentTotal = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-          if (value === 0 || disabledCategories.includes(label) || currentTotal === 0) return "";
+          if (disabledCategories.includes(label) || currentTotal === 0) return null;
           const percent = ((value / currentTotal) * 100).toFixed(2);
-          return `${percent}%`;
+          return `${label}: ${value} (${percent}%)`;
         },
-        anchor: "end",
-        align: "end",
-        offset: 8,
       },
     },
-    layout: { padding: 10 },
-  };
+    datalabels: {
+      color: "White",
+      font: { size: 14 },
+      formatter: (value, context) => {
+        const label = context.chart.data.labels[context.dataIndex];
+        const currentTotal = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+        if (value === 0 || disabledCategories.includes(label) || currentTotal === 0) return "";
+        const percent = ((value / currentTotal) * 100).toFixed(2);
+        return `${percent}%`;
+      },
+      // MODIFICATION ICI : Positionnement des étiquettes à l'intérieur des secteurs
+      anchor: "center",
+      align: "center",
+      offset: 0, // Réduire l'offset à 0
+      // Alternative : garder à l'extérieur mais avec plus de padding
+      // anchor: "end",
+      // align: "end", 
+      // offset: 4, // Réduire l'offset de 8 à 4
+      clip: false, // Permet aux étiquettes de dépasser les limites du canvas
+    },
+  },
+  // MODIFICATION ICI : Augmenter le padding pour laisser de l'espace aux étiquettes
+  layout: { 
+    padding: {
+      top: 20,
+      right: 30,
+      bottom: 20,
+      left: 30
+    }
+  },
+};
+
 
   const periodeLabel = useMemo(() => {
     if (hasGlobalFilter && globalStartDate && globalEndDate) {
