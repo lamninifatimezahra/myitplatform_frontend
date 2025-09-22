@@ -114,7 +114,6 @@ export default function HeaderMyAI({ setSidebarOpen }) {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotifOpen(!notifOpen)}

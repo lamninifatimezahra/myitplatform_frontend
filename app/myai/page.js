@@ -12,7 +12,6 @@ export default function MyAIPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Simulation d'un petit chargement initial (1.5s)
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
@@ -38,7 +37,6 @@ export default function MyAIPage() {
           </div>
         </div>
 
-        {/* Animation personnalisée */}
         <style jsx>{`
           @keyframes spin-custom {
             0% {
