@@ -18,7 +18,6 @@ export default function MyProposHomePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // ✅ Spinner MyIT (logo centré + cercle animé)
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-white relative">
