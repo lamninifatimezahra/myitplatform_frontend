@@ -97,7 +97,8 @@ export default function HispeedDashboard() {
             {/* Ligne 2 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <GroupedBarChart apiUrl={API_HISPEED_DATA} />
-              <TranticiteCriticite apiUrl={API_HISPEED_DATA} />
+              <RapportSortantsEntrants apiUrl={API_HISPEED_DATA} />
+
             </div>
 
             {/* Ligne 3 */}
@@ -108,7 +109,7 @@ export default function HispeedDashboard() {
 
             {/* Ligne 4 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <RapportSortantsEntrants apiUrl={API_HISPEED_DATA} />
+              <TranticiteCriticite apiUrl={API_HISPEED_DATA} />
               <TauxReentrants apiUrl={API_HISPEED_DATA} />
             </div>
 

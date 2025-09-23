@@ -161,7 +161,7 @@ export default function DashboardFTTH() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <GroupedBarChart apiUrl={API_FTTH_TICKETING_DATA} />
-                  <BacklogJ/>
+                  <RapportSortantsEntrants apiUrl={API_FTTH_TICKETING_DATA} />
                   <BacklogChart apiUrl={API_FTTH_TICKETING_DATA} />
                   <TranticiteCriticite apiUrl={API_FTTH_TICKETING_DATA} />
                   <SlaAnciennete apiUrl={API_FTTH_TICKETING_DATA} />

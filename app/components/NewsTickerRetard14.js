@@ -5,12 +5,12 @@ import fetchWithAuth from "@/utils/fetchWithAuth";
 
 export default function NewsTickerRetard({
   apiUrl, // URL de l'API requise sans valeur par défaut
-  title = "Tickets en retard (+14j)",
+  title = "Tickets en retard (+7j)",
   dateSortieField = "date_sortie",
   dateDerniereMajField = "date_derniere_maj",
   idField = "id_ticket",
   titreField = "compl_title",
-  retardDays = 14,
+  retardDays = 7,
   scrollSpeed = 50 // Vitesse en pixels par seconde
 }) {
   // Déclaration de tous les états au début de la fonction

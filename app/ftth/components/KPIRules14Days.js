@@ -64,7 +64,7 @@ export default function KPIManuelData7Days({
     return (
       <div className="visualisation relative w-64" data-id="kpi-manuel-7j">
         <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
-          <h3 className="text-gray-800 text-lg font-medium">Commandes +Semaine</h3>
+          <h3 className="text-gray-800 text-lg font-medium">Dossiers +Semaine</h3>
           <div className="flex items-center justify-center w-full mt-4">
             <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
           </div>
