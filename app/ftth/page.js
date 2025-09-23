@@ -166,7 +166,6 @@ export default function DashboardFTTH() {
                   <TranticiteCriticite apiUrl={API_FTTH_TICKETING_DATA} />
                   <SlaAnciennete apiUrl={API_FTTH_TICKETING_DATA} />
                   <VolumeTicketsDivision apiUrl={API_FTTH_TICKETING_DATA} />
-                  <RapportSortantsEntrants apiUrl={API_FTTH_TICKETING_DATA} />
                   <TauxReentrants apiUrl={API_FTTH_TICKETING_DATA} />
                   <VolumeReentrant apiUrl={API_FTTH_TICKETING_DATA} />
                   <VolumeReentrantsLineChart apiUrl={API_FTTH_TICKETING_DATA} />
