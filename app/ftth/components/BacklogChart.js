@@ -105,6 +105,7 @@ export default function BacklogChart({
   dateEntryField = "date_derniere_maj",
   dateExitField = "date_sortie",
   defaultNumDays = 15,
+  retardDays = 7, // Nouveau paramètre pour le seuil de retard
 }) {
   if (!apiUrl) {
     return (
@@ -139,7 +140,7 @@ export default function BacklogChart({
 
   // --- Calcul du backlog global (une seule fois pour toutes les données) ---
   const globalBacklogData = useMemo(() => {
-    if (!data.length) return {};
+    if (!data.length) return { backlogByDate: {}, backlogRetardByDate: {} };
 
     // 1. Créer tous les événements
     const events = [];
@@ -151,7 +152,8 @@ export default function BacklogChart({
         events.push({
           date: entryDateStr,
           type: 'ENTRY',
-          ticketId: ticket.id_ticket || ticket.id
+          ticketId: ticket.id_ticket || ticket.id,
+          ticket: ticket
         });
       }
 
@@ -159,7 +161,8 @@ export default function BacklogChart({
         events.push({
           date: exitDateStr,
           type: 'EXIT',
-          ticketId: ticket.id_ticket || ticket.id
+          ticketId: ticket.id_ticket || ticket.id,
+          ticket: ticket
         });
       }
     });
@@ -167,33 +170,53 @@ export default function BacklogChart({
     // 2. Trier tous les événements chronologiquement
     events.sort((a, b) => a.date.localeCompare(b.date));
 
-    // 3. Calculer le backlog cumulatif pour chaque date
+    // 3. Calculer le backlog cumulatif et le backlog en retard pour chaque date
     const backlogByDate = {};
-    let currentBacklog = 0;
+    const backlogRetardByDate = {};
+    const activeTickets = new Map(); // tickets actuellement dans le backlog
     
-    // Traiter tous les événements dans l'ordre chronologique
     events.forEach(event => {
+      const eventDate = new Date(event.date);
+      
       // Si on n'a pas encore de valeur pour cette date, initialiser avec la valeur précédente
       if (!backlogByDate.hasOwnProperty(event.date)) {
-        backlogByDate[event.date] = currentBacklog;
+        const previousDates = Object.keys(backlogByDate).sort();
+        const lastValue = previousDates.length > 0 ? backlogByDate[previousDates[previousDates.length - 1]] : 0;
+        const lastRetardValue = previousDates.length > 0 ? backlogRetardByDate[previousDates[previousDates.length - 1]] : 0;
+        
+        backlogByDate[event.date] = lastValue;
+        backlogRetardByDate[event.date] = lastRetardValue;
       }
 
       // Appliquer l'événement
       if (event.type === 'ENTRY') {
-        currentBacklog++;
+        activeTickets.set(event.ticketId, {
+          ticket: event.ticket,
+          entryDate: eventDate
+        });
       } else if (event.type === 'EXIT') {
-        currentBacklog--;
+        activeTickets.delete(event.ticketId);
       }
       
-      // Sécurité : empêcher backlog négatif
-      currentBacklog = Math.max(0, currentBacklog);
+      // Recalculer le backlog total et en retard
+      const totalBacklog = activeTickets.size;
       
-      // Mettre à jour la valeur pour cette date
-      backlogByDate[event.date] = currentBacklog;
+      // Calculer combien de tickets sont en retard (>= retardDays jours dans le backlog)
+      let ticketsEnRetard = 0;
+      activeTickets.forEach(({ entryDate }) => {
+        const delayInDays = Math.ceil((eventDate - entryDate) / (1000 * 60 * 60 * 24));
+        if (delayInDays >= retardDays) {
+          ticketsEnRetard++;
+        }
+      });
+      
+      // Sécurité : empêcher backlog négatif
+      backlogByDate[event.date] = Math.max(0, totalBacklog);
+      backlogRetardByDate[event.date] = Math.max(0, ticketsEnRetard);
     });
 
-    return { backlogByDate, finalBacklog: currentBacklog };
-  }, [data, dateEntryField, dateExitField]);
+    return { backlogByDate, backlogRetardByDate };
+  }, [data, dateEntryField, dateExitField, retardDays]);
 
   // --- Fonction pour appliquer le filtre global ---
   const applyGlobalFilter = useCallback(() => {
@@ -328,7 +351,8 @@ export default function BacklogChart({
     return selectedValues.map(dateStr => {
       // Si on a une valeur exacte pour cette date, l'utiliser
       if (globalBacklogData.backlogByDate.hasOwnProperty(dateStr)) {
-        return globalBacklogData.backlogByDate[dateStr];
+        const value = globalBacklogData.backlogByDate[dateStr];
+        return typeof value === 'number' ? value : 0;
       }
 
       // Sinon, trouver la dernière valeur connue avant cette date
@@ -337,7 +361,8 @@ export default function BacklogChart({
       
       for (let i = allDates.length - 1; i >= 0; i--) {
         if (allDates[i] < dateStr) {
-          lastKnownValue = globalBacklogData.backlogByDate[allDates[i]];
+          const value = globalBacklogData.backlogByDate[allDates[i]];
+          lastKnownValue = typeof value === 'number' ? value : 0;
           break;
         }
       }
@@ -346,18 +371,56 @@ export default function BacklogChart({
     });
   }, [selectedValues, globalBacklogData]);
 
-  // Générer les labels pour l'axe X
+  // Extraction des valeurs de backlog en retard pour les jours sélectionnés
+  const backlogRetardData = useMemo(() => {
+    if (!selectedValues.length || !globalBacklogData.backlogRetardByDate) return [];
+
+    return selectedValues.map(dateStr => {
+      // Si on a une valeur exacte pour cette date, l'utiliser
+      if (globalBacklogData.backlogRetardByDate.hasOwnProperty(dateStr)) {
+        const value = globalBacklogData.backlogRetardByDate[dateStr];
+        return typeof value === 'number' ? value : 0;
+      }
+
+      // Sinon, trouver la dernière valeur connue avant cette date
+      const allDates = Object.keys(globalBacklogData.backlogRetardByDate).sort();
+      let lastKnownValue = 0;
+      
+      for (let i = allDates.length - 1; i >= 0; i--) {
+        if (allDates[i] < dateStr) {
+          const value = globalBacklogData.backlogRetardByDate[allDates[i]];
+          lastKnownValue = typeof value === 'number' ? value : 0;
+          break;
+        }
+      }
+      
+      return lastKnownValue;
+    });
+  }, [selectedValues, globalBacklogData]);
+
+  // Calcul des moyennes pour la légende
+  const backlogMoyenne = useMemo(() => {
+    if (!backlogData.length) return 0;
+    const sum = backlogData.reduce((acc, val) => acc + val, 0);
+    return Math.round(sum / backlogData.length * 10) / 10; // Arrondi à 1 décimale
+  }, [backlogData]);
+
+  const backlogRetardMoyenne = useMemo(() => {
+    if (!backlogRetardData.length) return 0;
+    const sum = backlogRetardData.reduce((acc, val) => acc + val, 0);
+    return Math.round(sum / backlogRetardData.length * 10) / 10; // Arrondi à 1 décimale
+  }, [backlogRetardData]);
   const labels = useMemo(() => 
     selectedValues.map(dateStr => formatDayLabel(dateStr)), 
     [selectedValues]
   );
 
-  // Structure des données pour ChartJS
+  // Structure des données pour ChartJS avec deux datasets
   const chartData = {
     labels,
     datasets: [
       {
-        label: "Tickets dans le backlog",
+        label: `Tickets dans le backlog (moy: ${backlogMoyenne})`,
         data: backlogData,
         backgroundColor: "rgba(104, 189, 221, 0.2)",
         borderColor: "#68bddd",
@@ -369,6 +432,20 @@ export default function BacklogChart({
         pointBorderWidth: 2,
         pointRadius: 5,
         pointHoverRadius: 7
+      },
+      {
+        label: `Tickets +${retardDays} jours (moy: ${backlogRetardMoyenne})`,
+        data: backlogRetardData,
+        backgroundColor: "rgba(255, 99, 132, 0.1)",
+        borderColor: "#ff6384",
+        borderWidth: 3,
+        fill: false,
+        tension: 0.3,
+        pointBackgroundColor: "#dc2626",
+        pointBorderColor: "#ff6384",
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
       }
     ]
   };
@@ -380,12 +457,31 @@ export default function BacklogChart({
     plugins: {
       datalabels: {
         display: true,
-        color: "#000",
+        color: function(context) {
+          // Couleur rouge pour le dataset des retards, bleu pour le total
+          return context.datasetIndex === 1 ? "#dc2626" : "#1b2b6b";
+        },
         font: { weight: "bold", size: 10 },
-        formatter: val => val > 0 ? val : "",
-        anchor: "end",
-        align: "top",
-        offset: 5
+        formatter: function(value, context) {
+          // Retourner simplement la valeur
+          return value;
+        },
+        anchor: function(context) {
+          return context.datasetIndex === 1 ? "center" : "end";
+        },
+        align: function(context) {
+          return context.datasetIndex === 1 ? "bottom" : "top";
+        },
+        offset: function(context) {
+          return context.datasetIndex === 1 ? -10 : 5;
+        },
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderColor: function(context) {
+          return context.datasetIndex === 1 ? "#dc2626" : "#1b2b6b";
+        },
+        borderWidth: 1,
+        borderRadius: 2,
+        padding: 1
       },
       legend: {
         position: "top",
@@ -400,6 +496,10 @@ export default function BacklogChart({
         bodyFont: { size: 12 },
         callbacks: {
           label: function(context) {
+            // Vérifier que context.parsed existe
+            if (!context.parsed || typeof context.parsed.y === 'undefined') {
+              return `${context.dataset.label}: 0 tickets`;
+            }
             return `${context.dataset.label}: ${context.parsed.y} tickets`;
           }
         }
@@ -437,7 +537,7 @@ export default function BacklogChart({
     },
     layout: { padding: { top: 15, right: 20, bottom: 10, left: 10 } },
     animation: { duration: 300 },
-  }), []);
+  }), [retardDays]);
 
   // Texte descriptif de la période sélectionnée
   const getPeriodLabelText = () => {
