@@ -78,7 +78,6 @@ export default function DashboardsPage() {
     { id: "FTTH", display: "FTTH", route: "ftth" },
     { id: "DSL", display: "DSL", route: "dsl" },
     { id: "FTTB", display: "FTTB", route: "fttb" },
-    { id: "EARF", display: "Migration Docs", route: "earf" },
     { id: "EARFT", display: "EARF-T", route: "earft" },
     { id: "ARTHUIS", display: "ARTHUIS", route: "arthuis" },
   ];
