@@ -24,7 +24,6 @@ import NewsTickerRetard from "../components/NewsTickerRetard14";
 import { GlobalFilterProvider } from "../components/GlobalFilterContext";
 import { ExportProvider } from "../components/ExportContext";
 
-// ✅ API spécifique à FTTB
 const API_BASE_URL = "https://api.606510.xyz/dashboard/api";
 const API_FTTB_DATA = `${API_BASE_URL}/fttb/data/`;
 const API_COMMENT_UPDATE = `${API_BASE_URL}/update-ticket-comment/`;
