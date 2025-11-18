@@ -16,7 +16,7 @@ export default function CollaborateursPropositionsPage() {
   useEffect(() => {
     const fetchPropositions = async () => {
       try {
-        const res = await fetch('/api/propositions/collaborateurs'); // 🔁 endpoint à adapter
+        const res = await fetch('/api/propositions/collaborateurs'); 
         const data = await res.json();
         setPropositions(data);
       } catch (error) {
