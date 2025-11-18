@@ -12,6 +12,7 @@ import KPIBacklogJ from "./components/KPIBacklogJ";
 import KPISPA from "./components/KPISPA";
 import KPIRules14Days from "./components/KPIRules14Days";
 import GraphVueEnsemble from "./components/GraphVueEnsemble";
+import BacklogFtthChart from "./components/BacklogFtthChart"; // AJOUT : Importer le nouveau composant
 import GraphRepartitionManuelle from "./components/GraphRepartitionManuelle";
 import GraphTopRegles from "./components/GraphTopRegles";
 import GraphTopReglesParJour from "./components/GraphTopReglesParJour";
@@ -131,13 +132,20 @@ export default function DashboardFTTH() {
 
             {/* ======= SECTION : MANUEL ======= */}
             <section ref={refManual} className="space-y-6 scroll-mt-16">
-              <GraphVueEnsemble />
+              {/* MODIFICATION : Création d'une grille pour mettre les graphiques côte à côte */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <GraphVueEnsemble />
+                <BacklogFtthChart />
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <GraphRepartitionManuelle />
                 <GraphTopRegles />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <GraphTopReglesParJour />
               <GraphEntrantsSortants />
+              </div>
             </section>
 
             {/* ======= SECTION : TICKETING ======= */}

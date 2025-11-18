@@ -19,11 +19,13 @@ const SIZE_CONFIG = {
   "KPI Tickets en Cours +Semaine": { width: 190, height: 110 },
   
   // === Graphiques Manuel FTTH ===
-  "vue-ensemble-backlog": { width: 855, height: 350 },
-  "repartition-manuelle": { width: 650, height: 380 },
-  "Top 5 RÈGLES": { width: 580, height: 340 },
-  "top-regles-par-jour": { width: 850, height: 330 },
-  "Entrants – Sortants – Nouveaux cas": { width: 855, height: 330 },
+  "Backlog FTTH J et Dossiers Traités": { width: 750, height: 380 },
+  "KPI FTTH": { width: 750, height: 380 },
+  "repartition-manuelle": { width: 750, height: 380 },
+  "Top 5 RÈGLES": { width: 750, height: 380 },
+  "Top 5 RÈGLES par jour": { width: 750, height: 380 },
+  "KPI FTTH": { width: 750, height: 380 },
+  "Entrants – Sortants – Nouveaux cas": { width: 750, height: 380 },
   
   // === Graphiques Ticketing FTTH ===
   "Tickets Entrants/Sortants": { width: 750, height: 380 },
@@ -126,10 +128,11 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
       title: "Manuel FTTH",
       kpis: ["kpi-backlog-j1", "kpi-backlog-j"],
       singles: [
-        "vue-ensemble-backlog",
+        "Backlog FTTH J et Dossiers Traités",
+        "KPI FTTH",
         "repartition-manuelle",
         "Top 5 RÈGLES",
-        "top-regles-par-jour",
+        "Top 5 RÈGLES par jour",
         "Entrants – Sortants – Nouveaux cas",
       ],
     },
@@ -449,26 +452,27 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   });
 
   // Footer final
-  documentHtml += `
-    <div style="page-break-before: always; padding: 30pt;">
-      <div style="
-        width: 90%;
-        margin: 40pt auto;
-        padding: 20pt;
-        background: #eef2f7;
-        border-radius: 12pt;
-        text-align: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-      ">
-        <p style="font-size:11pt; color:#1f2937; line-height:1.8; margin:0;">
-          Rapport généré automatiquement par <strong style="color:#004aad;">MyIT</strong><br/>
-          <a href="https://myit-three.vercel.app" target="_blank" style="text-decoration:none; color:#004aad; font-weight:bold;">
-            Dashboard FTTH - Plateforme MyIT
-          </a>
-        </p>
-      </div>
+// Footer final
+documentHtml += `
+  <div style="padding: 30pt;">
+    <div style="
+      width: 90%;
+      margin: 40pt auto;
+      padding: 20pt;
+      background: #eef2f7;
+      border-radius: 12pt;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    ">
+      <p style="font-size:11pt; color:#1f2937; line-height:1.8; margin:0;">
+        Rapport généré automatiquement par <strong style="color:#004aad;">MyIT</strong><br/>
+        <a href="https://myit-three.vercel.app" target="_blank" style="text-decoration:none; color:#004aad; font-weight:bold;">
+          Dashboard FTTH - Plateforme MyIT
+        </a>
+      </p>
     </div>
-  `;
+  </div>
+`;
 
   /* --- HTML final avec styles globaux --- */
   const html = `

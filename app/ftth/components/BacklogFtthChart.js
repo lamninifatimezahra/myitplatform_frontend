@@ -164,46 +164,39 @@ function getAllSemestersBetween(startDate, endDate) {
     return semestersArray;
 }
 
-const COLORS = ["#68bddd", "#4B5563"];
+// Une seule couleur nécessaire pour ce graphique
+const COLORS = ["#1b2b6b"];
 
-// MODIFICATION : Le composant de légende est simplifié
+// Composant de légende simplifié pour un seul élément
 function LegendInline({ visibleKeys, onClick }) {
-  const items = [
-    { key: "stock",  label: "Backlog FTTH J",   color: COLORS[0] },
-    { key: "traite", label: "Dossiers Traités", color: COLORS[1] },
-  ];
+  const item = { key: "non_traite", label: "Backlog FTTH J-1", color: COLORS[0] };
+  const active = visibleKeys.includes(item.key);
 
   return (
     <div className="w-full flex justify-center items-center mt-1 mb-2 select-none">
       <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-        {items.map((it) => {
-          const active = visibleKeys.includes(it.key);
-          return (
-            <li key={it.key}>
-              <button
-                onClick={() => onClick(it.key)} // On appelle directement la fonction avec la clé
-                title="Cliquer pour afficher/masquer" // Le titre est plus simple
-                className={`inline-flex items-center gap-2 transition-opacity ${active ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
-              >
-                <span
-                  className="inline-block w-3 h-3 rounded-sm border border-gray-300"
-                  style={{ backgroundColor: it.color }}
-                />
-                <span className={`text-gray-800 whitespace-nowrap ${!active ? 'line-through' : ''}`}>{it.label}</span>
-              </button>
-            </li>
-          );
-        })}
+        <li>
+          <button
+            onClick={() => onClick(item.key)}
+            title="Cliquer pour masquer/afficher"
+            className={`inline-flex items-center gap-2 transition-opacity ${active ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
+          >
+            <span
+              className="inline-block w-3 h-3 rounded-sm border border-gray-300"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className={`text-gray-800 whitespace-nowrap ${!active ? 'line-through' : ''}`}>{item.label}</span>
+          </button>
+        </li>
       </ul>
     </div>
   );
 }
 
-
-export default function BacklogFtthChart({
+export default function KPI_FTTH({
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/stock/",
-  id = "Backlog FTTH J et Dossiers Traités",
-  chartTitle = "Backlog FTTH J et Dossiers Traités",
+  id = "KPI FTTH",
+  chartTitle = "KPI FTTH",
   defaultViewMode = "day",
   defaultNumPeriods = 5,
   holidays = [],
@@ -215,12 +208,12 @@ export default function BacklogFtthChart({
   const initializationCompleted = useRef(false);
   const globalFilterApplied = useRef(false);
   const prevViewMode = useRef(null);
-  
+
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  
+
   const [records, setRecords] = useState([]);
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [availableYears, setAvailableYears] = useState([]);
@@ -238,7 +231,8 @@ export default function BacklogFtthChart({
   const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
   const [dayViewSelection, setDayViewSelection] = useState({ dates: [null, null], values: [] });
   
-  const [visibleKeys, setVisibleKeys] = useState(["stock", "traite"]);
+  // État initial pour la seule clé visible
+  const [visibleKeys, setVisibleKeys] = useState(["non_traite"]);
   
   const [annotations, setAnnotations] = useState([]);
   
@@ -255,6 +249,7 @@ export default function BacklogFtthChart({
   
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
+  // Les fonctions de gestion des filtres globaux et des vues (jour, semaine, etc.) restent identiques
   const applyGlobalFilter = () => {
     if (!globalStartDate || !globalEndDate) return;
     
@@ -340,16 +335,13 @@ export default function BacklogFtthChart({
             const d = new Date(r.date);
             if (isNaN(d.getTime())) return null;
             return {
-              date: r.date,
-              dateObj: d,
               dateISO: toISO(d),
               year: d.getFullYear(),
               week: weekNumber(d),
               month: d.getMonth() + 1,
               quarter: quarterOf(d),
               semester: semesterOf(d),
-              stock: Number(r.stock) || 0,
-              traite: Number(r.traite) || 0,
+              non_traite: Number(r.non_traite) || 0, // On ne garde que la donnée qui nous intéresse
             };
           })
           .filter(Boolean);
@@ -369,17 +361,14 @@ export default function BacklogFtthChart({
               setSelectedDates([parseISO(last[0]), parseISO(last[last.length - 1])]);
               setSelectedValues(last);
               setDayViewSelection({ dates: [parseISO(last[0]), parseISO(last[last.length - 1])], values: last });
-            } else {
-              setSelectedDates([null, null]);
-              setSelectedValues([]);
             }
           } else {
-            const latestYear = years.length ? years[years.length - 1] : new Date().getFullYear();
+            const latestYear = years.length > 0 ? years[years.length - 1] : new Date().getFullYear();
             setSelectedYear(latestYear);
             const periods = getAvailablePeriodsForYear(mapped, latestYear, defaultViewMode);
             const selectedPeriods = periods.slice(-defaultNumPeriods);
             setSelectedValues(selectedPeriods);
-
+            
             if (defaultViewMode === "week") setWeekViewSelection({ values: selectedPeriods, year: latestYear });
             else if (defaultViewMode === "month") setMonthViewSelection({ values: selectedPeriods, year: latestYear });
             else if (defaultViewMode === "quarter") setQuarterViewSelection({ values: selectedPeriods, year: latestYear });
@@ -392,11 +381,9 @@ export default function BacklogFtthChart({
           applyGlobalFilter();
           globalFilterApplied.current = true;
         }
-
         setLoading(false);
       } catch (err) {
         if (mounted) {
-          setRecords([]);
           setErrorText("Impossible de charger les données (réseau/API).");
           setLoading(false);
         }
@@ -404,28 +391,20 @@ export default function BacklogFtthChart({
         clearTimeout(timer);
       }
     })();
-
     return () => { mounted = false; };
   };
   
   useEffect(reload, [apiUrl]);
-
-  useEffect(() => {
-    if (globalStartDate && globalEndDate && globalModifiedAt > 0) {
-      applyGlobalFilter();
-    }
-  }, [globalStartDate, globalEndDate, globalModifiedAt]);
-  
+  useEffect(() => { if (globalStartDate && globalEndDate && globalModifiedAt > 0) applyGlobalFilter(); }, [globalStartDate, globalEndDate, globalModifiedAt]);
   useEffect(() => {
     const onDown = (e) => {
-      if (isOpen && filterPanelRef.current && !filterPanelRef.current.contains(e.target) && !e.target.closest('[data-filter-toggle]')) {
-        setIsOpen(false);
-      }
+      if (isOpen && filterPanelRef.current && !filterPanelRef.current.contains(e.target) && !e.target.closest('[data-filter-toggle]')) setIsOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [isOpen]);
   
+  // Le reste de la logique de filtrage est inchangé
   function getAvailablePeriodsForYear(data, year, mode) {
     const key = mode;
     const s = new Set();
@@ -436,11 +415,7 @@ export default function BacklogFtthChart({
   const handleDayRangeChange = (dates) => {
     const [a, b] = dates;
     setSelectedDates(dates);
-    if (a && b) {
-      setSelectedValues(allWorkingDaysBetween(a, b));
-    } else {
-      setSelectedValues([]);
-    }
+    setSelectedValues(a && b ? allWorkingDaysBetween(a, b) : []);
     setHasGlobalFilter(false);
   };
   const handleYearChange = (y) => {
@@ -472,119 +447,84 @@ export default function BacklogFtthChart({
     setSelectedValues(newValues);
     setHasGlobalFilter(false);
   };
-  
-  const sortedSelectedValues = useMemo(
-    () => (viewMode === "day" ? selectedValues.slice().sort() : selectedValues.slice().sort((a, b) => a - b)),
-    [selectedValues, viewMode]
-  );
-  
+
+  const sortedSelectedValues = useMemo(() => (viewMode === "day" ? selectedValues.slice().sort() : selectedValues.slice().sort((a, b) => a - b)), [selectedValues, viewMode]);
   const labels = useMemo(() => {
     const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-    if (viewMode === "day") {
-      return sortedSelectedValues.map((iso) => {
-        const d = parseISO(iso);
-        const dd = String(d.getDate()).padStart(2, "0");
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        return `${dd}/${mm} (S${weekNumber(d)})`;
-      });
-    }
-    if (viewMode === "week") return sortedSelectedValues.map((w) => `S${w}`);
-    if (viewMode === "month") return sortedSelectedValues.map((m) => months[m - 1] || `M${m}`);
-    if (viewMode === "quarter") return sortedSelectedValues.map((q) => `T${q}`);
-    if (viewMode === "semester") return sortedSelectedValues.map((s) => `S${s}`);
-    return sortedSelectedValues.map(String);
+    if (viewMode === "day") return sortedSelectedValues.map(iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)} (S${weekNumber(parseISO(iso))})`);
+    if (viewMode === "week") return sortedSelectedValues.map(w => `S${w}`);
+    if (viewMode === "month") return sortedSelectedValues.map(m => months[m - 1] || `M${m}`);
+    if (viewMode === "quarter") return sortedSelectedValues.map(q => `T${q}`);
+    return sortedSelectedValues.map(s => `S${s}`);
   }, [sortedSelectedValues, viewMode]);
   
+  // Calcul des sommes pour `non_traite` uniquement
   const sums = useMemo(() => {
-    const stock = {}, tra = {};
-    sortedSelectedValues.forEach((v) => { stock[v]=0; tra[v]=0; });
+    const nonT = {};
+    sortedSelectedValues.forEach((v) => { nonT[v] = 0; });
     records.forEach((r) => {
+      let key;
       if (viewMode === "day") {
-        const key = r.dateISO;
-        if (sortedSelectedValues.includes(key)) {
-          stock[key] += r.stock;
-          tra[key] += r.traite;
-        }
+        key = r.dateISO;
       } else {
-        if (holidaySet.has(r.dateISO)) return;
-        if (selectedYear && r.year !== selectedYear) return;
-        const key = viewMode === "week" ? r.week : viewMode === "month" ? r.month : viewMode === "quarter" ? r.quarter : r.semester;
-        if (sortedSelectedValues.includes(key)) {
-          stock[key] += r.stock;
-          tra[key] += r.traite;
-        }
+        if (holidaySet.has(r.dateISO) || (selectedYear && r.year !== selectedYear)) return;
+        key = r[viewMode];
+      }
+      if (sortedSelectedValues.includes(key)) {
+        nonT[key] += r.non_traite;
       }
     });
-    return {
-      stockArr: sortedSelectedValues.map((v) => stock[v] || 0),
-      traiteArr: sortedSelectedValues.map((v) => tra[v] || 0),
-    };
+    return { nonTraiteArr: sortedSelectedValues.map((v) => nonT[v] || 0) };
   }, [records, sortedSelectedValues, selectedYear, viewMode, holidaySet]);
   
+  // Données du graphique pour un seul dataset
   const chartData = useMemo(() => {
     const holidayFlags = sortedSelectedValues.map(v => viewMode === "day" && holidaySet.has(v));
-    const processDataForHolidays = (dataArray) => dataArray.map((val, idx) => (viewMode === "day" && holidayFlags[idx] && val === 0 ? 0.1 : val));
+    const processData = (data) => data.map((val, idx) => (holidayFlags[idx] && val === 0 ? 0.1 : val));
 
     return {
       labels,
       datasets: [
         { 
-          label: "Backlog FTTH J", 
-          data: processDataForHolidays(sums.stockArr), 
+          label: "Backlog FTTH J-1", 
+          data: processData(sums.nonTraiteArr), 
           backgroundColor: COLORS[0], 
           borderRadius: 6, 
-          hidden: !visibleKeys.includes("stock") 
-        },
-        { 
-          label: "Dossiers Traités", 
-          data: processDataForHolidays(sums.traiteArr), 
-          backgroundColor: COLORS[1],
-          borderRadius: 6, 
-          hidden: !visibleKeys.includes("traite") 
+          hidden: !visibleKeys.includes("non_traite") 
         },
       ],
       holidayFlags,
-      originalData: {
-        stockArr: sums.stockArr,
-        traiteArr: sums.traiteArr
-      }
+      originalData: { nonTraiteArr: sums.nonTraiteArr }
     };
-  }, [labels, sums, visibleKeys, sortedSelectedValues, viewMode, holidaySet]);
+  }, [labels, sums, visibleKeys, viewMode, holidaySet]);
 
   const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       datalabels: {
-        display: (context) => (viewMode === "day" && chartData.holidayFlags?.[context.dataIndex]) || (context.dataset.data[context.dataIndex] > 0),
-        color: "#000",
-        font: { size: 10, weight: "bold" },
-        formatter: (value, context) => {
-          if (viewMode === "day" && chartData.holidayFlags?.[context.dataIndex]) {
-            const originalValue = context.datasetIndex === 0 ? chartData.originalData.stockArr[context.dataIndex] : chartData.originalData.traiteArr[context.dataIndex];
+        display: (ctx) => (viewMode === "day" && chartData.holidayFlags?.[ctx.dataIndex]) || (ctx.dataset.data[ctx.dataIndex] > 0),
+        color: "#000", font: { size: 10, weight: "bold" },
+        formatter: (val, ctx) => {
+          if (viewMode === "day" && chartData.holidayFlags?.[ctx.dataIndex]) {
+            const originalValue = chartData.originalData.nonTraiteArr[ctx.dataIndex];
             return originalValue > 0 ? `${originalValue} 🏖️` : "🏖️";
           }
-          return value > 0.5 ? Math.round(value) : "";
+          return val > 0.5 ? Math.round(val) : "";
         },
-        anchor: "end",
-        align: "top",
-        offset: -3,
-        clip: false,
+        anchor: "end", align: "top", offset: -3, clip: false,
       },
       legend: { display: false },
       tooltip: { 
-        mode: "index", 
-        intersect: false, 
-        padding: 10, 
+        mode: "index", intersect: false, padding: 10,
         callbacks: {
-          label: (context) => {
-            let label = context.dataset.label || '';
+          label: (ctx) => {
+            let label = ctx.dataset.label || '';
             if (label) label += ': ';
-            if (viewMode === "day" && chartData.holidayFlags?.[context.dataIndex]) {
-              const originalValue = context.datasetIndex === 0 ? chartData.originalData.stockArr[context.dataIndex] : chartData.originalData.traiteArr[context.dataIndex];
-              return label + originalValue + ' 🏖️';
+            if (viewMode === "day" && chartData.holidayFlags?.[ctx.dataIndex]) {
+              return label + chartData.originalData.nonTraiteArr[ctx.dataIndex] + ' 🏖️';
             }
-            return label + Math.round(context.parsed.y);
+            return label + Math.round(ctx.parsed.y);
           }
         }
       },
@@ -594,15 +534,11 @@ export default function BacklogFtthChart({
       x: {
         grid: { display: false },
         ticks: { maxRotation: viewMode === "day" ? 45 : 0, minRotation: viewMode === "day" ? 45 : 0 },
-        title: {
-          display: true,
-          text: viewMode === "day" ? "Jour" : `Périodes ${selectedYear ?? ""}`,
-        },
+        title: { display: true, text: viewMode === "day" ? "Jour" : `Périodes ${selectedYear ?? ""}` },
       },
       y: {
-        beginAtZero: true,
-        grid: { drawBorder: false },
-        ticks: { precision: 0, callback: (value) => Math.round(value) },
+        beginAtZero: true, grid: { drawBorder: false },
+        ticks: { precision: 0, callback: (val) => Math.round(val) },
         title: { display: true, text: "Volume" },
       },
     },
@@ -611,8 +547,7 @@ export default function BacklogFtthChart({
   const subtitle = useMemo(() => {
     if (viewMode === "day") {
       const [a, b] = selectedDates;
-      if (a && b) return `Du ${toISO(a)} au ${toISO(b)}`;
-      return "Aucun jour sélectionné";
+      return a && b ? `Du ${toISO(a)} au ${toISO(b)}` : "Aucun jour sélectionné";
     }
     if (!sortedSelectedValues.length) return "Aucune période sélectionnée";
     const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -626,20 +561,11 @@ export default function BacklogFtthChart({
     return `${selectedYear ? `Année ${selectedYear} - ` : ""}${prefix}: ${values.join(", ")}`;
   }, [viewMode, selectedDates, sortedSelectedValues, selectedYear]);
 
-  const showData = sums.stockArr.some((n) => n > 0) || sums.traiteArr.some((n) => n > 0);
+  const showData = sums.nonTraiteArr.some((n) => n > 0);
 
-  // MODIFICATION : La logique de clic sur la légende est maintenant un simple "toggle"
+  // Logique de clic sur la légende simplifiée pour un seul élément (toggle)
   const onLegendClick = (key) => {
-    setVisibleKeys((prev) => {
-      const isVisible = prev.includes(key);
-      if (isVisible) {
-        // Si la clé est déjà visible, on la retire pour la cacher
-        return prev.filter((k) => k !== key);
-      } else {
-        // Sinon, on l'ajoute pour la montrer
-        return [...prev, key];
-      }
-    });
+    setVisibleKeys((prev) => (prev.includes(key) ? [] : [key]));
   };
 
   if (loading) {
@@ -652,9 +578,10 @@ export default function BacklogFtthChart({
     );
   }
 
+  // Le JSX est identique au précédent, il s'adapte automatiquement aux nouvelles données
   return (
     <div className="visualisation relative" data-id={id}>
-       <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
+      <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-start mb-4 relative">
           <div>
@@ -687,9 +614,8 @@ export default function BacklogFtthChart({
               <FaExpand size={18} />
             </button>
           </div>
-          {/* Panneau de filtre (inchangé) */}
           {isOpen && (
-            <div ref={filterPanelRef} className="no-export absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50 border border-gray-200">
+             <div ref={filterPanelRef} className="no-export absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md p-4 w-64 z-50 border border-gray-200">
                <h4 className="font-semibold text-gray-600 text-sm mb-3">Filtrer par :</h4>
                <div className="flex space-x-1 mb-3 flex-wrap justify-start">
                  {["day", "week", "month", "quarter", "semester"].map(mode => (
@@ -797,45 +723,40 @@ export default function BacklogFtthChart({
           )}
         </div>
       </div>
-       
-       <Modal
-         isOpen={modalIsOpen}
-         onRequestClose={() => setModalIsOpen(false)}
-         className="flex items-center justify-center fixed inset-0 z-50"
-         overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-         contentLabel={`Modal ${chartTitle}`}
-       >
-         <div className="bg-white rounded-lg p-6 w-11/12 md:w-4/5 lg:w-3/4 shadow-xl max-h-[90vh] overflow-y-auto flex flex-col">
+      
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={() => setModalIsOpen(false)}
+        className="flex items-center justify-center fixed inset-0 z-50"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
+        contentLabel={`Modal ${chartTitle}`}
+      >
+        <div className="bg-white rounded-lg p-6 w-11/12 md:w-4/5 lg:w-3/4 shadow-xl max-h-[90vh] overflow-y-auto flex flex-col">
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
-             <div>
-               <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
-               <p className="text-sm text-gray-500 mt-1 min-h-[20px]">{subtitle}</p>
-             </div>
-             <button
-               onClick={() => setModalIsOpen(false)}
-               className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-100 transition-colors"
-               title="Fermer"
-             >
-               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-               </svg>
-             </button>
-           </div>
- 
-           <LegendInline visibleKeys={visibleKeys} onClick={onLegendClick} />
- 
-           <div className="relative flex-grow min-h-[400px] md:min-h-[500px] flex items-center justify-center" ref={modalChartContainerRef}>
-             {showData ? (
-               <Bar
-                 key={`m-${chartKey}`}
-                 data={chartData}
-                 options={{ ...chartOptions, plugins: { ...chartOptions.plugins, datalabels: { ...chartOptions.plugins.datalabels, font: { size: 11, weight: "bold" } } } }}
-                 plugins={[ChartDataLabels]}
-               />
-             ) : (
-               <p className="text-gray-500 italic">Aucune donnée à afficher.</p>
-             )}
-             <CommentButton
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800">{chartTitle}</h3>
+              <p className="text-sm text-gray-500 mt-1 min-h-[20px]">{subtitle}</p>
+            </div>
+            <button
+              onClick={() => setModalIsOpen(false)}
+              className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-100 transition-colors"
+              title="Fermer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <LegendInline visibleKeys={visibleKeys} onClick={onLegendClick} />
+
+          <div className="relative flex-grow min-h-[400px] md:min-h-[500px] flex items-center justify-center" ref={modalChartContainerRef}>
+            {showData ? (
+              <Bar key={`m-${chartKey}`} data={chartData} options={chartOptions} plugins={[ChartDataLabels]} />
+            ) : (
+              <p className="text-gray-500 italic">Aucune donnée à afficher.</p>
+            )}
+            <CommentButton
               containerRef={modalChartContainerRef}
               hideButton={true}
               comments={annotations}
@@ -843,9 +764,9 @@ export default function BacklogFtthChart({
               onUpdateComment={(c) => setAnnotations(annotations.map(a => a.id === c.id ? c : a))}
               onDeleteComment={(id) => setAnnotations(annotations.filter(a => a.id !== id))}
             />
-           </div>
-         </div>
-       </Modal>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

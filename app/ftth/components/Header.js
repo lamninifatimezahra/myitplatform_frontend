@@ -50,17 +50,21 @@ const DEFAULT_SELECTED = [
   "Vue d'ensemble combinée du Backlog",
   "vue-ensemble-backlog",
   "vue d ensemble combinee du backlog",
+  "Backlog FTTH J et Dossiers Traités",
 
   // Top 5 règles
   "Top 5 RÈGLES",
   "top-5-regles",
   "top 5 regles",
+  "backlog-ftth-traites",
+  "KPI FTTH",
 
   // Top 5 règles par jour
   "Top 5 RÈGLES par jour",
   "graph-top-regles-par-jour",
   "top 5 regles par jour",
-
+  "Top 5 RÈGLES par jour",
+  "Entrants – Sortants – Nouveaux cas",
   // Entrants/Sortants (manuel)
   "graph-entrants-sortants",
   "Graph Entrants/Sortants",

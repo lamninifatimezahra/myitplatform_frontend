@@ -59,10 +59,11 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
       title: "Manuel FTTH",
       kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-manuel-7j"],
       singles: [
-        "vue-ensemble-backlog",
+        "Backlog FTTH J et Dossiers Traités",
+        "KPI FTTH",
         "repartition-manuelle", 
         "Top 5 RÈGLES",
-        "top-regles-par-jour",
+        "Top 5 RÈGLES par jour",
         "Entrants – Sortants – Nouveaux cas"
       ],
       noComments: []
@@ -319,7 +320,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
     // Image du graphique (sans background blanc)
     slide.addImage({ 
       data: imageItem.image, 
-      x: 0.8, y: 1.5, w: 8.3, h: 3.4 
+      x: 0.8, y: 1.5, w: 7.8, h: 3.4 
     });
 
     // Affichage de la plage de dates (position ajustée)
@@ -474,7 +475,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
     if (section.singles) {
       section.singles.forEach(imageId => {
         if (section.title === "Manuel FTTH" && 
-            ["vue-ensemble-backlog", "repartition-manuelle", "top-regles-par-jour", "Entrants – Sortants – Nouveaux cas"].includes(imageId)) {
+            ["Backlog FTTH J et Dossiers Traités", "KPI FTTH", "repartition-manuelle", "Top 5 RÈGLES par jour", "Entrants – Sortants – Nouveaux cas"].includes(imageId)) {
           // Slides sans commentaires pour ces éléments spécifiques
           createSingleSlideNoComments(imageId);
         } else {
