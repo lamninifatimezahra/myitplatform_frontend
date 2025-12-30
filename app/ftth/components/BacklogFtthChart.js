@@ -26,7 +26,7 @@ import holidaysMap from "@/app/ftth/utils/holidays.json";
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ChartDataLabels);
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
-/* ========================== utils dates (inchangées) ========================== */
+/* ========================== utils dates ========================== */
 function toISO(d) {
   if (!d || isNaN(d.getTime())) return null;
   const y = d.getFullYear();
@@ -164,10 +164,8 @@ function getAllSemestersBetween(startDate, endDate) {
     return semestersArray;
 }
 
-// Une seule couleur nécessaire pour ce graphique
 const COLORS = ["#1b2b6b"];
 
-// Composant de légende simplifié pour un seul élément
 function LegendInline({ visibleKeys, onClick }) {
   const item = { key: "non_traite", label: "Backlog FTTH J-1", color: COLORS[0] };
   const active = visibleKeys.includes(item.key);
@@ -231,9 +229,7 @@ export default function KPI_FTTH({
   const [semesterViewSelection, setSemesterViewSelection] = useState({ values: [], year: null });
   const [dayViewSelection, setDayViewSelection] = useState({ dates: [null, null], values: [] });
   
-  // État initial pour la seule clé visible
   const [visibleKeys, setVisibleKeys] = useState(["non_traite"]);
-  
   const [annotations, setAnnotations] = useState([]);
   
   const holidaySet = useMemo(() => {
@@ -249,7 +245,6 @@ export default function KPI_FTTH({
   
   const { globalStartDate, globalEndDate, globalModifiedAt } = useGlobalFilter();
 
-  // Les fonctions de gestion des filtres globaux et des vues (jour, semaine, etc.) restent identiques
   const applyGlobalFilter = () => {
     if (!globalStartDate || !globalEndDate) return;
     
@@ -290,7 +285,6 @@ export default function KPI_FTTH({
       prevViewMode.current = viewMode;
       return;
     }
-
     if (prevViewMode.current === "day") setDayViewSelection({ dates: selectedDates, values: selectedValues });
     else if (prevViewMode.current === "week") setWeekViewSelection({ values: selectedValues, year: selectedYear });
     else if (prevViewMode.current === "month") setMonthViewSelection({ values: selectedValues, year: selectedYear });
@@ -313,7 +307,6 @@ export default function KPI_FTTH({
       setSelectedValues(semesterViewSelection.values);
       setSelectedYear(semesterViewSelection.year || selectedYear);
     }
-
     prevViewMode.current = viewMode;
   }, [viewMode]);
   
@@ -341,7 +334,7 @@ export default function KPI_FTTH({
               month: d.getMonth() + 1,
               quarter: quarterOf(d),
               semester: semesterOf(d),
-              non_traite: Number(r.non_traite) || 0, // On ne garde que la donnée qui nous intéresse
+              non_traite: Number(r.non_traite) || 0,
             };
           })
           .filter(Boolean);
@@ -404,7 +397,6 @@ export default function KPI_FTTH({
     return () => document.removeEventListener("mousedown", onDown);
   }, [isOpen]);
   
-  // Le reste de la logique de filtrage est inchangé
   function getAvailablePeriodsForYear(data, year, mode) {
     const key = mode;
     const s = new Set();
@@ -458,26 +450,73 @@ export default function KPI_FTTH({
     return sortedSelectedValues.map(s => `S${s}`);
   }, [sortedSelectedValues, viewMode]);
   
-  // Calcul des sommes pour `non_traite` uniquement
+  // ================= CALCUL DE LA MOYENNE ROBUSTE =================
   const sums = useMemo(() => {
-    const nonT = {};
-    sortedSelectedValues.forEach((v) => { nonT[v] = 0; });
+    // 1. On consolide d'abord par JOUR pour éviter de compter plusieurs lignes pour la même journée
+    // comme des entrées différentes dans le calcul de la moyenne.
+    const dailyTotals = {};
+    
     records.forEach((r) => {
+      // Ignorer si jour férié ou mauvaise année
+      if (holidaySet.has(r.dateISO)) return;
+      if (viewMode !== "day" && selectedYear && r.year !== selectedYear) return;
+
+      if (!dailyTotals[r.dateISO]) {
+        dailyTotals[r.dateISO] = 0;
+      }
+      dailyTotals[r.dateISO] += r.non_traite;
+    });
+
+    // 2. On agrège maintenant les totaux journaliers dans les périodes sélectionnées
+    const periodSums = {};
+    const periodDayCounts = {}; // Compte le nombre de JOURS uniques ayant des données
+
+    // Initialisation
+    sortedSelectedValues.forEach((v) => {
+      periodSums[v] = 0;
+      periodDayCounts[v] = 0;
+    });
+
+    // Parcours des jours consolidés
+    Object.entries(dailyTotals).forEach(([isoDate, val]) => {
+      const d = parseISO(isoDate);
+      if (!d) return;
+
       let key;
       if (viewMode === "day") {
-        key = r.dateISO;
-      } else {
-        if (holidaySet.has(r.dateISO) || (selectedYear && r.year !== selectedYear)) return;
-        key = r[viewMode];
+        key = isoDate;
+      } else if (viewMode === "week") {
+        key = weekNumber(d);
+      } else if (viewMode === "month") {
+        key = d.getMonth() + 1;
+      } else if (viewMode === "quarter") {
+        key = quarterOf(d);
+      } else if (viewMode === "semester") {
+        key = semesterOf(d);
       }
+
+      // Si la période est affichée, on ajoute les valeurs
       if (sortedSelectedValues.includes(key)) {
-        nonT[key] += r.non_traite;
+        periodSums[key] += val;
+        periodDayCounts[key] += 1;
       }
     });
-    return { nonTraiteArr: sortedSelectedValues.map((v) => nonT[v] || 0) };
+
+    // 3. Calcul final : Somme (jour) ou Moyenne (autres vues)
+    const finalValues = sortedSelectedValues.map((v) => {
+      const total = periodSums[v] || 0;
+      const count = periodDayCounts[v] || 0;
+
+      if (viewMode === "day") return total;
+
+      // Moyenne = Somme des totaux journaliers / Nombre de jours
+      return count > 0 ? total / count : 0;
+    });
+
+    return { nonTraiteArr: finalValues };
   }, [records, sortedSelectedValues, selectedYear, viewMode, holidaySet]);
+  // ================= FIN CALCUL =================
   
-  // Données du graphique pour un seul dataset
   const chartData = useMemo(() => {
     const holidayFlags = sortedSelectedValues.map(v => viewMode === "day" && holidaySet.has(v));
     const processData = (data) => data.map((val, idx) => (holidayFlags[idx] && val === 0 ? 0.1 : val));
@@ -539,7 +578,7 @@ export default function KPI_FTTH({
       y: {
         beginAtZero: true, grid: { drawBorder: false },
         ticks: { precision: 0, callback: (val) => Math.round(val) },
-        title: { display: true, text: "Volume" },
+        title: { display: true, text: viewMode === "day" ? "Volume" : "Moyenne" },
       },
     },
   }), [viewMode, selectedYear, chartData]);
@@ -563,7 +602,6 @@ export default function KPI_FTTH({
 
   const showData = sums.nonTraiteArr.some((n) => n > 0);
 
-  // Logique de clic sur la légende simplifiée pour un seul élément (toggle)
   const onLegendClick = (key) => {
     setVisibleKeys((prev) => (prev.includes(key) ? [] : [key]));
   };
@@ -578,7 +616,6 @@ export default function KPI_FTTH({
     );
   }
 
-  // Le JSX est identique au précédent, il s'adapte automatiquement aux nouvelles données
   return (
     <div className="visualisation relative" data-id={id}>
       <div className="relative bg-white p-5 shadow-md rounded-lg w-full h-full flex flex-col">
