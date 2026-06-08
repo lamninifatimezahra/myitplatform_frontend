@@ -29,12 +29,12 @@ if (typeof window !== "undefined") Modal.setAppElement(document.body);
 // =========================================
 
 const COLORS = {
-  "Finalisation commande": "#68bddd",
-  "Intervention": "#1b2b6b",
-  "MAJ CR STOC": "#4a90e2",
-  "Rattrapage B57": "#7bb3f0",
-  "REF PMT": "#9ca3af",
-  "Renonciation": "#d1d5db",
+  "Finalisation commande": "#0bedf9",
+  "Intervention": "#2F80ED",
+  "MAJ CR STOC": "#e913fd",
+  "Rattrapage B57": "#2fec09",
+  "REF PMT": "#f48422",
+  "Renonciation": "#BDBDBD",
 };
 
 // =========================================

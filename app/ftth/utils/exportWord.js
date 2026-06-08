@@ -20,11 +20,11 @@ const SIZE_CONFIG = {
   
   // === Graphiques Manuel FTTH ===
   "Backlog FTTH J et Dossiers Traités": { width: 750, height: 380 },
-  "KPI FTTH": { width: 750, height: 380 },
+  "KPI FTTH Manuel": { width: 750, height: 380 },
   "repartition-manuelle": { width: 750, height: 380 },
   "Top 5 RÈGLES": { width: 750, height: 380 },
   "Top 5 RÈGLES par jour": { width: 750, height: 380 },
-  "KPI FTTH": { width: 750, height: 380 },
+  "KPI FTTH Manuel": { width: 750, height: 380 },
   "Entrants – Sortants – Nouveaux cas": { width: 750, height: 380 },
   
   // === Graphiques Ticketing FTTH ===
@@ -122,6 +122,16 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     });
   }
 
+  function sectionHasSelectedItems(section) {
+  const allIds = [
+    ...(section.kpis || []),
+    ...(section.singles || []),
+    ...(section.noComments || []),
+  ];
+
+  return allIds.some((id) => findImageById(id));
+}
+
   /* --- Sections --- */
   const sections = {
     manuel: {
@@ -129,7 +139,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
       kpis: ["kpi-backlog-j1", "kpi-backlog-j"],
       singles: [
         "Backlog FTTH J et Dossiers Traités",
-        "KPI FTTH",
+        "KPI FTTH Manuel",
         "repartition-manuelle",
         "Top 5 RÈGLES",
         "Top 5 RÈGLES par jour",
@@ -213,11 +223,9 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   function generateKpiPages(kpiIds, sectionTitle) {
     if (!kpiIds || kpiIds.length === 0) return "";
 
-    const kpiImages = kpiIds.map((kpiId) => {
-      const found = findImageById(kpiId);
-      return found ? found : { label: kpiId, id: kpiId, image: null };
-    });
-
+    const kpiImages = kpiIds
+      .map((kpiId) => findImageById(kpiId))
+      .filter(Boolean);
     let pagesHtml = "";
 
     // Pour Manuel FTTH : 2 colonnes avec KPIs plus grands
@@ -428,28 +436,34 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
 
   // Génération des sections
   Object.values(sections).forEach((section) => {
-    // Page titre de section
-    documentHtml += generateSectionTitlePage(section.title);
-    
-    // Pages KPIs
-    if (section.kpis?.length) {
-      documentHtml += generateKpiPages(section.kpis, section.title);
-    }
-    
-    // Pages graphiques individuels
-    if (section.singles) {
-      section.singles.forEach((id) => {
+
+  // Ne rien générer si aucun élément de la section n'est sélectionné
+  if (!sectionHasSelectedItems(section)) {
+    return;
+  }
+
+  documentHtml += generateSectionTitlePage(section.title);
+
+  if (section.kpis?.length) {
+    documentHtml += generateKpiPages(section.kpis, section.title);
+  }
+
+  if (section.singles) {
+    section.singles.forEach((id) => {
+      if (findImageById(id)) {
         documentHtml += generateSingleGraphPage(id);
-      });
-    }
-    
-    // Pages sans commentaires
-    if (section.noComments) {
-      section.noComments.forEach((id) => {
+      }
+    });
+  }
+
+  if (section.noComments) {
+    section.noComments.forEach((id) => {
+      if (findImageById(id)) {
         documentHtml += generateSingleGraphPage(id);
-      });
-    }
-  });
+      }
+    });
+  }
+});
 
   // Footer final
 // Footer final

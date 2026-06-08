@@ -194,7 +194,7 @@ function LegendInline({ visibleKeys, onClick }) {
 export default function KPI_FTTH({
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/stock/",
   id = "KPI FTTH",
-  chartTitle = "KPI FTTH",
+  chartTitle = "KPI FTTH Manuel",
   defaultViewMode = "day",
   defaultNumPeriods = 5,
   holidays = [],
@@ -441,14 +441,23 @@ export default function KPI_FTTH({
   };
 
   const sortedSelectedValues = useMemo(() => (viewMode === "day" ? selectedValues.slice().sort() : selectedValues.slice().sort((a, b) => a - b)), [selectedValues, viewMode]);
+  const filteredSelectedValues = useMemo(() => {
+  if (viewMode !== "day") return sortedSelectedValues;
+  return sortedSelectedValues.filter((iso) => !holidaySet.has(iso));
+  }, [sortedSelectedValues, viewMode, holidaySet]);
   const labels = useMemo(() => {
-    const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-    if (viewMode === "day") return sortedSelectedValues.map(iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)} (S${weekNumber(parseISO(iso))})`);
-    if (viewMode === "week") return sortedSelectedValues.map(w => `S${w}`);
-    if (viewMode === "month") return sortedSelectedValues.map(m => months[m - 1] || `M${m}`);
-    if (viewMode === "quarter") return sortedSelectedValues.map(q => `T${q}`);
-    return sortedSelectedValues.map(s => `S${s}`);
-  }, [sortedSelectedValues, viewMode]);
+  const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+  const values = filteredSelectedValues;
+
+  if (viewMode === "day")
+    return values.map(iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)} (S${weekNumber(parseISO(iso))})`);
+
+  if (viewMode === "week") return values.map(w => `S${w}`);
+  if (viewMode === "month") return values.map(m => months[m - 1] || `M${m}`);
+  if (viewMode === "quarter") return values.map(q => `T${q}`);
+  return values.map(s => `S${s}`);
+}, [filteredSelectedValues, viewMode]);
   
   // ================= CALCUL DE LA MOYENNE ROBUSTE =================
   const sums = useMemo(() => {
@@ -472,7 +481,7 @@ export default function KPI_FTTH({
     const periodDayCounts = {}; // Compte le nombre de JOURS uniques ayant des données
 
     // Initialisation
-    sortedSelectedValues.forEach((v) => {
+    filteredSelectedValues.forEach((v) => {
       periodSums[v] = 0;
       periodDayCounts[v] = 0;
     });
@@ -503,7 +512,7 @@ export default function KPI_FTTH({
     });
 
     // 3. Calcul final : Somme (jour) ou Moyenne (autres vues)
-    const finalValues = sortedSelectedValues.map((v) => {
+    const finalValues = filteredSelectedValues.map((v) => {
       const total = periodSums[v] || 0;
       const count = periodDayCounts[v] || 0;
 
@@ -518,7 +527,7 @@ export default function KPI_FTTH({
   // ================= FIN CALCUL =================
   
   const chartData = useMemo(() => {
-    const holidayFlags = sortedSelectedValues.map(v => viewMode === "day" && holidaySet.has(v));
+    const holidayFlags = filteredSelectedValues.map(v => viewMode === "day" && holidaySet.has(v));
     const processData = (data) => data.map((val, idx) => (holidayFlags[idx] && val === 0 ? 0.1 : val));
 
     return {

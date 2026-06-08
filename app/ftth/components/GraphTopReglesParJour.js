@@ -24,6 +24,10 @@ import CommentButton from "@/app/components/CommentButton";
 
 if (typeof window !== "undefined") Modal.setAppElement(document.body);
 
+function isHoliday(dateISO, holidaySet) {
+  return holidaySet.has(dateISO);
+}
+
 // ... (les fonctions utilitaires de date ne changent pas)
 function toISO(d) {
     if (!d || isNaN(d.getTime())) return null;
@@ -139,13 +143,18 @@ function toISO(d) {
   }
   return semestersArray;
   }
-  function allWorkingDaysBetweenIncludingHolidays(a, b) {
+  function allWorkingDaysBetweenIncludingHolidays(a, b, holidaySet) {
       const res = [];
       if (!a || !b) return res;
       const d = new Date(a); d.setHours(0, 0, 0, 0);
       const end = new Date(b); end.setHours(0, 0, 0, 0);
       while (d <= end) {
-        if (isWorkingDay(d)) res.push(toISO(d));
+         const iso = toISO(d);
+
+        if (isWorkingDay(d) && !holidaySet.has(iso)) {
+            res.push(iso);
+        }
+
         d.setDate(d.getDate() + 1);
       }
       return res;
@@ -226,6 +235,7 @@ const LabelFormatter = (props) => {
 
 /* ============================ Composant Principal ============================ */
 export default function GraphTopReglesStacked({
+  disabled = true,
   apiUrl = "https://api.606510.xyz/dashboard/api/ftth/regle/",
   id = "Top 5 RÈGLES par jour",
   chartTitle = "Top 5 RÈGLES par jour",
@@ -233,6 +243,7 @@ export default function GraphTopReglesStacked({
   defaultNumPeriods = 5,
   holidays = [],
 }) {
+  if (disabled) return null;
   const filterPanelRef = useRef(null);
   const chartContainerRef = useRef(null);
   const modalChartContainerRef = useRef(null);
@@ -353,7 +364,7 @@ export default function GraphTopReglesStacked({
         let key = null;
         if (viewMode === 'day' && selectedValues.includes(r.dateISO)) {
             const dateLabel = new Date(r.dateISO).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit' });
-            key = holidaySet.has(r.dateISO) ? `${dateLabel} 🏖️` : dateLabel;
+            key = dateLabel;
         } else if (viewMode !== 'day' && r.year === selectedYear) {
             const periodValue = r[viewMode];
             if (selectedValues.includes(periodValue)) {
@@ -363,7 +374,8 @@ export default function GraphTopReglesStacked({
                 if(viewMode === 'semester') key = `S${periodValue}`;
             }
         }
-
+        //Ignorer les jours feries 
+        if (holidaySet.has(r.dateISO)) return;
         if (key) {
             if (!dataMap.has(key)) dataMap.set(key, new Map());
             const ruleMap = dataMap.get(key);
@@ -493,7 +505,7 @@ export default function GraphTopReglesStacked({
                         onChange={(dates) => {
                             const [start, end] = dates;
                             setSelectedDates([start, end]);
-                            setSelectedValues(allWorkingDaysBetweenIncludingHolidays(start, end));
+                            setSelectedValues(allWorkingDaysBetweenIncludingHolidays(start, end, holidaySet));
                         }}
                         startDate={selectedDates[0]}
                         endDate={selectedDates[1]}

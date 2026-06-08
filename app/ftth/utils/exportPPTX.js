@@ -20,7 +20,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   const introBackground = "/ftth_intro.png";
   const titleSlideBackground = "/title_slide.png";
   const transverseBackground = "/ftth_2.png";
-  const tyBackground = "/ftth_ty.png";
+  //const tyBackground = "/ftth_ty.png";
   const endBackground = "/fin.png";
   const contentBackground = "/ftth_diapo.png";
 
@@ -119,7 +119,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
     });
   }
   cover.addText(`Édité le : ${todayStr}`, {
-    x: 7.0, y: 5.2, w: 2.8, h: 0.3, align: "right", fontSize: 10, color: "D0D0D0"
+    x: 6.0, y: 5.2, w: 2.8, h: 0.3, align: "right", fontSize: 10, color: "D0D0D0"
   });
 
   // Fonction pour créer une slide de titre de section
@@ -575,7 +575,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
 
   // Slide – Météo & Humeur Générale
   const moodSlide = pptx.addSlide();
-  moodSlide.addImage({ path: contentBackground, x: 0, y: 0, w: "100%", h: "100%" });
+  moodSlide.addImage({ path: "/mood_background.png", x: 0, y: 0, w: "100%", h: "100%" });
 
   moodSlide.addText("Météo & Humeur Générale", {
     x: 0.6, y: 0.7, w: 8, h: 0.4, fontSize: 20, bold: true, color: blue
@@ -657,8 +657,8 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   addStyledCard(synthese, { x: synthStartX + 2 * (cardW + cardSpacing), headerColor: "#facc15", title: "Points d'attention" });
 
   // Slide – Merci
-  const tySlide = pptx.addSlide();
-  tySlide.addImage({ path: tyBackground, x: 0, y: 0, w: "100%", h: "100%" });
+  //const tySlide = pptx.addSlide();
+  //tySlide.addImage({ path: tyBackground, x: 0, y: 0, w: "100%", h: "100%" });
 
   // Slide – Fin
   const end = pptx.addSlide();

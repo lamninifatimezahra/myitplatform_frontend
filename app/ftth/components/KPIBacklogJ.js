@@ -80,11 +80,9 @@ export default function KPIBacklogJ({ onComponentReady }) {
                 
         <p className="text-3xl font-bold text-black">{todayValue}</p>
         
-        <p className="text-xs text-gray-500 mt-1">
-          {isPositive ? "+" : "-"}
-          {percent}% ({isPositive ? "+" : "-"}
-          {diff} commandes)
-        </p>
+        <div className="text-xs text-gray-500 mt-1 opacity-0 pointer-events-none">
+          0
+        </div>
       </div>
     </motion.div>
   );

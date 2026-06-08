@@ -522,48 +522,49 @@ export default function BacklogFtthChart({
   }, [records, sortedSelectedValues, selectedYear, viewMode, holidaySet]);
   
   const chartData = useMemo(() => {
-    const holidayFlags = sortedSelectedValues.map(v => viewMode === "day" && holidaySet.has(v));
-    const processDataForHolidays = (dataArray) => dataArray.map((val, idx) => (viewMode === "day" && holidayFlags[idx] && val === 0 ? 0.1 : val));
 
-    return {
-      labels,
-      datasets: [
-        { 
-          label: "Backlog FTTH J", 
-          data: processDataForHolidays(sums.stockArr), 
-          backgroundColor: COLORS[0], 
-          borderRadius: 6, 
-          hidden: !visibleKeys.includes("stock") 
-        },
-        { 
-          label: "Dossiers Traités", 
-          data: processDataForHolidays(sums.traiteArr), 
-          backgroundColor: COLORS[1],
-          borderRadius: 6, 
-          hidden: !visibleKeys.includes("traite") 
-        },
-      ],
-      holidayFlags,
-      originalData: {
-        stockArr: sums.stockArr,
-        traiteArr: sums.traiteArr
-      }
-    };
-  }, [labels, sums, visibleKeys, sortedSelectedValues, viewMode, holidaySet]);
+  const filteredIndexes =
+    viewMode === "day"
+      ? sortedSelectedValues
+          .map((v, index) => ({ v, index }))
+          .filter(({ v }) => !holidaySet.has(v))
+          .map(({ index }) => index)
+      : sortedSelectedValues.map((_, index) => index);
+
+  const filteredLabels = filteredIndexes.map(i => labels[i]);
+  const filteredStock = filteredIndexes.map(i => sums.stockArr[i]);
+  const filteredTraite = filteredIndexes.map(i => sums.traiteArr[i]);
+
+  return {
+    labels: filteredLabels,
+    datasets: [
+      {
+        label: "Backlog FTTH J",
+        data: filteredStock,
+        backgroundColor: COLORS[0],
+        borderRadius: 6,
+        hidden: !visibleKeys.includes("stock"),
+      },
+      {
+        label: "Dossiers Traités",
+        data: filteredTraite,
+        backgroundColor: COLORS[1],
+        borderRadius: 6,
+        hidden: !visibleKeys.includes("traite"),
+      },
+    ],
+  };
+}, [labels, sums, visibleKeys, sortedSelectedValues, viewMode, holidaySet]);
 
   const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       datalabels: {
-        display: (context) => (viewMode === "day" && chartData.holidayFlags?.[context.dataIndex]) || (context.dataset.data[context.dataIndex] > 0),
+       display: (context) => context.dataset.data[context.dataIndex] > 0,
         color: "#000",
         font: { size: 10, weight: "bold" },
-        formatter: (value, context) => {
-          if (viewMode === "day" && chartData.holidayFlags?.[context.dataIndex]) {
-            const originalValue = context.datasetIndex === 0 ? chartData.originalData.stockArr[context.dataIndex] : chartData.originalData.traiteArr[context.dataIndex];
-            return originalValue > 0 ? `${originalValue} 🏖️` : "🏖️";
-          }
+        formatter: (value) => {
           return value > 0.5 ? Math.round(value) : "";
         },
         anchor: "end",
@@ -578,13 +579,11 @@ export default function BacklogFtthChart({
         padding: 10, 
         callbacks: {
           label: (context) => {
-            let label = context.dataset.label || '';
-            if (label) label += ': ';
-            if (viewMode === "day" && chartData.holidayFlags?.[context.dataIndex]) {
-              const originalValue = context.datasetIndex === 0 ? chartData.originalData.stockArr[context.dataIndex] : chartData.originalData.traiteArr[context.dataIndex];
-              return label + originalValue + ' 🏖️';
-            }
-            return label + Math.round(context.parsed.y);
+              let label = context.dataset.label || '';
+
+              if (label) label += ': ';
+
+              return label + Math.round(context.parsed.y);
           }
         }
       },

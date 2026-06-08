@@ -154,7 +154,7 @@ export default function KPIBacklogJ1({
   // ---------- logique couleur et labels ----------
   const isDanger = currentValue >= 100; // ≥100 rouge, sinon vert
   const hasFilter = !!(globalStartDate && globalEndDate);
-  const displayTitle = hasFilter ? "Moyenne KPI" : "KPI du Jour";
+  const displayTitle = hasFilter ? "Moyenne KPI Manuel" : "KPI du Jour Manuel";
   
   // Format des dates pour l'affichage - also fixed to use local dates
   const formatDateRange = () => {
