@@ -45,6 +45,8 @@ const DEFAULT_SELECTED = [
   "kpi-backlog-j1",
   "KPI Backlog J",
   "kpi-backlog-j",
+  "KPI SPA",
+  "kpi-spa",
 
   // Vue d’ensemble Backlog
   "Vue d'ensemble combinée du Backlog",
@@ -87,7 +89,7 @@ const DEFAULT_SELECTED = [
 ];
 
 // ❌ Ne jamais pré-cocher
-const EXCLUDE_DEFAULT = ["KPI SPA"];
+const EXCLUDE_DEFAULT = [];
 
 const DEFAULT_KEYS = new Set(DEFAULT_SELECTED.map(toKey));
 const EXCLUDE_KEYS = new Set(EXCLUDE_DEFAULT.map(toKey));

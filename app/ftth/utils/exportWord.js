@@ -136,7 +136,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const sections = {
     manuel: {
       title: "Manuel FTTH",
-      kpis: ["kpi-backlog-j1", "kpi-backlog-j"],
+      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-spa"],
       singles: [
         "Backlog FTTH J et Dossiers Traités",
         "KPI FTTH",

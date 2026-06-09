@@ -78,7 +78,7 @@ export default function KPIBacklogJ({ onComponentReady }) {
           )}
         </div>
                 
-        <p className="text-3xl font-bold text-black">{todayValue}</p>
+        <p className="text-3xl font-bold text-black mt-4">{todayValue}</p>
         
         <div className="text-xs text-gray-500 mt-1 opacity-0 pointer-events-none">
           0

@@ -197,7 +197,7 @@ export default function KPIBacklogJ1({
       data-graph-label="KPI Backlog J-1"
       whileHover={{ scale: 1.05 }}
     >
-      <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full">
+      <div className="relative bg-white p-6 rounded-xl shadow-md flex flex-col items-start w-full mt-4" >
         <div className="flex justify-between items-start w-full mb-2">
           <h3 className="text-gray-800 text-lg font-medium">{displayTitle}</h3>
           <BullseyeIcon color="#374151" size={20} />
