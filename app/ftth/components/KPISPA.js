@@ -40,7 +40,7 @@ export default function KPISPA({
   const { globalStartDate, globalEndDate } = useGlobalFilter();
 
   const [data, setData] = useState([]);
-  const [ratio, setRatio] = useState("0/0");
+  const [ratio, setRatio] = useState("0/5");
 
   // ---------- helpers ----------
   const toISO = (d) => {
@@ -107,7 +107,7 @@ export default function KPISPA({
   // ---------- calcul ----------
   useEffect(() => {
     if (!data.length) {
-      setRatio("0/0");
+      setRatio("0/5");
       return;
     }
 
