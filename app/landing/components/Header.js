@@ -32,7 +32,7 @@ export default function Header() {
         {/* Logo */}
         <div className="flex items-center">
           <img
-            src={scrolled ? "/logo-myit.png" : "/logo-myit-blanc.png"}
+            src={scrolled ? "/logo-myitv4.png" : "/logo-myit-blanc.png"}
             alt="Logo MyIT"
             className="w-16 h-16 object-contain transition-transform duration-300 hover:scale-110"
           />

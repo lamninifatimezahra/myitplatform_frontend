@@ -28,7 +28,7 @@ export default function MyAIPage() {
           {/* Logo centré */}
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src="/logo-myit.png"
+              src="/logo-myitv4.png"
               alt="Logo MyIT"
               width={48}
               height={48}

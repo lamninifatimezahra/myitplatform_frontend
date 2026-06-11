@@ -8,7 +8,7 @@ export default function Footer() {
         {/* Logo + Intro */}
         <div className="col-span-1">
           <div className="flex items-center gap-2 mb-4">
-            <img src="/logo-myit.png" alt="MyIT" className="w-12 h-12" />
+            <img src="/logo-myitv4.png" alt="MyIT" className="w-12 h-12" />
             <h3 className="text-2xl font-extrabold text-[#004aad]">MyIT</h3>
           </div>
           <p className="text-gray-500">

@@ -10,7 +10,7 @@ export const posts = [
       },
       description:
         "Selon vous, quelle plateforme nocode est la plus performante pour créer une app métier rapidement ?",
-      image: "/logo-myit.png",
+      image: "/logo-myitv4.png",
       link: "https://www.softr.io",
       createdAt: "14/01/2025 19:56",
       comments: [

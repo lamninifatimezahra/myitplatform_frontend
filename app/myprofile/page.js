@@ -140,7 +140,7 @@ export default function MyProfile() {
           <div className="absolute inset-0 border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent rounded-full animate-spin-custom" />
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src="/logo-myit.png"
+              src="/logo-myitv4.png"
               alt="Logo MyIT"
               width={48}
               height={48}

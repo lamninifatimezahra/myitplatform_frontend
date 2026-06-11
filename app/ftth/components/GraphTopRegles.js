@@ -170,7 +170,7 @@ function getAllSemestersBetween(startDate, endDate) {
 }
 
 /* =============== config (mêmes couleurs que GraphTopRegles) =============== */
-const COLORS = ["#0bedf9", "#7b61ff", "#f48422", "#e913fd", "#f4fe33"];
+const COLORS = ["#95c2e4", "#7b61ff", "#f48422", "#e913fd", "#564f8e"];
 function computeYAxisMax(max) {
   if (max <= 5) return 10;
   if (max <= 10) return 20;

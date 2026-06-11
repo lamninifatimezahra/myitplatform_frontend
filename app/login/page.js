@@ -40,7 +40,7 @@ export default function LoginPage() {
           <div className="absolute inset-0 border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent rounded-full animate-spin-custom" />
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src="/logo-myit.png"
+              src="/logo-myitv4.png"
               alt="Logo MyIT"
               width={48}
               height={48}
@@ -204,7 +204,7 @@ export default function LoginPage() {
         <div className="max-w-md mx-auto w-full bg-white/70 backdrop-blur-md p-10 rounded-3xl shadow-2xl animate-fade-in">
           <div className="flex justify-center mb-6">
             <Image
-              src="/logo-myit.png"
+              src="/logo-myitv4.png"
               alt="MyIT Logo"
               width={220}
               height={220}

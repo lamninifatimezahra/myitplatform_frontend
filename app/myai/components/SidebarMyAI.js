@@ -71,7 +71,7 @@ export default function SidebarMyAI({ sidebarOpen, setSidebarOpen }) {
         {/* Logos bas fixes */}
         <div className="flex justify-center items-center space-x-2 p-4 border-t border-gray-200">
           <Image src="/logo-sfr.png" alt="SFR" width={40} height={40} />
-          <Image src="/intelcia_it_solutions_logo.jpg" alt="Intelcia IT Solutions" width={100} height={40} />
+          <Image src="/intelcia_it_solutions_logov7.png" alt="Intelcia IT Solutions" width={100} height={40} />
         </div>
       </div>
     </>
@@ -92,7 +92,7 @@ function SidebarContent({ pathname, handleLogout, closeSidebar, user }) {
       {/* Logo cliquable vers l'modules */}
       <div className="flex justify-center shrink-0 mb-4">
         <a href="/modules" className="hover:opacity-90 transition">
-          <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
+          <Image src="/logo-myitv4.png" alt="MyIT Logo" width={250} height={40} />
         </a>
       </div>
 

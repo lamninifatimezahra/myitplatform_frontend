@@ -112,7 +112,7 @@ return `${formattedFirst} ${formattedLast}`.trim();
         <div className="relative w-24 h-24">
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Image src="/logo-myit.png" alt="Logo MyIT" width={48} height={48} className="object-contain" />
+            <Image src="/logo-myitv4.png" alt="Logo MyIT" width={48} height={48} className="object-contain" />
           </div>
         </div>
         <style jsx>{`
@@ -182,7 +182,7 @@ return `${formattedFirst} ${formattedLast}`.trim();
       {/* Carte Upload */}
       <div className="flex flex-1 justify-center items-center pt-28 p-6">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-2xl bg-gray-50 border border-[#31327e] rounded-2xl shadow-xl p-10 flex flex-col items-center">
-          <Image src="/logo-myit.png" alt="Logo MyIT" width={150} height={60} className="mb-6" />
+          <Image src="/logo-myitv4.png" alt="Logo MyIT" width={150} height={60} className="mb-6" />
           <h1 className="text-3xl font-bold text-[#31327e] mb-6 text-center">Upload Arthuis</h1>
 
           {/* Message en cours de déploiement */}

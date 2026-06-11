@@ -76,7 +76,7 @@ export default function SidebarMyForum({ sidebarOpen, setSidebarOpen }) {
         {/* Logos bas */}
         <div className="flex justify-center items-center space-x-2 p-4 border-t border-gray-200">
           <Image src="/logo-sfr.png" alt="SFR" width={40} height={40} />
-          <Image src="/intelcia_it_solutions_logo.jpg" alt="Intelcia IT Solutions" width={100} height={40} />
+          <Image src="/intelcia_it_solutions_logov7.png" alt="Intelcia IT Solutions" width={100} height={40} />
         </div>
       </div>
     </>
@@ -97,7 +97,7 @@ function SidebarContent({ pathname, handleLogout, user, closeSidebar }) {
       {/* Logo cliquable */}
       <div className="mb-6 flex justify-center">
         <Link href="/modules" onClick={closeSidebar} className="hover:opacity-90 transition">
-          <Image src="/logo-myit.png" alt="MyIT Logo" width={250} height={40} />
+          <Image src="/logo-myitv4.png" alt="MyIT Logo" width={250} height={40} />
         </Link>
       </div>
 

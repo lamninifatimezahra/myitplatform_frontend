@@ -48,7 +48,7 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex flex-col items-center mb-4 space-y-2">
-        <Image src="/logo-myit.png" alt="MyIT Logo" width={isOpen ? 200 : 40} height={40} />
+        <Image src="/logo-myitv4.png" alt="MyIT Logo" width={isOpen ? 200 : 40} height={40} />
       </div>
 
       {/* Navigation */}
@@ -118,7 +118,7 @@ export default function Sidebar() {
       {isOpen && (
         <div className="flex justify-center items-center space-x-2 px-4">
           <Image src="/logo-sfr.png" alt="SFR" width={40} height={40} />
-          <Image src="/intelcia_it_solutions_logo.jpg" alt="Intelcia IT Solutions" width={100} height={40} />
+          <Image src="/intelcia_it_solutions_logov7.png" alt="Intelcia IT Solutions" width={100} height={40} />
         </div>
       )}
     </div>

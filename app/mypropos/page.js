@@ -24,7 +24,7 @@ export default function MyProposHomePage() {
         <div className="relative w-24 h-24">
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Image src="/logo-myit.png" alt="Logo MyIT" width={48} height={48} />
+            <Image src="/logo-myitv4.png" alt="Logo MyIT" width={48} height={48} />
           </div>
         </div>
 

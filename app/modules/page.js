@@ -54,7 +54,7 @@ export default function AccueilPage() {
           <div className="absolute inset-0 rounded-full border-[6px] border-t-[#31327e] border-b-[#6f80ac] border-l-transparent border-r-transparent animate-spin-custom" />
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src="/logo-myit.png"
+              src="/logo-myitv4.png"
               alt="Logo MyIT"
               width={48}
               height={48}
@@ -219,7 +219,7 @@ export default function AccueilPage() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-10">
             <Image
-              src="/logo-myit.png"
+              src="/logo-myitv4.png"
               alt="MyIT Logo"
               width={280}
               height={80}
