@@ -259,7 +259,7 @@ return `${formattedFirst} ${formattedLast}`.trim();
 
       {/* Copyright */}
       <footer className="relative z-10 text-center text-sm text-gray-400 py-4 mt-10">
-        © {new Date().getFullYear()} MyIT – Plateforme interne Intelcia IT Solutions
+        © {new Date().getFullYear()} MyIT – Plateforme interne Intelcia Tech
       </footer>
     </main>
   );
