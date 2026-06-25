@@ -35,6 +35,7 @@ const COLORS = {
   "Rattrapage B57": "#2fec09",
   "REF PMT": "#f48422",
   "Renonciation": "#BDBDBD",
+  "BRAM": "#eb0b0b",
 };
 
 // =========================================
