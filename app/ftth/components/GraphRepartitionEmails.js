@@ -114,10 +114,18 @@ export default function GraphRepartitionParType() {
   const title = "Répartition des e-mails par type";
   const COLORS = {
       "Intervention": "#3b82f6",
-      "Renonciation": "#f59e0b",
-      "REF PMT": "#111827",
-      "Finalisation de commande": "#4b5563",
-      "Autre": "#68bddd"
+      "Renonciation": "#BDBDBD",
+      "REF PMT": "#f48422",
+      "Rattrapage B57": "#307422",
+      "Finalisation commande": "#0bedf9",
+      "BRAM": "#eb0b0b",
+      "migration":"#300beb",
+      "Nettoyage client":"#10f398",
+      "DDE":"#cf85fad1",
+      "Abandon de commande":"#add5f1",
+      "Blocage de commande":"#520058",
+      "Arthius":"#ebd50b",
+      "Autre": "#1c7393"
   };
   
   // Références et états
