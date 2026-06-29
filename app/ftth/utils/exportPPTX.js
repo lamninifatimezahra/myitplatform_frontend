@@ -57,7 +57,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   const sections = {
     manuel: {
       title: "Manuel FTTH",
-      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-manuel-7j"],
+      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-manuel-7j", "kpi-spa"],
       singles: [
         "Backlog FTTH J et Dossiers Traités",
         "KPI FTTH",
