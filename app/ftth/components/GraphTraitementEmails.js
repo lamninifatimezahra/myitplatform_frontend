@@ -29,13 +29,18 @@ if (typeof window !== "undefined") Modal.setAppElement(document.body);
 // =========================================
 
 const COLORS = {
-  "Finalisation commande": "#0bedf9",
-  "Intervention": "#2F80ED",
-  "MAJ CR STOC": "#e913fd",
-  "Rattrapage B57": "#2fec09",
-  "REF PMT": "#f48422",
-  "Renonciation": "#BDBDBD",
-  "BRAM": "#eb0b0b",
+      "Intervention": "#3b82f6",
+      "Renonciation": "#BDBDBD",
+      "REF PMT": "#f48422",
+      "Rattrapage B57": "#307422",
+      "Finalisation commande": "#0bedf9",
+      "BRAM": "#ebd50b",
+      "migration":"#300beb",
+      "Nettoyage client":"#10f398",
+      "DDE":"#cf85fad1",
+      "Abandon de commande":"#add5f1",
+      "Blocage de commande":"#520058",
+      "Arthius":"#1bf9be"
 };
 
 // =========================================

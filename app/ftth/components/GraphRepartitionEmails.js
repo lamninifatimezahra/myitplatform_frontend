@@ -118,14 +118,13 @@ export default function GraphRepartitionParType() {
       "REF PMT": "#f48422",
       "Rattrapage B57": "#307422",
       "Finalisation commande": "#0bedf9",
-      "BRAM": "#eb0b0b",
+      "BRAM": "#ebd50b",
       "migration":"#300beb",
       "Nettoyage client":"#10f398",
       "DDE":"#cf85fad1",
       "Abandon de commande":"#add5f1",
       "Blocage de commande":"#520058",
-      "Arthius":"#ebd50b",
-      "Autre": "#1c7393"
+      "Arthius":"#1bf9be"
   };
   
   // Références et états
