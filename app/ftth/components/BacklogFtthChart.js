@@ -609,7 +609,7 @@ export default function KPI_FTTH({
     return `${selectedYear ? `Année ${selectedYear} - ` : ""}${prefix}: ${values.join(", ")}`;
   }, [viewMode, selectedDates, sortedSelectedValues, selectedYear]);
 
-  const showData = sums.nonTraiteArr.some((n) => n > 0);
+  const showData = !errorText && sortedSelectedValues.length > 0;
 
   const onLegendClick = (key) => {
     setVisibleKeys((prev) => (prev.includes(key) ? [] : [key]));

@@ -625,7 +625,7 @@ export default function BacklogFtthChart({
     return `${selectedYear ? `Année ${selectedYear} - ` : ""}${prefix}: ${values.join(", ")}`;
   }, [viewMode, selectedDates, sortedSelectedValues, selectedYear]);
 
-  const showData = sums.stockArr.some((n) => n > 0) || sums.traiteArr.some((n) => n > 0);
+  const showData = !errorText && sortedSelectedValues.length > 0;
 
   // MODIFICATION : La logique de clic sur la légende est maintenant un simple "toggle"
   const onLegendClick = (key) => {

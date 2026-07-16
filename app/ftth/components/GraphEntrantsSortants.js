@@ -480,7 +480,7 @@ export default function GraphEntrantsSortants({
   }, [chartRows, visibleKeys]);
   
   const maxY = niceMax(maxVisible);
-  const showData = chartRows.length > 0 && maxVisible > 0;
+  const showData = !errorText && chartRows.length > 0;
 
   const subtitle = useMemo(() => {
     if (viewMode === "day") {
