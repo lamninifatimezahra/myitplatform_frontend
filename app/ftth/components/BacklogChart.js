@@ -432,20 +432,6 @@ export default function BacklogChart({
         pointBorderWidth: 2,
         pointRadius: 5,
         pointHoverRadius: 7
-      },
-      {
-        label: `Tickets +${retardDays} jours (moy: ${backlogRetardMoyenne})`,
-        data: backlogRetardData,
-        backgroundColor: "rgba(255, 99, 132, 0.1)",
-        borderColor: "#ff6384",
-        borderWidth: 3,
-        fill: false,
-        tension: 0.3,
-        pointBackgroundColor: "#dc2626",
-        pointBorderColor: "#ff6384",
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
       }
     ]
   };
@@ -457,28 +443,16 @@ export default function BacklogChart({
     plugins: {
       datalabels: {
         display: true,
-        color: function(context) {
-          // Couleur rouge pour le dataset des retards, bleu pour le total
-          return context.datasetIndex === 1 ? "#dc2626" : "#1b2b6b";
-        },
+        color: "#1b2b6b",
         font: { weight: "bold", size: 10 },
-        formatter: function(value, context) {
-          // Retourner simplement la valeur
+        formatter: function(value) {
           return value;
         },
-        anchor: function(context) {
-          return context.datasetIndex === 1 ? "center" : "end";
-        },
-        align: function(context) {
-          return context.datasetIndex === 1 ? "bottom" : "top";
-        },
-        offset: function(context) {
-          return context.datasetIndex === 1 ? -10 : 5;
-        },
+        anchor: "end",
+        align: "top",
+        offset: 5,
         backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderColor: function(context) {
-          return context.datasetIndex === 1 ? "#dc2626" : "#1b2b6b";
-        },
+        borderColor: "#1b2b6b",
         borderWidth: 1,
         borderRadius: 2,
         padding: 1
@@ -537,7 +511,7 @@ export default function BacklogChart({
     },
     layout: { padding: { top: 15, right: 20, bottom: 10, left: 10 } },
     animation: { duration: 300 },
-  }), [retardDays]);
+  }), []);
 
   // Texte descriptif de la période sélectionnée
   const getPeriodLabelText = () => {
