@@ -96,7 +96,7 @@ export default function HispeedDashboard() {
 
             {/* Ligne 2 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <GroupedBarChart apiUrl={API_HISPEED_DATA} />
+              <GroupedBarChart apiUrl={API_HISPEED_DATA} showBacklog />
               <RapportSortantsEntrants apiUrl={API_HISPEED_DATA} />
 
             </div>

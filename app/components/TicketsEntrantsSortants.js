@@ -218,7 +218,42 @@ function getLastNWorkingDays(days, n = 10) {
     .map(item => item.str);
   return filteredDays;
 }
+const BACKLOG_THRESHOLD = 15;
+const COLOR_OK = "#22c55e";
+const COLOR_ALERT = "#ef4444";
 
+// Dernier jour (dimanche) d'une semaine ISO
+function getISOWeekEndDate(year, week) {
+  const jan4 = new Date(year, 0, 4);
+  const dayNum = jan4.getDay() || 7;
+  const mondayWeek1 = new Date(year, 0, 4 - dayNum + 1);
+
+  return new Date(
+    year,
+    0,
+    mondayWeek1.getDate() + (week - 1) * 7 + 6
+  );
+}
+
+// Date de fin (YYYY-MM-DD) d'une période
+function getPeriodEndString(val, mode, year) {
+  if (mode === "day") return val;
+  if (!year) return null;
+
+  let end = null;
+
+  if (mode === "week") {
+    end = getISOWeekEndDate(year, val);
+  } else if (mode === "month") {
+    end = new Date(year, val, 0);
+  } else if (mode === "quarter") {
+    end = new Date(year, val * 3, 0);
+  } else if (mode === "semester") {
+    end = new Date(year, val * 6, 0);
+  }
+
+  return end ? getLocalDateString(end) : null;
+}
 ChartJS.register(
   BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartDataLabels
 );
@@ -236,6 +271,7 @@ export default function GroupedBarChart({
   weekClosedField = "semaine_date_sortant", // Champ semaine pour sortants
   defaultViewMode = "day",
   defaultNumPeriods = 5,
+  showBacklog = false, 
 }) {
   if (!apiUrl) {
     return (
@@ -796,68 +832,175 @@ export default function GroupedBarChart({
   }, []); // Pas de dépendances externes variables
 
   // Calcul des données pour Entrants et Sortants (Utilisation de useMemo pour optimisation)
-  const { entrantsData, sortantsData } = useMemo(() => {
-      const entrantCounts = {};
-      const sortantCounts = {};
+ const { entrantsData, sortantsData } = useMemo(() => {
+  const entrantCounts = {};
+  const sortantCounts = {};
 
-      // Initialiser les compteurs pour les périodes sélectionnées
-      sortedSelectedValues.forEach(val => {
-          entrantCounts[val] = 0;
-          sortantCounts[val] = 0;
-      });
+  // Initialiser les compteurs
+  sortedSelectedValues.forEach(val => {
+    entrantCounts[val] = 0;
+    sortantCounts[val] = 0;
+  });
 
-      data.forEach(t => {
-          // Calcul pour les entrants
-          const dateUpdateStr = t[dateUpdateField]?.split("T")[0];
-          const dateUpdate = parseLocalDate(dateUpdateStr);
-          if (dateUpdate) {
-              if (viewMode === "day") {
-                  if (sortedSelectedValues.includes(dateUpdateStr)) {
-                      entrantCounts[dateUpdateStr]++;
-                  }
-              } else if (dateUpdate.getFullYear() === selectedYear) {
-                  const period = getTicketPeriod(t, viewMode, dateUpdateField, weekField);
-                  if (period !== null && sortedSelectedValues.includes(period)) {
-                      entrantCounts[period]++;
-                  }
-              }
-          }
+  data.forEach(t => {
 
-          // Calcul pour les sortants
-          const dateClosedStr = t[dateClosedField]?.split("T")[0];
-          const dateClosed = parseLocalDate(dateClosedStr);
-          if (dateClosed) {
-              if (viewMode === "day") {
-                  if (sortedSelectedValues.includes(dateClosedStr)) {
-                      sortantCounts[dateClosedStr]++;
-                  }
-              } else if (dateClosed.getFullYear() === selectedYear) {
-                  const relevantWeekField = viewMode === "week" ? (weekClosedField || weekField) : weekField;
-                  const period = getTicketPeriod(t, viewMode, dateClosedField, relevantWeekField);
-                  if (period !== null && sortedSelectedValues.includes(period)) {
-                      sortantCounts[period]++;
-                  }
-              }
-          }
-      });
+    // =========================
+    // ENTRANTS
+    // =========================
+    const dateUpdateStr = t[dateUpdateField]?.split("T")[0];
+    const dateUpdate = parseLocalDate(dateUpdateStr);
 
-      // Convertir les objets de comptage en tableaux dans le bon ordre
-      const finalEntrantsData = sortedSelectedValues.map(val => entrantCounts[val] || 0);
-      const finalSortantsData = sortedSelectedValues.map(val => sortantCounts[val] || 0);
+    if (dateUpdate) {
+      if (viewMode === "day") {
+        if (sortedSelectedValues.includes(dateUpdateStr)) {
+          entrantCounts[dateUpdateStr]++;
+        }
+      } else if (dateUpdate.getFullYear() === selectedYear) {
+        const period = getTicketPeriod(
+          t,
+          viewMode,
+          dateUpdateField,
+          weekField
+        );
 
-      return { entrantsData: finalEntrantsData, sortantsData: finalSortantsData };
+        if (
+          period !== null &&
+          sortedSelectedValues.includes(period)
+        ) {
+          entrantCounts[period]++;
+        }
+      }
+    }
 
-  }, [data, sortedSelectedValues, viewMode, selectedYear, dateUpdateField, dateClosedField, weekField, weekClosedField, getTicketPeriod]); // Dépendances clés
+    // =========================
+    // SORTANTS
+    // =========================
+    const dateClosedStr = t[dateClosedField]?.split("T")[0];
+    const dateClosed = parseLocalDate(dateClosedStr);
+
+    if (dateClosed) {
+      if (viewMode === "day") {
+        if (sortedSelectedValues.includes(dateClosedStr)) {
+          sortantCounts[dateClosedStr]++;
+        }
+      } else if (dateClosed.getFullYear() === selectedYear) {
+
+        const relevantWeekField =
+          viewMode === "week"
+            ? (weekClosedField || weekField)
+            : weekField;
+
+        const period = getTicketPeriod(
+          t,
+          viewMode,
+          dateClosedField,
+          relevantWeekField
+        );
+
+        if (
+          period !== null &&
+          sortedSelectedValues.includes(period)
+        ) {
+          sortantCounts[period]++;
+        }
+      }
+    }
+  });
+
+  const finalEntrantsData = sortedSelectedValues.map(
+    val => entrantCounts[val] || 0
+  );
+
+  const finalSortantsData = sortedSelectedValues.map(
+    val => sortantCounts[val] || 0
+  );
+
+  return {
+    entrantsData: finalEntrantsData,
+    sortantsData: finalSortantsData
+  };
+
+}, [
+  data,
+  sortedSelectedValues,
+  viewMode,
+  selectedYear,
+  dateUpdateField,
+  dateClosedField,
+  weekField,
+  weekClosedField,
+  getTicketPeriod
+]);
+const backlogData = useMemo(() => {
+  return sortedSelectedValues.map((val, index) => {
+    const endStr = getPeriodEndString(
+      val,
+      viewMode,
+      selectedYear
+    );
+
+    if (!endStr) return 0;
+
+    const restants = data.reduce((count, t) => {
+      const entryStr = t[dateUpdateField]?.split("T")[0];
+      const exitStr = t[dateClosedField]?.split("T")[0];
+
+      // Pas encore entré
+      if (!entryStr || entryStr > endStr) {
+        return count;
+      }
+
+      // Déjà sorti
+      if (exitStr && exitStr <= endStr) {
+        return count;
+      }
+
+      // Entré mais pas encore sorti
+      return count + 1;
+    }, 0);
+
+    // Backlog = Restants - Entrants
+    return restants - (entrantsData[index] || 0);
+  });
+}, [
+  data,
+  sortedSelectedValues,
+  viewMode,
+  selectedYear,
+  dateUpdateField,
+  dateClosedField,
+  entrantsData
+]);
 
 
   // Structure des données pour ChartJS
-  const chartData = {
-    labels,
-    datasets: [
-      { label: "Entrants", data: entrantsData, backgroundColor: "#68bddd", borderRadius: 6 },
-      { label: "Sortants", data: sortantsData, backgroundColor: "#1b2b6b", borderRadius: 6 }
-    ]
-  };
+const chartData = {
+  labels,
+  datasets: [
+    {
+      label: "Entrants",
+      data: entrantsData,
+      backgroundColor: "#68bddd",
+      borderRadius: 6
+    },
+    {
+      label: "Sortants",
+      data: sortantsData,
+      backgroundColor: "#1b2b6b",
+      borderRadius: 6
+    },
+    ...(showBacklog
+      ? [{
+          label: `Backlog (≤ ${BACKLOG_THRESHOLD} vert, > ${BACKLOG_THRESHOLD} rouge)`,
+          data: backlogData,
+          backgroundColor: backlogData.map(v =>
+            v <= BACKLOG_THRESHOLD ? COLOR_OK : COLOR_ALERT
+          ),
+          borderRadius: 6
+        }]
+      : [])
+  ]
+};
 
   // Options du graphique
   const chartOptions = useMemo(() => ({ // useMemo pour les options aussi
@@ -873,11 +1016,30 @@ export default function GroupedBarChart({
         align: "top",
         offset: -3
       },
-      legend: {
-        position: "top",
-        align: "center",
-        labels: { padding: 15, boxWidth: 12, font: { size: 12 } }
-      },
+legend: {
+  position: "top",
+  align: "center",
+  labels: {
+    padding: 15,
+    boxWidth: 12,
+    font: { size: 12 },
+
+    generateLabels: (chart) => {
+      const labels =
+        ChartJS.defaults.plugins.legend.labels.generateLabels(chart);
+
+      return labels.map(l =>
+        l.datasetIndex === 2
+          ? {
+              ...l,
+              fillStyle: "#6b7280",
+              strokeStyle: "#6b7280"
+            }
+          : l
+      );
+    }
+  }
+},
       tooltip: {
         mode: "index", intersect: false, padding: 10,
         titleFont: { size: 13 }, bodyFont: { size: 12 }
@@ -944,7 +1106,7 @@ export default function GroupedBarChart({
         }
   };
   const periodeLabelText = getPeriodLabelText();
-  const showData = entrantsData.some(d => d > 0) || sortantsData.some(d => d > 0);
+  const showData = entrantsData.some(d => d > 0) || sortantsData.some(d => d > 0) || (showBacklog && backlogData.some(d => d > 0));
 
 
   // =========================================
