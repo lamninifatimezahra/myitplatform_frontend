@@ -27,6 +27,30 @@ if (typeof window !== "undefined") Modal.setAppElement(document.body);
 // =========================================
 // Fonctions Utilitaires
 // =========================================
+function getNextDayString(dateStr) {
+  const date = parseLocalDate(dateStr);
+  if (!date) return null;
+
+  date.setDate(date.getDate() + 1);
+  return getLocalDateString(date);
+}
+function toDayString(v) {
+  if (!v || typeof v !== "string") return null;
+
+  const s = v.trim();
+
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    return s.slice(0, 10);
+  }
+
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+
+  if (m) {
+    return `${m[3]}-${m[2]}-${m[1]}`;
+  }
+
+  return null;
+}
 
 function getLocalDateString(date) {
   if (!date || isNaN(date.getTime())) return null;
@@ -254,6 +278,29 @@ function getPeriodEndString(val, mode, year) {
 
   return end ? getLocalDateString(end) : null;
 }
+function getPeriodStartString(val, mode, year) {
+  if (mode === "day") return val;
+  if (!year) return null;
+
+  let start = null;
+
+  if (mode === "week") {
+    const end = getISOWeekEndDate(year, val);
+    start = new Date(
+      end.getFullYear(),
+      end.getMonth(),
+      end.getDate() - 6
+    );
+  } else if (mode === "month") {
+    start = new Date(year, val - 1, 1);
+  } else if (mode === "quarter") {
+    start = new Date(year, (val - 1) * 3, 1);
+  } else if (mode === "semester") {
+    start = new Date(year, (val - 1) * 6, 1);
+  }
+
+  return start ? getLocalDateString(start) : null;
+}
 ChartJS.register(
   BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartDataLabels
 );
@@ -272,6 +319,7 @@ export default function GroupedBarChart({
   defaultViewMode = "day",
   defaultNumPeriods = 5,
   showBacklog = false, 
+  backlogEntryField = "date_derniere_maj"
 }) {
   if (!apiUrl) {
     return (
@@ -931,47 +979,55 @@ export default function GroupedBarChart({
   weekClosedField,
   getTicketPeriod
 ]);
+// Retire tous les espaces pour comparer les noms de files (l'API en met parfois)
+const normalizeFile = (s) => (s || "").replace(/\s+/g, "");
+
+const BACKLOG_FILES = new Set([
+  "IN_DSI_FOC_EXP_DSL_ENT_COUP_STC",
+  "IN_DSI_FOC_EXP_DSL_ENT_COUPEE",
+  "DSI_FOC_EXP_DSL_ETUD-HSENT",
+  "DSI_FOC_EXP_DSL_ETUD-HSGP",
+  "IN_DSI_FOC_REFACT-HISPEED",
+  "IN_DSI_FOC_REFACT-HISPEED-DDS",
+  "IN_DSI_FOC_REFACT-REFFIXE-CPTL",
+  "IN_DSI_MOA_AGREGATEUR",
+  "IN_DSI_OSS_HISPEED_EXP_B2B",
+  "IN_DSI_FOC_REFACT-IPM",
+  "IN_DSI_FOC_REFACT-CERBERE",
+].map(normalizeFile));
 const backlogData = useMemo(() => {
-  return sortedSelectedValues.map((val, index) => {
-    const endStr = getPeriodEndString(
-      val,
-      viewMode,
-      selectedYear
-    );
+  if (!showBacklog) return [];
 
-    if (!endStr) return 0;
+  // Filtre sur les files une seule fois, pas à chaque barre
+  const backlogTickets = data.filter(t =>
+    BACKLOG_FILES.has(normalizeFile(t.file_clarify))
+  );
 
-    const restants = data.reduce((count, t) => {
-      const entryStr = t[dateUpdateField]?.split("T")[0];
-      const exitStr = t[dateClosedField]?.split("T")[0];
+  return sortedSelectedValues.map(val => {
+    const refStr = getPeriodStartString(val, viewMode, selectedYear); // = le jour en mode "day"
+    if (!refStr) return 0;
 
-      // Pas encore entré
-      if (!entryStr || entryStr > endStr) {
-        return count;
-      }
+    const nextDay = getNextDayString(refStr);
 
-      // Déjà sorti
-      if (exitStr && exitStr <= endStr) {
-        return count;
-      }
+    return backlogTickets.reduce((count, t) => {
+      const entryStr = toDayString(t[backlogEntryField]);   // DATE_ENTREE = date_derniere_maj
+      const exitStr = toDayString(t[dateClosedField]);      // DATE_SORTIE
 
-      // Entré mais pas encore sorti
+      if (!entryStr || entryStr >= refStr) return count;    // DATE_ENTREE < D
+      if (exitStr && exitStr < nextDay) return count;       // DATE_SORTIE NULL ou >= D+1
+
       return count + 1;
     }, 0);
-
-    // Backlog = Restants - Entrants
-    return restants - (entrantsData[index] || 0);
   });
 }, [
+  showBacklog,
   data,
   sortedSelectedValues,
   viewMode,
   selectedYear,
-  dateUpdateField,
   dateClosedField,
-  entrantsData
+  backlogEntryField,
 ]);
-
 
   // Structure des données pour ChartJS
 const chartData = {
