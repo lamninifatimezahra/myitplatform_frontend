@@ -27,30 +27,6 @@ if (typeof window !== "undefined") Modal.setAppElement(document.body);
 // =========================================
 // Fonctions Utilitaires
 // =========================================
-function getNextDayString(dateStr) {
-  const date = parseLocalDate(dateStr);
-  if (!date) return null;
-
-  date.setDate(date.getDate() + 1);
-  return getLocalDateString(date);
-}
-function toDayString(v) {
-  if (!v || typeof v !== "string") return null;
-
-  const s = v.trim();
-
-  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
-    return s.slice(0, 10);
-  }
-
-  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-
-  if (m) {
-    return `${m[3]}-${m[2]}-${m[1]}`;
-  }
-
-  return null;
-}
 
 function getLocalDateString(date) {
   if (!date || isNaN(date.getTime())) return null;
@@ -242,65 +218,7 @@ function getLastNWorkingDays(days, n = 10) {
     .map(item => item.str);
   return filteredDays;
 }
-const BACKLOG_THRESHOLD = 15;
-const COLOR_OK = "#22c55e";
-const COLOR_ALERT = "#ef4444";
 
-// Dernier jour (dimanche) d'une semaine ISO
-function getISOWeekEndDate(year, week) {
-  const jan4 = new Date(year, 0, 4);
-  const dayNum = jan4.getDay() || 7;
-  const mondayWeek1 = new Date(year, 0, 4 - dayNum + 1);
-
-  return new Date(
-    year,
-    0,
-    mondayWeek1.getDate() + (week - 1) * 7 + 6
-  );
-}
-
-// Date de fin (YYYY-MM-DD) d'une période
-function getPeriodEndString(val, mode, year) {
-  if (mode === "day") return val;
-  if (!year) return null;
-
-  let end = null;
-
-  if (mode === "week") {
-    end = getISOWeekEndDate(year, val);
-  } else if (mode === "month") {
-    end = new Date(year, val, 0);
-  } else if (mode === "quarter") {
-    end = new Date(year, val * 3, 0);
-  } else if (mode === "semester") {
-    end = new Date(year, val * 6, 0);
-  }
-
-  return end ? getLocalDateString(end) : null;
-}
-function getPeriodStartString(val, mode, year) {
-  if (mode === "day") return val;
-  if (!year) return null;
-
-  let start = null;
-
-  if (mode === "week") {
-    const end = getISOWeekEndDate(year, val);
-    start = new Date(
-      end.getFullYear(),
-      end.getMonth(),
-      end.getDate() - 6
-    );
-  } else if (mode === "month") {
-    start = new Date(year, val - 1, 1);
-  } else if (mode === "quarter") {
-    start = new Date(year, (val - 1) * 3, 1);
-  } else if (mode === "semester") {
-    start = new Date(year, (val - 1) * 6, 1);
-  }
-
-  return start ? getLocalDateString(start) : null;
-}
 ChartJS.register(
   BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartDataLabels
 );
@@ -318,8 +236,6 @@ export default function GroupedBarChart({
   weekClosedField = "semaine_date_sortant", // Champ semaine pour sortants
   defaultViewMode = "day",
   defaultNumPeriods = 5,
-  showBacklog = false, 
-  backlogEntryField = "date_derniere_maj"
 }) {
   if (!apiUrl) {
     return (
@@ -880,183 +796,68 @@ export default function GroupedBarChart({
   }, []); // Pas de dépendances externes variables
 
   // Calcul des données pour Entrants et Sortants (Utilisation de useMemo pour optimisation)
- const { entrantsData, sortantsData } = useMemo(() => {
-  const entrantCounts = {};
-  const sortantCounts = {};
+  const { entrantsData, sortantsData } = useMemo(() => {
+      const entrantCounts = {};
+      const sortantCounts = {};
 
-  // Initialiser les compteurs
-  sortedSelectedValues.forEach(val => {
-    entrantCounts[val] = 0;
-    sortantCounts[val] = 0;
-  });
+      // Initialiser les compteurs pour les périodes sélectionnées
+      sortedSelectedValues.forEach(val => {
+          entrantCounts[val] = 0;
+          sortantCounts[val] = 0;
+      });
 
-  data.forEach(t => {
+      data.forEach(t => {
+          // Calcul pour les entrants
+          const dateUpdateStr = t[dateUpdateField]?.split("T")[0];
+          const dateUpdate = parseLocalDate(dateUpdateStr);
+          if (dateUpdate) {
+              if (viewMode === "day") {
+                  if (sortedSelectedValues.includes(dateUpdateStr)) {
+                      entrantCounts[dateUpdateStr]++;
+                  }
+              } else if (dateUpdate.getFullYear() === selectedYear) {
+                  const period = getTicketPeriod(t, viewMode, dateUpdateField, weekField);
+                  if (period !== null && sortedSelectedValues.includes(period)) {
+                      entrantCounts[period]++;
+                  }
+              }
+          }
 
-    // =========================
-    // ENTRANTS
-    // =========================
-    const dateUpdateStr = t[dateUpdateField]?.split("T")[0];
-    const dateUpdate = parseLocalDate(dateUpdateStr);
+          // Calcul pour les sortants
+          const dateClosedStr = t[dateClosedField]?.split("T")[0];
+          const dateClosed = parseLocalDate(dateClosedStr);
+          if (dateClosed) {
+              if (viewMode === "day") {
+                  if (sortedSelectedValues.includes(dateClosedStr)) {
+                      sortantCounts[dateClosedStr]++;
+                  }
+              } else if (dateClosed.getFullYear() === selectedYear) {
+                  const relevantWeekField = viewMode === "week" ? (weekClosedField || weekField) : weekField;
+                  const period = getTicketPeriod(t, viewMode, dateClosedField, relevantWeekField);
+                  if (period !== null && sortedSelectedValues.includes(period)) {
+                      sortantCounts[period]++;
+                  }
+              }
+          }
+      });
 
-    if (dateUpdate) {
-      if (viewMode === "day") {
-        if (sortedSelectedValues.includes(dateUpdateStr)) {
-          entrantCounts[dateUpdateStr]++;
-        }
-      } else if (dateUpdate.getFullYear() === selectedYear) {
-        const period = getTicketPeriod(
-          t,
-          viewMode,
-          dateUpdateField,
-          weekField
-        );
+      // Convertir les objets de comptage en tableaux dans le bon ordre
+      const finalEntrantsData = sortedSelectedValues.map(val => entrantCounts[val] || 0);
+      const finalSortantsData = sortedSelectedValues.map(val => sortantCounts[val] || 0);
 
-        if (
-          period !== null &&
-          sortedSelectedValues.includes(period)
-        ) {
-          entrantCounts[period]++;
-        }
-      }
-    }
+      return { entrantsData: finalEntrantsData, sortantsData: finalSortantsData };
 
-    // =========================
-    // SORTANTS
-    // =========================
-    const dateClosedStr = t[dateClosedField]?.split("T")[0];
-    const dateClosed = parseLocalDate(dateClosedStr);
+  }, [data, sortedSelectedValues, viewMode, selectedYear, dateUpdateField, dateClosedField, weekField, weekClosedField, getTicketPeriod]); // Dépendances clés
 
-    if (dateClosed) {
-      if (viewMode === "day") {
-        if (sortedSelectedValues.includes(dateClosedStr)) {
-          sortantCounts[dateClosedStr]++;
-        }
-      } else if (dateClosed.getFullYear() === selectedYear) {
-
-        const relevantWeekField =
-          viewMode === "week"
-            ? (weekClosedField || weekField)
-            : weekField;
-
-        const period = getTicketPeriod(
-          t,
-          viewMode,
-          dateClosedField,
-          relevantWeekField
-        );
-
-        if (
-          period !== null &&
-          sortedSelectedValues.includes(period)
-        ) {
-          sortantCounts[period]++;
-        }
-      }
-    }
-  });
-
-  const finalEntrantsData = sortedSelectedValues.map(
-    val => entrantCounts[val] || 0
-  );
-
-  const finalSortantsData = sortedSelectedValues.map(
-    val => sortantCounts[val] || 0
-  );
-
-  return {
-    entrantsData: finalEntrantsData,
-    sortantsData: finalSortantsData
-  };
-
-}, [
-  data,
-  sortedSelectedValues,
-  viewMode,
-  selectedYear,
-  dateUpdateField,
-  dateClosedField,
-  weekField,
-  weekClosedField,
-  getTicketPeriod
-]);
-// Retire tous les espaces pour comparer les noms de files (l'API en met parfois)
-const normalizeFile = (s) => (s || "").replace(/\s+/g, "");
-
-const BACKLOG_FILES = new Set([
-  "IN_DSI_FOC_EXP_DSL_ENT_COUP_STC",
-  "IN_DSI_FOC_EXP_DSL_ENT_COUPEE",
-  "DSI_FOC_EXP_DSL_ETUD-HSENT",
-  "DSI_FOC_EXP_DSL_ETUD-HSGP",
-  "IN_DSI_FOC_REFACT-HISPEED",
-  "IN_DSI_FOC_REFACT-HISPEED-DDS",
-  "IN_DSI_FOC_REFACT-REFFIXE-CPTL",
-  "IN_DSI_MOA_AGREGATEUR",
-  "IN_DSI_OSS_HISPEED_EXP_B2B",
-  "IN_DSI_FOC_REFACT-IPM",
-  "IN_DSI_FOC_REFACT-CERBERE",
-].map(normalizeFile));
-const backlogData = useMemo(() => {
-  if (!showBacklog) return [];
-
-  // Filtre sur les files une seule fois, pas à chaque barre
-  const backlogTickets = data.filter(t =>
-    BACKLOG_FILES.has(normalizeFile(t.file_clarify))
-  );
-
-  return sortedSelectedValues.map(val => {
-    const refStr = getPeriodStartString(val, viewMode, selectedYear); // = le jour en mode "day"
-    if (!refStr) return 0;
-
-    const nextDay = getNextDayString(refStr);
-
-    return backlogTickets.reduce((count, t) => {
-      const entryStr = toDayString(t[backlogEntryField]);   // DATE_ENTREE = date_derniere_maj
-      const exitStr = toDayString(t[dateClosedField]);      // DATE_SORTIE
-
-      if (!entryStr || entryStr >= refStr) return count;    // DATE_ENTREE < D
-      if (exitStr && exitStr < nextDay) return count;       // DATE_SORTIE NULL ou >= D+1
-
-      return count + 1;
-    }, 0);
-  });
-}, [
-  showBacklog,
-  data,
-  sortedSelectedValues,
-  viewMode,
-  selectedYear,
-  dateClosedField,
-  backlogEntryField,
-]);
 
   // Structure des données pour ChartJS
-const chartData = {
-  labels,
-  datasets: [
-    {
-      label: "Entrants",
-      data: entrantsData,
-      backgroundColor: "#68bddd",
-      borderRadius: 6
-    },
-    {
-      label: "Sortants",
-      data: sortantsData,
-      backgroundColor: "#1b2b6b",
-      borderRadius: 6
-    },
-    ...(showBacklog
-      ? [{
-          label: `Backlog (≤ ${BACKLOG_THRESHOLD} vert, > ${BACKLOG_THRESHOLD} rouge)`,
-          data: backlogData,
-          backgroundColor: backlogData.map(v =>
-            v <= BACKLOG_THRESHOLD ? COLOR_OK : COLOR_ALERT
-          ),
-          borderRadius: 6
-        }]
-      : [])
-  ]
-};
+  const chartData = {
+    labels,
+    datasets: [
+      { label: "Entrants", data: entrantsData, backgroundColor: "#68bddd", borderRadius: 6 },
+      { label: "Sortants", data: sortantsData, backgroundColor: "#1b2b6b", borderRadius: 6 }
+    ]
+  };
 
   // Options du graphique
   const chartOptions = useMemo(() => ({ // useMemo pour les options aussi
@@ -1072,30 +873,11 @@ const chartData = {
         align: "top",
         offset: -3
       },
-legend: {
-  position: "top",
-  align: "center",
-  labels: {
-    padding: 15,
-    boxWidth: 12,
-    font: { size: 12 },
-
-    generateLabels: (chart) => {
-      const labels =
-        ChartJS.defaults.plugins.legend.labels.generateLabels(chart);
-
-      return labels.map(l =>
-        l.datasetIndex === 2
-          ? {
-              ...l,
-              fillStyle: "#6b7280",
-              strokeStyle: "#6b7280"
-            }
-          : l
-      );
-    }
-  }
-},
+      legend: {
+        position: "top",
+        align: "center",
+        labels: { padding: 15, boxWidth: 12, font: { size: 12 } }
+      },
       tooltip: {
         mode: "index", intersect: false, padding: 10,
         titleFont: { size: 13 }, bodyFont: { size: 12 }
@@ -1162,7 +944,7 @@ legend: {
         }
   };
   const periodeLabelText = getPeriodLabelText();
-  const showData = entrantsData.some(d => d > 0) || sortantsData.some(d => d > 0) || (showBacklog && backlogData.some(d => d > 0));
+  const showData = entrantsData.some(d => d > 0) || sortantsData.some(d => d > 0);
 
 
   // =========================================
