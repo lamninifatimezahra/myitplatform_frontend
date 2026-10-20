@@ -8,8 +8,9 @@ import htmlDocx from "html-docx-js/dist/html-docx";
 
 const SIZE_CONFIG = {
   // === KPIs Manuel FTTH ===
-  "kpi-backlog-j1": { width: 300, height: 180 },
-  "kpi-backlog-j": { width: 300, height: 180 },
+  "kpi-backlog-j1": { width: 240, height: 140 },
+  "kpi-backlog-j": { width: 240, height: 140 },
+  "kpi-spa": { width: 240, height: 140 },
   
   // === KPIs Ticketing FTTH ===
   "KPI Tickets Entrants": { width: 190, height: 110 },
@@ -200,7 +201,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   }
 
   /* --- Page titre de section (nouvelle page dédiée) --- */
-  function generateSectionTitlePage(sectionTitle) {
+  function generateSectionTitlePage(sectionTitle, keepWithNext = false) {
     return `
       <div style="page-break-before: always; page-break-after: always; height: 29.7cm; display: flex; align-items: center; justify-content: center;">
         <div style="text-align: center; width: 100%;">
@@ -234,35 +235,81 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
     if (isManuel) {
       // 2 colonnes pour Manuel FTTH
       const cols = 2;
-      let kpiHtml = "";
-      const numRows = Math.ceil(kpiImages.length / cols);
-      
-      for (let row = 0; row < numRows; row++) {
-        kpiHtml += '<table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:15pt;"><tr>';
-        for (let col = 0; col < cols; col++) {
-          const i = row * cols + col;
-          if (i < kpiImages.length) {
+let kpiHtml = `
+<table
+width="100%"
+cellspacing="0"
+cellpadding="0"
+border="0"
+style="
+margin-bottom:15pt;
+page-break-inside:avoid;
+">
+`;
+
+const numRows = Math.ceil(kpiImages.length / cols);
+
+for (let row = 0; row < numRows; row++) {
+
+    kpiHtml += "<tr>";
+
+    for (let col = 0; col < cols; col++) {
+
+        const i = row * cols + col;
+
+        if (i < kpiImages.length) {
+
             const k = kpiImages[i];
+
             const kpiId = k.id || k.label;
-            const size = getSize(kpiId, true); // true = c'est un KPI
+
+            const size = getSize(kpiId, true);
+
             const label = escapeHtml(k.label || k.id || "KPI");
+
             const img = k.image
-              ? `<img src="${k.image}" width="${size.width}" height="${size.height}" style="display:block; margin:0 auto;" />`
-              : `<div style="width:${size.width}px; height:${size.height}px; border:2px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:11pt;">KPI N/A<br/>${label}</div>`;
+                ? `<img src="${k.image}"
+                       width="${size.width}"
+                       height="${size.height}"
+                       style="display:block;margin:auto;" />`
+                : `<div style="
+                    width:${size.width}px;
+                    height:${size.height}px;
+                    border:2px dashed #ccc;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;">
+                    KPI N/A
+                   </div>`;
+
             kpiHtml += `
-              <td width="50%" align="center" valign="middle" style="padding:10pt;">
-                <div style="text-align:center; margin-bottom:8pt;">
-                  <strong style="font-size:12pt; color:#004aad;">${label}</strong>
+            <td
+            width="50%"
+            align="center"
+            valign="top"
+            style="padding:5pt;">
+
+                <div style="margin-bottom:6pt;">
+                    <strong>${label}</strong>
                 </div>
+
                 ${img}
-              </td>
-            `;
-          } else {
-            kpiHtml += '<td width="50%"></td>';
-          }
+
+            </td>`;
         }
-        kpiHtml += "</tr></table>";
-      }
+        else {
+
+            kpiHtml += `<td width="50%"></td>`;
+
+        }
+
+    }
+
+    kpiHtml += "</tr>";
+
+}
+
+kpiHtml += "</table>";
 
       pagesHtml += `
         <div style="page-break-before: always; page-break-after: always; height: 29.7cm; overflow: hidden; display: block;">
@@ -282,7 +329,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
                 📊 KPIs ${escapeHtml(sectionTitle)}
               </h2>
               
-              <div style="margin-top:30pt;">
+              <div style="margin-top:10pt; page-break-inside:avoid;">
                 ${kpiHtml}
               </div>
               
