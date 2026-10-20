@@ -312,9 +312,27 @@ for (let row = 0; row < numRows; row++) {
 kpiHtml += "</table>";
 
       pagesHtml += `
-        <div style="page-break-before: always; page-break-after: always; height: 29.7cm; overflow: hidden; display: block;">
+  <div style="
+    page-break-before: auto;
+    page-break-after: always;
+    height: 28.7cm;
+    overflow: hidden;
+    display: block;
+  ">
           <table style="width:99%; border:3pt solid #d1d5db; border-radius:20pt; margin:10pt auto; height: 28cm;">
             <tr><td style="padding:20pt 30pt; vertical-align: top;">
+            <h1 style="
+  text-align: center;
+  font-size: 28pt;
+  font-weight: bold;
+  color: #004aad;
+  margin: 0 0 16pt 0;
+  padding: 10pt 0;
+  border-top: 2pt solid #004aad;
+  border-bottom: 2pt solid #004aad;
+">
+  Manuel FTTH
+</h1>
               <!-- Logos -->
               <table style="width:100%; margin-bottom:10pt;"><tr>
                 <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:35pt;"></td>
@@ -416,9 +434,15 @@ kpiHtml += "</table>";
     const size = getSize(imageId, false); // false = c'est un graphique
 
     return `
-      <div style="page-break-before: always; page-break-after: always; height: 29.7cm; overflow: hidden; display: block;">
+      <div style="
+  page-break-before: always;
+  page-break-after: always;
+  height: 27.7cm;
+  overflow: hidden;
+  display: block;
+">
         <table style="width:99%; border:3pt solid #d1d5db; border-radius:20pt; margin:10pt auto; height: 28cm;">
-          <tr><td style="padding:20pt 30pt; vertical-align: top;">
+          <tr><td style="padding:10pt 20pt; vertical-align: top;">
             <!-- Logos -->
             <table style="width:100%; margin-bottom:10pt;"><tr>
               <td><img src="https://myit-three.vercel.app/logo-intelcia-small_1.png" style="height:35pt;"></td>
@@ -433,7 +457,7 @@ kpiHtml += "</table>";
               📊 ${title}
             </h2>
             
-            <div style="margin-top:20pt; text-align:center;">
+            <div style="margin-top:8pt; text-align:center; page-break-inside:avoid;">
               <img src="${item.image}" width="${size.width}" height="${size.height}" style="max-width:100%; height:auto; display:block; margin:0 auto;" />
             </div>
             
@@ -489,7 +513,9 @@ kpiHtml += "</table>";
     return;
   }
 
+  if (section.title !== "Manuel FTTH") {
   documentHtml += generateSectionTitlePage(section.title);
+}
 
   if (section.kpis?.length) {
     documentHtml += generateKpiPages(section.kpis, section.title);
