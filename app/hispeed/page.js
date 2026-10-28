@@ -4,6 +4,7 @@ import { useState } from "react";
 import useAuth from "@/hooks/useAuth";
 import Sidebar from "../components/Sidebar"; // ✅ ton nouveau sidebar FTTH-like
 import Header from "./components/Header";
+import Backlog from "../components/Backlog";
 
 import ClientCoupeChart from "../components/ClientCoupeChart";
 import KpiTicketTraite from "../components/KPITicketTraite";
@@ -99,6 +100,11 @@ export default function HispeedDashboard() {
               <GroupedBarChart apiUrl={API_HISPEED_DATA} showBacklog />
               <RapportSortantsEntrants apiUrl={API_HISPEED_DATA} />
 
+            </div>
+
+            {/* Ligne 2 bis */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Backlog apiUrl={API_HISPEED_DATA} />
             </div>
 
             {/* Ligne 3 */}
