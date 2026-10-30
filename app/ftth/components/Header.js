@@ -1,0 +1,483 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { registerLocale, setDefaultLocale } from "react-datepicker";
+import fr from "date-fns/locale/fr";
+import { FaFilter } from "react-icons/fa";
+import { AiOutlineDownload, AiOutlineClockCircle } from "react-icons/ai";
+import { generateWordFromImages } from "../utils/exportWord";
+import { generatePPTFromImages } from "../utils/exportPPTX";
+import html2canvas from "html2canvas-pro";
+import fetchWithAuth from "@/utils/fetchWithAuth";
+import { useGlobalFilter } from "@/app/components/GlobalFilterContext";
+import ProfileMenu from "@/app/ftth/components/ProfileMenu";
+import NotificationMenu from "@/app/ftth/components/NotificationMenu";
+
+// --- Locale
+registerLocale("fr", fr);
+setDefaultLocale("fr");
+
+// --- Helpers
+const getWeekNumber = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  const startOfYear = new Date(d.getFullYear(), 0, 1);
+  const days = Math.floor((d - startOfYear) / (24 * 60 * 60 * 1000));
+  return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+};
+
+const toKey = (s) =>
+  (s || "")
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+// ✅ Pré-cochés par défaut (labels ou ids)
+const DEFAULT_SELECTED = [
+  // KPI Backlog
+  "KPI Backlog J-1",
+  "kpi-backlog-j1",
+  "KPI Backlog J",
+  "kpi-backlog-j",
+  "KPI SPA",
+  "kpi-spa",
+
+  // Vue d’ensemble Backlog
+  "Vue d'ensemble combinée du Backlog",
+  "vue-ensemble-backlog",
+  "vue d ensemble combinee du backlog",
+  "Backlog FTTH J et Dossiers Traités",
+
+  // Top 5 règles
+  "Top 5 RÈGLES",
+  "top-5-regles",
+  "top 5 regles",
+  "backlog-ftth-traites",
+  "KPI FTTH",
+
+  // Top 5 règles par jour
+  "Top 5 RÈGLES par jour",
+  "graph-top-regles-par-jour",
+  "top 5 regles par jour",
+  "Top 5 RÈGLES par jour",
+  "Entrants – Sortants – Nouveaux cas",
+  // Entrants/Sortants (manuel)
+  "graph-entrants-sortants",
+  "Graph Entrants/Sortants",
+
+  // KPIs Ticketing
+  "KPI Tickets Entrants",
+  "KPI Tickets Traités",
+  "KPI Tickets Réentrants",
+  "KPI Tickets en Cours",
+  "KPI Tickets en Cours +Semaine",
+
+  // Graphs ticketing
+  "Tickets Entrants/Sortants",
+  "Rapport Sortants/Entrants",
+
+  // Mailing
+  "Traitement des E-mails",
+  "Répartition des E-mails par type",
+  "graph-repartition-emails",
+];
+
+// ❌ Ne jamais pré-cocher
+const EXCLUDE_DEFAULT = [];
+
+const DEFAULT_KEYS = new Set(DEFAULT_SELECTED.map(toKey));
+const EXCLUDE_KEYS = new Set(EXCLUDE_DEFAULT.map(toKey));
+
+export default function Header({ type = "FTTH" }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [downloadStep, setDownloadStep] = useState("chooseFormat"); // "chooseFormat" | "selectGraphs"
+  const [selectedFormat, setSelectedFormat] = useState(null);
+
+  const [graphList, setGraphList] = useState([]);
+  const [selectedGraphs, setSelectedGraphs] = useState([]);
+
+  const [lastUploadDate, setLastUploadDate] = useState(null);
+  const [isLoadingUploadDate, setIsLoadingUploadDate] = useState(true);
+
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
+  const [portalContainer, setPortalContainer] = useState(null);
+
+  // Filtre global (contexte)
+  const { globalStartDate, globalEndDate, setGlobalFilter } = useGlobalFilter();
+  const [localStartDate, setLocalStartDate] = useState(globalStartDate);
+  const [localEndDate, setLocalEndDate] = useState(globalEndDate);
+  const endDateRef = useRef(null);
+
+  const periodText =
+    localStartDate && localEndDate
+      ? `${localStartDate.toLocaleDateString("fr-FR")} (S${getWeekNumber(
+          localStartDate
+        )}) → ${localEndDate.toLocaleDateString("fr-FR")} (S${getWeekNumber(localEndDate)})`
+      : "Aucune période sélectionnée";
+
+  const handleGlobalFilter = () => setGlobalFilter(localStartDate, localEndDate);
+
+  // --- Dernière mise à jour
+  useEffect(() => {
+    const parseCustomDate = (dateStr) => {
+      if (!dateStr) return new Date(0);
+      const [datePart, timePart] = dateStr.split(" ");
+      const [day, month, year] = datePart.split("/");
+      const [hours, minutes] = timePart ? timePart.split(":") : ["0", "0"];
+      return new Date(year, month - 1, day, hours, minutes);
+    };
+
+    const fetchLastUploadDate = async () => {
+      setIsLoadingUploadDate(true);
+      try {
+        const apiUrl = `https://api.606510.xyz/dashboard/api/ftth/files/`;
+        const response = await fetchWithAuth(apiUrl);
+        if (!response.ok) throw new Error("Erreur lors de la récupération des fichiers");
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const sorted = [...data].sort(
+            (a, b) => parseCustomDate(b.uploaded_at) - parseCustomDate(a.uploaded_at)
+          );
+          setLastUploadDate(sorted[0].uploaded_at);
+        } else {
+          setLastUploadDate(null);
+        }
+      } catch {
+        setLastUploadDate(null);
+      } finally {
+        setIsLoadingUploadDate(false);
+      }
+    };
+
+    fetchLastUploadDate();
+    const interval = setInterval(fetchLastUploadDate, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [type]);
+
+  // --- Portal
+  useEffect(() => {
+    const container = document.createElement("div");
+    container.style.zIndex = "9999";
+    container.style.position = "absolute";
+    document.body.appendChild(container);
+    setPortalContainer(container);
+    return () => document.body.removeChild(container);
+  }, []);
+
+  // --- Détection des graphes + pré-cochage EXACT
+  useEffect(() => {
+    const shouldPreselectGraph = (g) => {
+      const idKey = toKey(g.id);
+      const labelKey = toKey(g.label);
+      if (EXCLUDE_KEYS.has(idKey) || EXCLUDE_KEYS.has(labelKey)) return false;
+      return DEFAULT_KEYS.has(idKey) || DEFAULT_KEYS.has(labelKey);
+    };
+
+    const detectGraphs = () => {
+      const graphs = Array.from(document.querySelectorAll(".visualisation")).map((el) => ({
+        id: el.getAttribute("data-id") || "",
+        label: el.getAttribute("data-graph-label") || el.getAttribute("data-id") || "",
+      }));
+      setGraphList(graphs);
+
+      // Merge incrémental (utile si des cartes arrivent après)
+      const matches = graphs.filter(shouldPreselectGraph).map((g) => g.id);
+      setSelectedGraphs((prev) => {
+        const set = new Set(prev);
+        matches.forEach((m) => set.add(m));
+        return Array.from(set);
+      });
+    };
+
+    detectGraphs();
+    const observer = new MutationObserver(detectGraphs);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // --- Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        showMenu &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target)
+      ) {
+        setShowMenu(false);
+        setDownloadStep("chooseFormat");
+        setSelectedFormat(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMenu]);
+
+  // --- Sélection
+  const toggleGraph = (id) =>
+    setSelectedGraphs((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
+  const toggleAll = (check) => setSelectedGraphs(check ? graphList.map((g) => g.id) : []);
+
+  // --- Capture & Export (HQ)
+  const captureScreenshots = async () => {
+    // Optionnel: si vous avez une règle CSS associée
+    document.body.classList.add("disable-animations");
+
+    // Masquer les éléments à exclure
+    const elementsToHide = document.querySelectorAll(".no-export");
+    elementsToHide.forEach((el) => {
+      el.dataset.originalDisplay = el.style.display;
+      el.style.display = "none";
+    });
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    const elements = Array.from(document.querySelectorAll(".visualisation")).filter((el) =>
+      selectedGraphs.includes(el.getAttribute("data-id") || "")
+    );
+
+    const images = [];
+    for (const el of elements) {
+      try {
+        // Amélioration netteté: scale élevé + DPI natif
+        const scale =
+          Math.max(window.devicePixelRatio || 1, 1.5) * 2; // ≈3x sur écrans standard
+        const canvas = await html2canvas(el, {
+          backgroundColor: "#ffffff",
+          scale,
+          useCORS: true,
+          logging: false,
+          removeContainer: true,
+          imageTimeout: 30000,
+          foreignObjectRendering: false,
+          width: el.offsetWidth,
+          height: el.offsetHeight,
+        });
+
+        images.push({
+          id: el.getAttribute("data-id") || "",
+          label: el.getAttribute("data-graph-label") || el.getAttribute("data-id") || "",
+          image: canvas.toDataURL("image/png"),
+        });
+      } catch (err) {
+        console.error("Erreur capture image:", err);
+      }
+    }
+
+    // Restaurer
+    elementsToHide.forEach((el) => {
+      el.style.display = el.dataset.originalDisplay || "";
+      delete el.dataset.originalDisplay;
+    });
+
+    document.body.classList.remove("disable-animations");
+    return images;
+  };
+
+  const generateWord = async () => {
+    if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
+    const images = await captureScreenshots();
+    await generateWordFromImages(images, globalStartDate, globalEndDate);
+  };
+
+  const generatePPT = async () => {
+    if (selectedGraphs.length === 0) return alert("Sélectionnez au moins une visualisation.");
+    const images = await captureScreenshots();
+    await generatePPTFromImages(images, globalStartDate, globalEndDate);
+  };
+
+  const handleDownload = () => {
+    if (selectedFormat === "word") generateWord();
+    else if (selectedFormat === "pptx") generatePPT();
+  };
+
+  // --- Dropdown
+  const renderDropdown = () => {
+    if (!portalContainer || !showMenu) return null;
+    const rect = buttonRef.current?.getBoundingClientRect();
+
+    return ReactDOM.createPortal(
+      <div
+        ref={dropdownRef}
+        className="absolute w-80 bg-white rounded-lg shadow-lg z-[9999] p-3 space-y-3"
+        style={{
+          position: "fixed",
+          top: rect ? rect.bottom + 8 : 100,
+          right: rect ? window.innerWidth - rect.right : 20,
+        }}
+      >
+        {downloadStep === "chooseFormat" ? (
+          <div className="space-y-2">
+            <div
+              onClick={() => {
+                setSelectedFormat("word");
+                setDownloadStep("selectGraphs");
+              }}
+              className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded text-gray-700 border border-gray-200"
+            >
+              📄 CR (Format Word)
+            </div>
+            <div
+              onClick={() => {
+                setSelectedFormat("pptx");
+                setDownloadStep("selectGraphs");
+              }}
+              className="cursor-pointer hover:bg-gray-100 px-3 py-2 rounded text-gray-700 border border-gray-200"
+            >
+              📊 CR (Format PPTX)
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                setDownloadStep("chooseFormat");
+                setSelectedFormat(null);
+              }}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              ← Retour au choix du format
+            </button>
+
+            <div className="flex justify-between text-sm px-2 text-blue-600 font-medium">
+              <button onClick={() => toggleAll(true)}>Tout cocher</button>
+              <button onClick={() => toggleAll(false)}>Tout décocher</button>
+            </div>
+
+            <div className="max-h-48 overflow-y-auto px-2 text-sm text-gray-800 font-medium space-y-1">
+              {graphList.map((graph) => (
+                <label key={graph.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedGraphs.includes(graph.id)}
+                    onChange={() => toggleGraph(graph.id)}
+                  />
+                  <span>{graph.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="border-t pt-2">
+              <button
+                onClick={handleDownload}
+                className="w-full flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
+              >
+                Télécharger CR
+              </button>
+            </div>
+          </div>
+        )}
+      </div>,
+      portalContainer
+    );
+  };
+
+  // --- UI
+  return (
+    <header className="bg-white shadow-md px-4 sm:px-6 py-4 flex flex-col gap-y-4 sticky top-0 z-50">
+      {/* Ligne supérieure : titre et menus utilisateur */}
+      <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
+            <span className="text-blue-600">Dashboard {type}</span>
+          </h1>
+          <div className="flex items-center text-gray-500 text-sm">
+            <span>Bienvenue !</span>
+            {lastUploadDate && (
+              <div className="ml-4 flex items-center text-gray-600">
+                <AiOutlineClockCircle className="mr-1" />
+                <span>
+                  Dernière mise à jour :{" "}
+                  <span className="font-medium text-blue-600">{lastUploadDate}</span>
+                </span>
+              </div>
+            )}
+            {isLoadingUploadDate && (
+              <div className="ml-4 text-gray-400 flex items-center">
+                <span className="animate-pulse">Chargement des données...</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 flex-wrap justify-end flex-1">
+          <NotificationMenu />
+          <ProfileMenu />
+        </div>
+      </div>
+
+      {/* Filtres + bouton Télécharger */}
+      <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl px-4 py-3 flex flex-col lg:flex-row justify-between items-start gap-4">
+        <div className="flex flex-wrap items-center gap-3 flex-1">
+          <label className="text-gray-700 font-medium">Période sélectionnée :</label>
+          <DatePicker
+            selected={localStartDate}
+            onChange={(date) => {
+              setLocalStartDate(date);
+              setTimeout(() => endDateRef.current?.setFocus(), 200);
+            }}
+            selectsStart
+            startDate={localStartDate}
+            endDate={localEndDate}
+            placeholderText="Date de début"
+            className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
+            locale="fr"
+            dateFormat="dd/MM/yyyy"
+          />
+          <DatePicker
+            ref={endDateRef}
+            selected={localEndDate}
+            onChange={(date) => setLocalEndDate(date)}
+            selectsEnd
+            startDate={localStartDate}
+            endDate={localEndDate}
+            minDate={localStartDate}
+            placeholderText="Date de fin"
+            className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 shadow-sm text-sm"
+            locale="fr"
+            dateFormat="dd/MM/yyyy"
+          />
+          <button
+            onClick={handleGlobalFilter}
+            className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg shadow hover:bg-gray-200"
+          >
+            <FaFilter />
+            <span>Filtrer</span>
+          </button>
+          {periodText && (
+            <span className="text-sm text-blue-700 font-medium whitespace-nowrap ml-3">
+              {periodText}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-2 lg:mt-0">
+          <button
+            ref={buttonRef}
+            onClick={() => {
+              setShowMenu(!showMenu);
+              if (!showMenu) {
+                setDownloadStep("chooseFormat");
+                setSelectedFormat(null);
+              }
+            }}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
+          >
+            <AiOutlineDownload />
+            <span>Télécharger CR</span>
+          </button>
+        </div>
+      </div>
+
+      {renderDropdown()}
+    </header>
+  );
+}

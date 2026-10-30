@@ -1,0 +1,22 @@
+{
+    "name": "MyIT",
+    "short_name": "MyIT",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#004aad",
+    "theme_color": "#004aad",
+    "orientation": "portrait",
+    "icons": [
+      {
+        "src": "/logo-myit.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/logo-myit.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
+  
