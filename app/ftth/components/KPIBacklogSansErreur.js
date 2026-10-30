@@ -63,7 +63,7 @@ export default function KPIBacklogSansErreur() {
     }),
     datasets: [
       {
-        label: "KPI sans commptabilisées les erreurs",
+        label: "KPI sans comptabilisées les erreurs",
         
         data: records.map(({ value }) => value),
         backgroundColor: "#0284c7",
