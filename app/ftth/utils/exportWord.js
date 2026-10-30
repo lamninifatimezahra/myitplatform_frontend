@@ -8,16 +8,19 @@ import htmlDocx from "html-docx-js/dist/html-docx";
 
 const SIZE_CONFIG = {
   // === KPIs Manuel FTTH ===
-  "kpi-backlog-j1": { width: 240, height: 140 },
-  "kpi-backlog-j": { width: 240, height: 140 },
-  "kpi-spa": { width: 240, height: 140 },
+  "kpi-backlog-j1": { width: 250, height: 172 },
+  "kpi-backlog-j": { width: 250, height: 172 },
+  "kpi-spa": { width: 250, height: 172 },
+  "kpi-manuel-7j": { width: 250, height: 172 },
+  "kpi-du-jour-sans-erreur": { width: 250, height: 172 },
+  "kpi-backlog-sans-erreur": { width: 750, height: 380 },
   
   // === KPIs Ticketing FTTH ===
-  "KPI Tickets Entrants": { width: 190, height: 110 },
-  "KPI Tickets Traités": { width: 190, height: 110 },
-  "KPI Tickets Réentrants": { width: 190, height: 110 },
-  "KPI Tickets en Cours": { width: 190, height: 110 },
-  "KPI Tickets en Cours +Semaine": { width: 190, height: 110 },
+  "KPI Tickets Entrants": { width: 220, height: 150 },
+  "KPI Tickets Traités": { width: 220, height: 150 },
+  "KPI Tickets Réentrants": { width: 220, height: 150 },
+  "KPI Tickets du jour": { width: 220, height: 150 },
+  "KPI Tickets en Cours +Semaine": { width: 220, height: 150 },
   
   // === Graphiques Manuel FTTH ===
   "Backlog FTTH J et Dossiers Traités": { width: 750, height: 380 },
@@ -137,10 +140,11 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
   const sections = {
     manuel: {
       title: "Manuel FTTH",
-      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-spa"],
+      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-spa", "kpi-manuel-7j", "kpi-du-jour-sans-erreur"],
       singles: [
         "Backlog FTTH J et Dossiers Traités",
         "KPI FTTH",
+        "kpi-backlog-sans-erreur",
         "repartition-manuelle",
         "Top 5 RÈGLES",
         "Top 5 RÈGLES par jour",
@@ -153,7 +157,7 @@ export async function generateWordFromImages(imageList, startDate = null, endDat
         "KPI Tickets Entrants",
         "KPI Tickets Traités",
         "KPI Tickets Réentrants",
-        "KPI Tickets en Cours",
+        "KPI Tickets du jour",
         "KPI Tickets en Cours +Semaine",
       ],
       singles: [
@@ -265,13 +269,11 @@ for (let row = 0; row < numRows; row++) {
 
             const size = getSize(kpiId, true);
 
-            const label = escapeHtml(k.label || k.id || "KPI");
-
             const img = k.image
                 ? `<img src="${k.image}"
                        width="${size.width}"
                        height="${size.height}"
-                       style="display:block;margin:auto;" />`
+                   style="display:block;margin:auto;max-width:100%;height:auto;" />`
                 : `<div style="
                     width:${size.width}px;
                     height:${size.height}px;
@@ -288,10 +290,6 @@ for (let row = 0; row < numRows; row++) {
             align="center"
             valign="top"
             style="padding:5pt;">
-
-                <div style="margin-bottom:6pt;">
-                    <strong>${label}</strong>
-                </div>
 
                 ${img}
 
@@ -370,15 +368,11 @@ kpiHtml += "</table>";
             const k = kpiImages[i];
             const kpiId = k.id || k.label;
             const size = getSize(kpiId, true); // true = c'est un KPI
-            const label = escapeHtml(k.label || k.id || "KPI");
             const img = k.image
-              ? `<img src="${k.image}" width="${size.width}" height="${size.height}" style="display:block; margin:0 auto;" />`
-              : `<div style="width:${size.width}px; height:${size.height}px; border:1px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:10pt;">KPI N/A<br/>${label}</div>`;
+              ? `<img src="${k.image}" width="${size.width}" height="${size.height}" style="display:block; margin:0 auto; max-width:100%; height:auto;" />`
+              : `<div style="width:${size.width}px; height:${size.height}px; border:1px dashed #cdcdcd; text-align:center; color:#999; display:flex; align-items:center; justify-content:center; font-size:10pt;">KPI N/A</div>`;
             kpiHtml += `
               <td width="33.33%" align="center" valign="middle" style="padding:8pt;">
-                <div style="text-align:center; margin-bottom:6pt;">
-                  <strong style="font-size:10pt; color:#004aad;">${label}</strong>
-                </div>
                 ${img}
               </td>
             `;

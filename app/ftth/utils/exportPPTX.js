@@ -57,10 +57,11 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
   const sections = {
     manuel: {
       title: "Manuel FTTH",
-      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-manuel-7j", "kpi-spa"],
+      kpis: ["kpi-backlog-j1", "kpi-backlog-j", "kpi-manuel-7j", "kpi-spa", "kpi-du-jour-sans-erreur"],
       singles: [
         "Backlog FTTH J et Dossiers Traités",
         "KPI FTTH",
+        "kpi-backlog-sans-erreur",
         "repartition-manuelle", 
         "Top 5 RÈGLES",
         "Top 5 RÈGLES par jour",
@@ -74,7 +75,7 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
         "KPI Tickets Entrants",
         "KPI Tickets Traités",
         "KPI Tickets Réentrants",
-        "KPI Tickets en Cours",
+        "KPI Tickets du jour",
         "KPI Tickets en Cours +Semaine"
       ],
       singles: [
@@ -175,126 +176,29 @@ export async function generatePPTFromImages(imageList, startDate = null, endDate
       return;
     }
 
-    // Fonction createKPI
-    const createKPI = (kpiImage, posX, posY, kpiWidth, kpiHeight) => {
-      const kpiBoxW = kpiWidth; 
-      const kpiBoxH = kpiHeight;
-      const kpiTitleH = 0.3; 
-      const kpiImgH = kpiBoxH - kpiTitleH - 0.15;
-      const kpiLabel = kpiImage?.label || kpiImage?.id || "KPI Inconnu"; 
-      const kpiImageData = kpiImage?.image;
-      
-      // Boîte principale du KPI
-      slide.addShape(pptx.ShapeType.rect, { 
-        x: posX, y: posY, w: kpiBoxW, h: kpiBoxH, 
-        fill: { color: "#ffffff" }, 
-        line: { color: "#dddddd", width: 1 } 
-      });
-      
-      // En-tête colorée du KPI
-      slide.addShape(pptx.ShapeType.rect, { 
-        x: posX, y: posY, w: kpiBoxW, h: kpiTitleH, 
-        fill: { color: "#00AEEF" }
-      });
-      
-      // Titre du KPI
-      slide.addText(kpiLabel, { 
-        x: posX, y: posY + 0.02, w: kpiBoxW, h: kpiTitleH, 
-        align: "center", fontSize: 8, bold: true, color: "#ffffff" 
-      });
-      
-      // Image
-      slide.addImage({ 
-        data: kpiImageData, 
-        x: posX + 0.1, y: posY + kpiTitleH + 0.1, 
-        w: kpiBoxW - 0.2, h: kpiImgH 
-      });
-    };
+    const columnCount = Math.min(3, availableKpis.length);
+    const rowCount = Math.ceil(availableKpis.length / columnCount);
+    const horizontalGap = 0.2;
+    const verticalGap = 0.2;
+    const cardWidth = Math.min(3.0, (availableWidth - (columnCount - 1) * horizontalGap) / columnCount);
+    const cardHeight = Math.min(cardWidth / 1.45, (availableHeight - (rowCount - 1) * verticalGap) / rowCount);
+    const gridHeight = rowCount * cardHeight + (rowCount - 1) * verticalGap;
+    const gridStartY = contentStartY + (availableHeight - gridHeight) / 2;
 
-    // Calcul des dimensions et positions selon le nombre de KPIs disponibles
-    let kpiWidth, kpiHeight, kpiPositions;
-    const kpiStartX = contentStartX + 0.2;
-    const kpiStartY = contentStartY + 0.5;
-    const maxKpiWidth = availableWidth - 0.4;
-    const maxKpiHeight = availableHeight - 1;
+    availableKpis.forEach((kpiImage, index) => {
+      const row = Math.floor(index / columnCount);
+      const column = index % columnCount;
+      const itemsInRow = Math.min(columnCount, availableKpis.length - row * columnCount);
+      const rowWidth = itemsInRow * cardWidth + (itemsInRow - 1) * horizontalGap;
+      const rowStartX = contentStartX + (availableWidth - rowWidth) / 2;
 
-    if (availableKpis.length === 1) {
-      // 1 KPI - centré et plus grand
-      kpiWidth = Math.min(3.0, maxKpiWidth);
-      kpiHeight = Math.min(2.5, maxKpiHeight);
-      const centerX = contentStartX + (availableWidth - kpiWidth) / 2;
-      const centerY = contentStartY + (availableHeight - kpiHeight) / 2;
-      kpiPositions = [{ index: 0, x: centerX, y: centerY }];
-    } else if (availableKpis.length === 2) {
-      // 2 KPIs - côte à côte et plus grands
-      kpiWidth = Math.min(3.5, (maxKpiWidth - 0.3) / 2);
-      kpiHeight = Math.min(2.5, maxKpiHeight);
-      const totalWidth = 2 * kpiWidth + 0.3;
-      const startX = contentStartX + (availableWidth - totalWidth) / 2;
-      const centerY = contentStartY + (availableHeight - kpiHeight) / 2;
-      kpiPositions = [
-        { index: 0, x: startX, y: centerY },
-        { index: 1, x: startX + kpiWidth + 0.3, y: centerY }
-      ];
-    } else if (availableKpis.length === 3) {
-      // 3 KPIs - ligne horizontale
-      kpiWidth = Math.min(2.5, (maxKpiWidth - 0.6) / 3);
-      kpiHeight = Math.min(2.2, maxKpiHeight);
-      const totalWidth = 3 * kpiWidth + 0.6;
-      const startX = contentStartX + (availableWidth - totalWidth) / 2;
-      const centerY = contentStartY + (availableHeight - kpiHeight) / 2;
-      kpiPositions = [
-        { index: 0, x: startX, y: centerY },
-        { index: 1, x: startX + kpiWidth + 0.3, y: centerY },
-        { index: 2, x: startX + 2 * (kpiWidth + 0.3), y: centerY }
-      ];
-    } else if (availableKpis.length === 4) {
-      // 4 KPIs - 2x2
-      kpiWidth = Math.min(2.2, (maxKpiWidth - 0.3) / 2);
-      kpiHeight = Math.min(1.8, (maxKpiHeight - 0.3) / 2);
-      const totalWidth = 2 * kpiWidth + 0.3;
-      const totalHeight = 2 * kpiHeight + 0.3;
-      const startX = contentStartX + (availableWidth - totalWidth) / 2;
-      const startY = contentStartY + (availableHeight - totalHeight) / 2;
-      kpiPositions = [
-        { index: 0, x: startX, y: startY },
-        { index: 1, x: startX + kpiWidth + 0.3, y: startY },
-        { index: 2, x: startX, y: startY + kpiHeight + 0.3 },
-        { index: 3, x: startX + kpiWidth + 0.3, y: startY + kpiHeight + 0.3 }
-      ];
-    } else {
-      // 5 KPIs ou plus - layout original (2 en haut, 3 en bas)
-      kpiWidth = 1.6; 
-      kpiHeight = 1.2;
-      const kpiMarginX = 0.1;
-      const kpiMarginY = 0.1;
-      const totalKpiWidth = 3 * kpiWidth + 2 * kpiMarginX; 
-      const centerOffsetX = Math.max(0, (maxKpiWidth - totalKpiWidth) / 2);
-
-      kpiPositions = [
-        // Première ligne - 2 KPIs centrés
-        { index: 0, x: kpiStartX + centerOffsetX + (kpiWidth + kpiMarginX) / 2, y: kpiStartY },
-        { index: 1, x: kpiStartX + centerOffsetX + (kpiWidth + kpiMarginX) / 2 + kpiWidth + kpiMarginX, y: kpiStartY },
-        
-        // Deuxième ligne - 3 KPIs centrés
-        { index: 2, x: kpiStartX + centerOffsetX, y: kpiStartY + kpiHeight + kpiMarginY },
-        { index: 3, x: kpiStartX + centerOffsetX + kpiWidth + kpiMarginX, y: kpiStartY + kpiHeight + kpiMarginY },
-        { index: 4, x: kpiStartX + centerOffsetX + 2 * (kpiWidth + kpiMarginX), y: kpiStartY + kpiHeight + kpiMarginY }
-      ];
-    }
-
-    // Créer chaque KPI
-    availableKpis.forEach((kpiData, index) => {
-      if (index < kpiPositions.length) {
-        const pos = kpiPositions[index];
-        console.log(`Création KPI index ${index}:`, kpiData ? kpiData.label || kpiData.id : "Non trouvé");
-        
-        if (typeof pos.x === 'number' && typeof pos.y === 'number' && !isNaN(pos.x) && !isNaN(pos.y)) {
-          createKPI(kpiData, pos.x, pos.y, kpiWidth, kpiHeight);
-        } else {
-          console.error(`Coordonnées invalides pour KPI index ${index}: x=${pos.x}, y=${pos.y}`);
-        }
-      }
+      slide.addImage({
+        data: kpiImage.image,
+        x: rowStartX + column * (cardWidth + horizontalGap),
+        y: gridStartY + row * (cardHeight + verticalGap),
+        w: cardWidth,
+        h: cardHeight,
+      });
     });
   }
 

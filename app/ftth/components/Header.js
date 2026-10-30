@@ -47,6 +47,11 @@ const DEFAULT_SELECTED = [
   "kpi-backlog-j",
   "KPI SPA",
   "kpi-spa",
+  "kpi-manuel-7j",
+  "kpi-du-jour-sans-erreur",
+  "KPI sans erreur",
+  "kpi-backlog-sans-erreur",
+  "Commandes non comptabilisées avant la MEP",
 
   // Vue d’ensemble Backlog
   "Vue d'ensemble combinée du Backlog",
@@ -75,7 +80,7 @@ const DEFAULT_SELECTED = [
   "KPI Tickets Entrants",
   "KPI Tickets Traités",
   "KPI Tickets Réentrants",
-  "KPI Tickets en Cours",
+  "KPI Tickets du jour",
   "KPI Tickets en Cours +Semaine",
 
   // Graphs ticketing

@@ -63,7 +63,7 @@ export default function KPIBacklogSansErreur() {
     }),
     datasets: [
       {
-        label: "KPI sans commptabilisées les erreurs",
+        label: "KPI sans comptabilisées les erreurs",
         
         data: records.map(({ value }) => value),
         backgroundColor: "#0284c7",
@@ -115,7 +115,12 @@ export default function KPIBacklogSansErreur() {
       : "12 derniers jours, hors week-ends";
 
   return (
-    <section className="relative flex min-h-[360px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+    <section
+      id="kpi-backlog-sans-erreur"
+      className="visualisation relative flex min-h-[360px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+      data-id="kpi-backlog-sans-erreur"
+      data-graph-label="Commandes non comptabilisées avant la MEP"
+    >
       <header className="mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Commandes non comptabilisées avant la MEP</h3>
         <p className="text-sm text-gray-500">{subtitle}</p>
