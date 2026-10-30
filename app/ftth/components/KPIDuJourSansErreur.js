@@ -65,7 +65,7 @@ export default function KPIDuJourSansErreur() {
           <CircleCheck className="h-5 w-5 text-gray-800" />
         </div>
         <p className="mb-1 text-xs text-gray-500">{subtitle}</p>
-        <p className={`text-3xl font-bold ${currentValue >= 100 ? "text-red-600" : "text-green-600"}`}>
+        <p className={`text-3xl font-bold ${currentValue > 75 ? "text-red-600" : "text-green-600"}`}>
           {Number.isFinite(currentValue) ? currentValue.toLocaleString("fr-FR") : "—"}
         </p>
       </div>
