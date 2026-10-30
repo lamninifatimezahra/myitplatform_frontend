@@ -201,7 +201,7 @@ export default function KpiTicketsEnCours({
         </div>
 
         <p className="text-xs text-gray-500 mb-1">{periodeLabel}</p>
-        <p className="text-3xl font-bold text-black">
+        <p className={`text-3xl font-bold ${ticketsEnCours > 40 ? "text-red-600" : "text-green-600"}`}>
           {Number(ticketsEnCours).toLocaleString("fr-FR", { maximumFractionDigits: 1 })}
         </p>
 
