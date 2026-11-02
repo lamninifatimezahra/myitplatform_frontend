@@ -76,6 +76,13 @@ function getLocalDateString(date) {
   return `${y}-${m}-${d}`;
 }
 
+function getNextDayString(dateStr) {
+  const d = parseLocalDate(dateStr);
+  if (!d) return null;
+  d.setDate(d.getDate() + 1);
+  return getLocalDateString(d);
+}
+
 function parseLocalDate(dateStr) {
   if (typeof dateStr !== "string") return null;
   const parts = dateStr.split("-");
@@ -389,18 +396,20 @@ export default function Backlog({
   // ===== FIN DU TEST =====
 
     return sortedSelectedValues.map(val => {
-      let ref = getPeriodEndString(val, viewMode, selectedYear);
-      if (!ref) return 0;
-      if (ref > today) ref = today;
+  let ref = getPeriodEndString(val, viewMode, selectedYear);
+  if (!ref) return 0;
+  if (ref > today) ref = today;
 
-      return tickets.reduce((count, t) => {
-        const entry = toDayString(t[entryField]);
-        const exit = toDayString(t[exitField]);
-        if (!entry || entry >= ref) return count;  // DATE_ENTREE < D
-        if (exit && exit <= ref) return count;     // DATE_SORTIE NULL ou > D (>= D+1)
-        return count + 1;
-      }, 0);
-    });
+  const nextDay = getNextDayString(ref);   // D+1
+
+  return tickets.reduce((count, t) => {
+    const entry = toDayString(t[entryField]);
+    const exit = toDayString(t[exitField]);
+    if (!entry || entry > ref) return count;     // DATE_ENTREE < D+1
+    if (exit && exit <= nextDay) return count;   // DATE_SORTIE NULL ou > D+1
+    return count + 1;
+  }, 0);
+});
   }, [data, sortedSelectedValues, viewMode, selectedYear, entryField, exitField, fileField]);
 
   const chartData = {
