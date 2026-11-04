@@ -1,4 +1,12 @@
 [
+      {
+    "date_reporting": "2026-11-04",
+    "kpi_sans_erreur": 51
+  },
+  {
+    "date_reporting": "2026-11-03",
+    "kpi_sans_erreur": 60
+  },
     {
     "date_reporting": "2026-11-02",
     "kpi_sans_erreur": 26
